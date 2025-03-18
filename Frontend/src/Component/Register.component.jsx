@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
-const API_URL = import.meta.env.REACT_APP_API_URL;
+const API_URL = process.env.REACT_APP_API_URL;
 
 function RegisterPage() {
     const [credentials, setCredentials] = useState({
@@ -18,12 +18,10 @@ function RegisterPage() {
 
     const handleRegister = async () => {
         try {
-            const response = await axios.post(`${API_URL}/users/register`, credentials,
-         {
+            const response = await axios.post(`${API_URL}/api/v1/users/register`, credentials, {
                 headers: {
                     "Content-Type": "application/json",
                 },
-               
             });
 
             console.log("Register Response:", response.data);
