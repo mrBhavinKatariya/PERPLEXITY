@@ -18,7 +18,7 @@ function RegisterPage() {
 
     const handleRegister = async () => {
         try {
-            const response = await axios.post(`${API_URL}/api/v1/users/register`, credentials,
+            const response = await axios.post(`${API_URL}/users/register`, credentials,
          {
                 headers: {
                     "Content-Type": "application/json",
