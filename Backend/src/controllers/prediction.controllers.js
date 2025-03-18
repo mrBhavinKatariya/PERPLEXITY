@@ -20,7 +20,6 @@ const generateSecureRandomNumber = () => {
   return crypto.randomInt(0, 10); // Generates a number between 0 and 9
 };
 
-// Handle random number generation and save to database
 const handleRandomNumberGeneration = async () => {
   if (!isGenerating) {
     isGenerating = true;
@@ -30,10 +29,15 @@ const handleRandomNumberGeneration = async () => {
       let currentNumber;
       let nextNumber;
 
+      // Debugging: Log the last record
+      console.log("Last Record:", lastRecord);
+
       if (lastRecord) {
-        currentNumber = lastRecord.nextNumber; // Use nextNumber from the last record
+        // If lastRecord.nextNumber is missing, generate a new random number
+        currentNumber = lastRecord.nextNumber || generateSecureRandomNumber();
         nextNumber = generateSecureRandomNumber();
       } else {
+        // If no lastRecord exists, generate both numbers
         currentNumber = generateSecureRandomNumber();
         nextNumber = generateSecureRandomNumber();
       }
