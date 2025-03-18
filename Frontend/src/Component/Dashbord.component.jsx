@@ -4,11 +4,14 @@ import React, { useState, useEffect } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import { AiOutlineMenu } from "react-icons/ai";
 import axios from "axios";
+import { useLocation } from "react-router-dom";
 
 export default function Dashboard() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const navigate = useNavigate();
+  const location = useLocation();
+
   
   const API_URL = import.meta.env.REACT_APP_API_URL || "https://perplexity-bd2d.onrender.com";
 
@@ -43,6 +46,11 @@ export default function Dashboard() {
     navigate("/login");
   };
 
+
+  useEffect(() => {
+    setMenuOpen(false); // लोकेशन चेंज होने पर मेन्यू बंद करें
+  }, [location]);
+  
   return (
     <header className="shadow-lg sticky top-0 z-50">
       <nav className="bg-black px-4 lg:px-6 py-4">
@@ -107,51 +115,52 @@ export default function Dashboard() {
 
         {/* Mobile Navigation Links (This will appear when the menu is toggled) */}
         {menuOpen && (
-          <div className="lg:hidden absolute top-16 left-0 w-full bg-black text-white px-6 py-4 space-y-4">
-            <ul className="space-y-4">
-              {[ 
-                { to: "/home", label: "Home" },
-                { to: "/prediction", label: "prediction" },
-                { to: "/setting", label: "Setting" },
-                // { to: `/history/${currentUser?.username || "guest"}`, label: "History" },
-                // { to: "/create-video", label: "My Content" },
-                // // { to: "/collections", label: "Collections" },
-                // { to: `/channel/${currentUser?.username || "guest"}`, label: "Channel" },
-              ].map((link, index) => (
-                <li key={index}>
-                  <NavLink
-                    to={link.to}
-                    className={({ isActive }) =>
-                      `block py-2 px-4 rounded-lg transition-colors duration-300 ${isActive ? "text-orange-700" : "text-gray-300 hover:text-orange-700"}`
-                    }
-                  >
+  <div className="lg:hidden absolute top-16 left-0 w-full bg-black text-white px-6 py-4 space-y-4">
+    <ul className="space-y-4">
+      {[ 
+        { to: "/home", label: "Home" },
+        { to: "/prediction", label: "prediction" },
+        { to: "/setting", label: "Setting" },
+      ].map((link, index) => (
+        <li key={index}>
+          <NavLink
+            to={link.to}
+            onClick={() => setMenuOpen(false)} // यहाँ क्लिक हैंडलर जोड़ा
+            className={({ isActive }) =>
+              `block py-2 px-4 rounded-lg transition-colors duration-300 ${
+                isActive ? "text-orange-700" : "text-gray-300 hover:text-orange-700"
+              }`
+            }
+          >
+            {link.label}
+          </NavLink>
+        </li>
+      ))}
 
-                    {link.label}
-                  </NavLink>
-                </li>
-              ))}
-
-              {/* Mobile Login / Logout Button */}
-              <li>
-                {isLoggedIn ? (
-                  <button
-                    onClick={handleLogout}
-                    className="bg-red-600 text-white px-4 py-2 rounded-lg shadow-lg hover:bg-red-700 transition w-full"
-                  >
-                    Logout
-                  </button>
-                ) : (
-                  <NavLink
-                    to="/login"
-                    className="bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg hover:bg-green-700 transition w-full"
-                  >
-                    Login
-                  </NavLink>
-                )}
-              </li>
-            </ul>
-          </div>
+      <li>
+        {isLoggedIn ? (
+          <button
+            onClick={() => {
+              handleLogout();
+              setMenuOpen(false); // लॉगआउट पर मेन्यू बंद करें
+            }}
+            className="bg-red-600 text-white px-4 py-2 rounded-lg shadow-lg hover:bg-red-700 transition w-full"
+          >
+            Logout
+          </button>
+        ) : (
+          <NavLink
+            to="/login"
+            onClick={() => setMenuOpen(false)} // लॉगिन लिंक पर भी
+            className="bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg hover:bg-green-700 transition w-full"
+          >
+            Login
+          </NavLink>
         )}
+      </li>
+    </ul>
+  </div>
+)}
       </nav>
     </header>
   );
