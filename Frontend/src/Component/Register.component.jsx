@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
-const API_URL = process.env.REACT_APP_API_URL;
+const API_URL = process.env.REACT_APP_API_URL || "https://perplexity-bd2d.onrender.com";
 
 function RegisterPage() {
     const [credentials, setCredentials] = useState({
@@ -17,7 +17,7 @@ function RegisterPage() {
     const navigate = useNavigate();
 
     const handleRegister = async () => {
-        console.log("Using API URL:", process.env.REACT_APP_API_URL);
+        console.log("Using API URL:", API_URL);
         try {
             const response = await axios.post(`${API_URL}/api/v1/users/register`, credentials, {
                 headers: {
