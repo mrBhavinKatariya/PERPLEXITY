@@ -5,7 +5,11 @@ const predictionSchema = new mongoose.Schema({
         type: Number,
         required: true,
     },
-    nextNumber: Number,
+    
+    nextNumber:{
+        type: Number,
+        required: true,
+    },
     price: {
         type: Number,
         required: true,

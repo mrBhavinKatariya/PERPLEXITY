@@ -21,32 +21,30 @@ const generateSecureRandomNumber = () => {
 };
 
 // Handle random number generation and save to database
+// Handle random number generation and save to database
 const handleRandomNumberGeneration = async () => {
   if (!isGenerating) {
     isGenerating = true;
     try {
-      // पिछला रिकॉर्ड ढूंढें
       const lastRecord = await Prediction.findOne().sort({ createdAt: -1 });
       
       let currentNumber;
       let nextNumber;
       
       if (lastRecord) {
-        // अगले नंबर को करंट नंबर बनाएं और नया नेक्स्ट जनरेट करें
-        currentNumber = lastRecord.nextNumber;
+        currentNumber = lastRecord.nextNumber; // पिछले रिकॉर्ड से nextNumber लें
         nextNumber = generateSecureRandomNumber();
       } else {
-        // पहली बार दोनों नंबर जनरेट करें
         currentNumber = generateSecureRandomNumber();
         nextNumber = generateSecureRandomNumber();
       }
 
-      // नया पीरियड नंबर
       const period = lastRecord ? lastRecord.period + 1 : 1;
       
-      // डेटाबेस में सेव करें
+      // नए रिकॉर्ड में nextNumber जोड़ें
       const newPrediction = new Prediction({
         number: currentNumber,
+        nextNumber: nextNumber, // 🚨 यहाँ nextNumber फ़ील्ड जोड़ें
         price: Math.floor(Math.random() * 965440),
         period: period,
         result: currentNumber
@@ -55,7 +53,7 @@ const handleRandomNumberGeneration = async () => {
       await newPrediction.save();
 
       console.log("Current Number:", currentNumber);
-      console.log("Next Number (Predetermined):", nextNumber);
+      console.log("Next Predicted Number:", nextNumber);
 
       return currentNumber;
     } catch (error) {
