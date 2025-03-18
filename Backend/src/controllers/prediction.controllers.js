@@ -47,7 +47,6 @@ const handleRandomNumberGeneration = async () => {
       // डेटाबेस में सेव करें
       const newPrediction = new Prediction({
         number: currentNumber,
-        nextNumber: nextNumber, // अगले इंटरवाल के लिए नंबर
         price: Math.floor(Math.random() * 965440),
         period: period,
         result: currentNumber
