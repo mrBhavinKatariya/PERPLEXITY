@@ -8,6 +8,7 @@ function LoginPage() {
     const navigate = useNavigate();
     const [errorMessage, setErrorMessage] = useState("");
     const [successMessage, setSuccessMessage] = useState("");
+    const API_URL = import.meta.env.REACT_APP_API_URL;
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -31,7 +32,7 @@ function LoginPage() {
         try {
             // Send login request to the server
             const response = await axios.post(
-                "http://localhost:8000/api/v1/users/login",
+                `${API_URL}/api/v1/users/login`,
                 loginData,
                 {
                     headers: {
@@ -51,7 +52,7 @@ function LoginPage() {
             console.log("Token stored:", accessToken);
 
             // Redirect to the home page after 2 seconds
-            setTimeout(() => navigate("/home"), 2000);
+            setTimeout(() => navigate("/prediction"), 2000);
         } catch (error) {
             // Handle errors
             if (error.response) {
@@ -90,7 +91,7 @@ function LoginPage() {
 
         try {
             const response = await axios.get(
-                "http://localhost:8000/api/v1/protected-endpoint",
+                `${API_URL}/api/v1/protected-endpoint`,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,

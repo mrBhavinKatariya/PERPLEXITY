@@ -9,6 +9,8 @@ export default function Dashboard() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState(null);
   const navigate = useNavigate();
+  
+  const API_URL = import.meta.env.REACT_APP_API_URL;
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -18,7 +20,7 @@ export default function Dashboard() {
           throw new Error("No token found");
         }
 
-        const response = await axios.get("http://localhost:8000/api/v1/users/current-user", {
+        const response = await axios.get(`${API_URL}/api/v1/users/current-user`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },

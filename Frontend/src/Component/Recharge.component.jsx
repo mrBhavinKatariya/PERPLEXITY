@@ -14,6 +14,8 @@ const RechargePage = ({ user, onClose }) => {
   const [userName, setUserName] = useState("");
   const [countdown, setCountdown] = useState(900);
 
+  const API_URL = import.meta.env.REACT_APP_API_URL;
+
   useEffect(() => {
     // Load Razorpay script dynamically
     const script = document.createElement('script');
@@ -35,7 +37,7 @@ const RechargePage = ({ user, onClose }) => {
         }
 
         const response = await axios.get(
-          "http://localhost:8000/api/v1/users/current-user",
+          `${API_URL}/api/v1/users/current-user`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -104,7 +106,7 @@ const RechargePage = ({ user, onClose }) => {
   const handleRazorpayPayment = async () => {
     try {
       const response = await axios.post(
-        "http://localhost:8000/api/v1/users/create-razorpay-order",
+        `${API_URL}/api/v1/users/create-razorpay-order`,
         { amount: amount * 100 } // Convert to paise
       );
 
@@ -123,7 +125,7 @@ const RechargePage = ({ user, onClose }) => {
         handler: async (response) => {
           try {
             const verificationResponse = await axios.post(
-              "http://localhost:8000/api/v1/users/verify-razorpay-payment",
+              `${API_URL}/api/v1/users/verify-razorpay-payment`,
               {
                 razorpayPaymentId: response.razorpay_payment_id,
                 razorpayOrderId: response.razorpay_order_id,

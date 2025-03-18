@@ -1,5 +1,5 @@
 [[redirects]]
 
-from = "/*"
-to = "/index.html"
+from = "/api/*"
+to = "https://perplexity-bd2d.onrender.com/api/v1/:splat"
 status = 200

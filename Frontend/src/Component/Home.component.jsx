@@ -7,6 +7,8 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  const API_URL = import.meta.env.REACT_APP_API_URL;
+
 
   useEffect(() => {
    
@@ -15,7 +17,7 @@ export default function Home() {
           const token = localStorage.getItem("token");
           console.log("🔹 Token in localStorage:", token);  
   
-          const response = await axios.get("http://localhost:8000/api/v1/users/current-user", {
+          const response = await axios.get(`${API_URL}/api/v1/users/current-user`, {
               headers: token ? { Authorization: `Bearer ${token}` } : {},
               withCredentials: true,  
           });

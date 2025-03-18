@@ -8,5 +8,8 @@ export default defineConfig({
   plugins: [react(),
   tailwindcss(),
   ],
+  define: {
+    'process.env': {}  // ✅ process को खाली Object से Define करें
+  }
 
 })

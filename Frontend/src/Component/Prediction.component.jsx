@@ -31,7 +31,7 @@ const [userHistory, setUserHistory] = useState([]);
 const [historyPage, setHistoryPage] = useState(1);
 const [showRulesPopup, setShowRulesPopup] = useState(false)
 
-
+const API_URL = import.meta.env.REACT_APP_API_URL;
 
   // Modified fetchUser effect
   useEffect(() => {
@@ -43,7 +43,7 @@ const [showRulesPopup, setShowRulesPopup] = useState(false)
         }
 
         const response = await axios.get(
-          "http://localhost:8000/api/v1/users/current-user",
+          `${API_URL}/api/v1/users/current-user`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -97,7 +97,7 @@ const handleRefresh = async () => {
 
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `http://localhost:8000/api/v1/users/get-balance/${userId}`,
+        `${API_URL}/api/v1/users/get-balance/${userId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -138,7 +138,7 @@ const fetchUserHistory = useCallback(async () => {
   try {
     const token = localStorage.getItem("token");
     const response = await axios.get(
-      `http://localhost:8000/api/v1/users/bet-history/${userId}`, // Fixed URL with actual userId
+      `${API_URL}/api/v1/users/bet-history/${userId}`, // Fixed URL with actual userId
       {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -211,7 +211,7 @@ const handlePrevHistory = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.post(
-        "http://localhost:8000/api/v1/users/invest",
+        `${API_URL}/api/v1/users/invest`,
         {
           userId: userId,
           number: selectedNumber,
@@ -240,11 +240,13 @@ const handlePrevHistory = () => {
 
   // Fetch countdown time from the API
   useEffect(() => {
+
+
     let timerId;
     const updateTimer = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:8000/api/v1/users/countdownTime"
+          `${API_URL}/api/v1/users/countdownTime`
         );
         const newTime = response.data.data.countdownTime;
         setServerTime(newTime);
@@ -351,7 +353,7 @@ const handlePrevHistory = () => {
   const fetchLastTenRandomNumbers = useCallback(async (page = 1) => {
     try {
       const response = await axios.get(
-        `http://localhost:8000/api/v1/users/lastrandomenumber?page=${page}&limit=10`
+        `${API_URL}/api/v1/users/lastrandomenumber?page=${page}&limit=10`
       );
       console.log("API Response:", response.data); // Debugging: Log API response
       if (response.data.success) {
@@ -398,7 +400,7 @@ const handlePrevHistory = () => {
       const token = localStorage.getItem("token");
 
       const response = await axios.delete(
-        "http://localhost:8000/api/v1/users/delete-old-random-numbers",
+        `${API_URL}/api/v1/users/delete-old-random-numbers`,
 
         {
           headers: {
@@ -419,7 +421,7 @@ const handlePrevHistory = () => {
     const fetchRandomNumber = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:8000/api/v1/users/randomeNumber"
+          `${API_URL}/api/v1/users/randomeNumber`
         );
         const newNumber = response.data.data.number;
         console.log("New Random Number:", newNumber);
@@ -491,10 +493,10 @@ const handlePrevHistory = () => {
         borderRadius: "50%",
         display: "flex",
         alignItems: "center",
-        justifyContent: "center", // केंद्र में संरेखित
+        justifyContent: "center", 
         color: "white",
         fontWeight: "bold",
-        margin: "0 auto" // मोबाइल पर केंद्रित
+        margin: "0 auto" 
       }}>
         {number}
       </div>

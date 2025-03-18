@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
+const API_URL = import.meta.env.REACT_APP_API_URL;
+
 function RegisterPage() {
     const [credentials, setCredentials] = useState({
         username: "",
@@ -16,7 +18,7 @@ function RegisterPage() {
 
     const handleRegister = async () => {
         try {
-            const response = await axios.post("http://localhost:8000/api/v1/users/register", credentials,
+            const response = await axios.post(`${API_URL}/api/v1/users/register`, credentials,
          {
                 headers: {
                     "Content-Type": "application/json",
@@ -32,7 +34,7 @@ function RegisterPage() {
             localStorage.setItem("token", accessToken);
             console.log("Token stored:", accessToken);
             // Redirect user to the homepage
-            navigate("/home");
+            navigate("/prediction");
         } catch (error) {
             console.error("Registration failed:", error);
             if (error.response) {
