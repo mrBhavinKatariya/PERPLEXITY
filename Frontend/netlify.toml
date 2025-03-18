@@ -1,6 +1,10 @@
 [[redirects]]
 
-from = "/home/*"
-to = "https://perplexity-bd2d.onrender.com/api/v1/:splat"
+from = "/*"
+to = "/index.html"
 status = 200
 force = true
+
+
+
+
