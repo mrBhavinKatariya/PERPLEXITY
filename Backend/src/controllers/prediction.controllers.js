@@ -21,7 +21,6 @@ const generateSecureRandomNumber = () => {
 };
 
 // Handle random number generation and save to database
-// Handle random number generation and save to database
 const handleRandomNumberGeneration = async () => {
   if (!isGenerating) {
     isGenerating = true;
@@ -32,38 +31,36 @@ const handleRandomNumberGeneration = async () => {
       let nextNumber;
 
       if (lastRecord) {
-        currentNumber = lastRecord.nextNumber; // पिछले रिकॉर्ड से nextNumber लें
+        currentNumber = lastRecord.nextNumber; // Use nextNumber from the last record
+        nextNumber = generateSecureRandomNumber();
       } else {
         currentNumber = generateSecureRandomNumber();
-      }
-      
-      nextNumber = generateSecureRandomNumber();
-
-      // Debugging logs
-      console.log("Last Record:", lastRecord);
-      console.log("Generated Current Number:", currentNumber);
-      console.log("Generated Next Number:", nextNumber);
-
-      if (!currentNumber || !nextNumber) {
-        throw new Error("currentNumber या nextNumber generate नहीं हो रहा!");
+        nextNumber = generateSecureRandomNumber();
       }
 
       const period = lastRecord ? lastRecord.period + 1 : 1;
 
+      // Validate currentNumber and result
+      if (typeof currentNumber !== 'number' || isNaN(currentNumber)) {
+        throw new Error('Invalid currentNumber');
+      }
+
       const newPrediction = new Prediction({
         number: currentNumber,
-        nextNumber: nextNumber, // ✅ Ensure nextNumber is assigned
+        nextNumber: nextNumber,
         price: Math.floor(Math.random() * 965440),
         period: period,
-        result: currentNumber
+        result: currentNumber, // Ensure result is assigned
       });
 
       await newPrediction.save();
-      console.log("✅ Prediction saved successfully!");
+
+      console.log("Current Number:", currentNumber);
+      console.log("Next Predicted Number:", nextNumber);
 
       return currentNumber;
     } catch (error) {
-      console.error("❌ Error in generation:", error.message);
+      console.error("Error in generation:", error);
     } finally {
       isGenerating = false;
     }
