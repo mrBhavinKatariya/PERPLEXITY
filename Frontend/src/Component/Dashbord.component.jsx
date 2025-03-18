@@ -48,16 +48,16 @@ export default function Dashboard() {
 
 
   useEffect(() => {
-    setMenuOpen(false); // लोकेशन चेंज होने पर मेन्यू बंद करें
+    setMenuOpen(false); 
   }, [location]);
-  
+
   return (
     <header className="shadow-lg sticky top-0 z-50">
       <nav className="bg-black px-4 lg:px-6 py-4">
         <div className="flex items-center justify-between mx-auto max-w-screen-xl">
           {/* Logo Section */}
           <Link to="/" className="flex items-center">
-            <img src="/Screenshot 2025-01-29 212924.png" className="h-12 mr-3" alt="Logo" />
+            <img src="../public/perplexity.png" className="h-12 mr-3" alt="Logo" />
           </Link>
 
           {/* Desktop Navigation Links */}
@@ -106,7 +106,7 @@ export default function Dashboard() {
 
           {/* Mobile Menu Button */}
           <button
-            className="lg:hidden text-2xl p-2 rounded-lg hover:bg-gray-700 transition"
+            className="lg:hidden text-2xl p-2  text-gray-700 rounded-lg hover:bg-gray-700 transition"
             onClick={() => setMenuOpen(!menuOpen)}
           >
             <AiOutlineMenu />
@@ -142,7 +142,7 @@ export default function Dashboard() {
           <button
             onClick={() => {
               handleLogout();
-              setMenuOpen(false); // लॉगआउट पर मेन्यू बंद करें
+              setMenuOpen(false); 
             }}
             className="bg-red-600 text-white px-4 py-2 rounded-lg shadow-lg hover:bg-red-700 transition w-full"
           >
@@ -151,7 +151,7 @@ export default function Dashboard() {
         ) : (
           <NavLink
             to="/login"
-            onClick={() => setMenuOpen(false)} // लॉगिन लिंक पर भी
+            onClick={() => setMenuOpen(false)} 
             className="bg-green-600 text-white px-4 py-2 rounded-lg shadow-lg hover:bg-green-700 transition w-full"
           >
             Login
