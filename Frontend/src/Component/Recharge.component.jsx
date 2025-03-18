@@ -14,7 +14,7 @@ const RechargePage = ({ user, onClose }) => {
   const [userName, setUserName] = useState("");
   const [countdown, setCountdown] = useState(900);
 
-  const API_URL = import.meta.env.REACT_APP_API_URL;
+  const API_URL = import.meta.env.REACT_APP_API_URL || "https://perplexity-bd2d.onrender.com";
 
   useEffect(() => {
     // Load Razorpay script dynamically

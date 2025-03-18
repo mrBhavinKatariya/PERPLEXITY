@@ -31,7 +31,7 @@ const [userHistory, setUserHistory] = useState([]);
 const [historyPage, setHistoryPage] = useState(1);
 const [showRulesPopup, setShowRulesPopup] = useState(false)
 
-const API_URL = import.meta.env.REACT_APP_API_URL;
+const API_URL = import.meta.env.REACT_APP_API_URL || "https://perplexity-bd2d.onrender.com";
 
   // Modified fetchUser effect
   useEffect(() => {

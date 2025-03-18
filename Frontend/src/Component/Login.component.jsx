@@ -8,7 +8,8 @@ function LoginPage() {
     const navigate = useNavigate();
     const [errorMessage, setErrorMessage] = useState("");
     const [successMessage, setSuccessMessage] = useState("");
-    const API_URL = import.meta.env.REACT_APP_API_URL;
+    
+    const API_URL = import.meta.env.REACT_APP_API_URL || "https://perplexity-bd2d.onrender.com";
 
     const handleLogin = async (e) => {
         e.preventDefault();

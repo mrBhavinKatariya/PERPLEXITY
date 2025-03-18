@@ -10,7 +10,7 @@ export default function Dashboard() {
   const [currentUser, setCurrentUser] = useState(null);
   const navigate = useNavigate();
   
-  const API_URL = import.meta.env.REACT_APP_API_URL;
+  const API_URL = import.meta.env.REACT_APP_API_URL || "https://perplexity-bd2d.onrender.com";
 
   useEffect(() => {
     const fetchUser = async () => {
