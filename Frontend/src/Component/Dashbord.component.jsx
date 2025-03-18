@@ -57,7 +57,7 @@ export default function Dashboard() {
         <div className="flex items-center justify-between mx-auto max-w-screen-xl">
           {/* Logo Section */}
           <Link to="/" className="flex items-center">
-            <img src="../public/perplexity.png" className="h-12 mr-3" alt="Logo" />
+            <img src="/perplexity.png" className="h-12 mr-3" alt="Logo" />
           </Link>
 
           {/* Desktop Navigation Links */}
