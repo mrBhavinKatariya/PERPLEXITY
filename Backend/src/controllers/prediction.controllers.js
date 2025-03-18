@@ -27,42 +27,49 @@ const handleRandomNumberGeneration = async () => {
     isGenerating = true;
     try {
       const lastRecord = await Prediction.findOne().sort({ createdAt: -1 });
-      
+
       let currentNumber;
       let nextNumber;
-      
+
       if (lastRecord) {
         currentNumber = lastRecord.nextNumber; // पिछले रिकॉर्ड से nextNumber लें
-        nextNumber = generateSecureRandomNumber();
       } else {
         currentNumber = generateSecureRandomNumber();
-        nextNumber = generateSecureRandomNumber();
+      }
+      
+      nextNumber = generateSecureRandomNumber();
+
+      // Debugging logs
+      console.log("Last Record:", lastRecord);
+      console.log("Generated Current Number:", currentNumber);
+      console.log("Generated Next Number:", nextNumber);
+
+      if (!currentNumber || !nextNumber) {
+        throw new Error("currentNumber या nextNumber generate नहीं हो रहा!");
       }
 
       const period = lastRecord ? lastRecord.period + 1 : 1;
-      
-      // नए रिकॉर्ड में nextNumber जोड़ें
+
       const newPrediction = new Prediction({
         number: currentNumber,
-        nextNumber: nextNumber, // 🚨 यहाँ nextNumber फ़ील्ड जोड़ें
+        nextNumber: nextNumber, // ✅ Ensure nextNumber is assigned
         price: Math.floor(Math.random() * 965440),
         period: period,
         result: currentNumber
       });
 
       await newPrediction.save();
-
-      console.log("Current Number:", currentNumber);
-      console.log("Next Predicted Number:", nextNumber);
+      console.log("✅ Prediction saved successfully!");
 
       return currentNumber;
     } catch (error) {
-      console.error("Error in generation:", error);
+      console.error("❌ Error in generation:", error.message);
     } finally {
       isGenerating = false;
     }
   }
 };
+
 
 setInterval(() => {
   handleRandomNumberGeneration();
