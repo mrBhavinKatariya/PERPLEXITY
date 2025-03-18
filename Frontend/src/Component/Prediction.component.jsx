@@ -4,7 +4,6 @@ import axios from "axios";
 import RechargePage from "./Recharge.component";
 import { FaTrophy, FaSyncAlt } from "react-icons/fa";
 
-
 export default function ColorPredictionGame() {
   const [timeLeft, setTimeLeft] = useState(90);
   const [selectedNumbers, setSelectedNumbers] = useState([]);
@@ -26,12 +25,15 @@ export default function ColorPredictionGame() {
     email: "",
   });
   // Add this state
-const [serverTime, setServerTime] = useState(90);
-const [userHistory, setUserHistory] = useState([]);
-const [historyPage, setHistoryPage] = useState(1);
-const [showRulesPopup, setShowRulesPopup] = useState(false)
+  const [serverTime, setServerTime] = useState(90);
+  const [userHistory, setUserHistory] = useState([]);
+  const [historyPage, setHistoryPage] = useState(1);
+  const [showRulesPopup, setShowRulesPopup] = useState(false);
+  const [showLoginPopup, setShowLoginPopup] = useState(false);
+  const [authError, setAuthError] = useState("");
 
-const API_URL = import.meta.env.REACT_APP_API_URL || "https://perplexity-bd2d.onrender.com";
+  const API_URL =
+    import.meta.env.REACT_APP_API_URL || "https://perplexity-bd2d.onrender.com";
 
   // Modified fetchUser effect
   useEffect(() => {
@@ -39,7 +41,9 @@ const API_URL = import.meta.env.REACT_APP_API_URL || "https://perplexity-bd2d.on
       try {
         const token = localStorage.getItem("token");
         if (!token) {
-          throw new Error("No token found");
+          setAuthError("Error fetching current user: Error: No token found");
+          setShowLoginPopup(true);
+          return;
         }
 
         const response = await axios.get(
@@ -55,7 +59,7 @@ const API_URL = import.meta.env.REACT_APP_API_URL || "https://perplexity-bd2d.on
         const userData = response.data.data;
         setUserId(userData._id); // Set userId directly from response
         console.log("User ID", userData._id);
-        
+
         setUser({
           // Update user state with correct ID
           id: userData._id,
@@ -65,6 +69,8 @@ const API_URL = import.meta.env.REACT_APP_API_URL || "https://perplexity-bd2d.on
         });
       } catch (err) {
         console.error("Error fetching current user:", err);
+        setAuthError(err.message);
+        setShowLoginPopup(true);
       }
     };
 
@@ -73,20 +79,35 @@ const API_URL = import.meta.env.REACT_APP_API_URL || "https://perplexity-bd2d.on
 
   // Fetch user balance
 
-  // Add refresh handler function in the component
-const handleRefresh = async () => {
-  try {
-    // Refresh all data
-    await fetchUserBalance();
-    await fetchLastTenRandomNumbers(1);
-    await fetchUserHistory();
-    setPage(1);
-    setHistoryPage(1);
-  } catch (error) {
-    console.error("Refresh error:", error);
-  }
-};
+  // Add login popup JSX
+  const renderLoginPopup = () => (
+    <div style={styles.popupOverlay}>
+      <div style={styles.loginPopup}>
+        <h3 style={styles.popupHeader}>Login Required</h3>
+        <div style={styles.errorMessage}>{authError}</div>
+        <button
+          style={styles.loginButton}
+          onClick={() => (window.location.href = "/login")} // Update with your login route
+        >
+          Log In
+        </button>
+      </div>
+    </div>
+  );
 
+  // Add refresh handler function in the component
+  const handleRefresh = async () => {
+    try {
+      // Refresh all data
+      await fetchUserBalance();
+      await fetchLastTenRandomNumbers(1);
+      await fetchUserHistory();
+      setPage(1);
+      setHistoryPage(1);
+    } catch (error) {
+      console.error("Refresh error:", error);
+    }
+  };
 
   const fetchUserBalance = useCallback(async () => {
     try {
@@ -109,10 +130,7 @@ const handleRefresh = async () => {
 
       if (response.data.success) {
         setUserBalance(response.data.data.balance);
-        console.log("uuserBa",response.data.data.balance);
-
-
-        
+        console.log("uuserBa", response.data.data.balance);
       } else {
         console.error("Balance fetch error:", response.data.message);
       }
@@ -131,51 +149,48 @@ const handleRefresh = async () => {
     }
   }, [userId, fetchUserBalance]);
 
-  
   // Add this function to fetch user history
-// Add this function to fetch user history
-const fetchUserHistory = useCallback(async () => {
-  try {
-    const token = localStorage.getItem("token");
-    const response = await axios.get(
-      `${API_URL}/api/v1/users/bet-history/${userId}`, // Fixed URL with actual userId
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        params: {
-          page: historyPage,
-          limit: 10
+  // Add this function to fetch user history
+  const fetchUserHistory = useCallback(async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(
+        `${API_URL}/api/v1/users/bet-history/${userId}`, // Fixed URL with actual userId
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          params: {
+            page: historyPage,
+            limit: 10,
+          },
         }
+      );
+
+      if (response.data.success) {
+        setUserHistory(response.data.data);
+        console.log("UserHistory", response.data.data);
       }
-    );
-
-    if (response.data.success) {
-      setUserHistory(response.data.data);
-      console.log("UserHistory", response.data.data);
-      
+    } catch (error) {
+      console.error("Error fetching user history:", error);
     }
-  } catch (error) {
-    console.error("Error fetching user history:", error);
-  }
-}, [userId, historyPage]); // Added userId to dependencies
+  }, [userId, historyPage]); // Added userId to dependencies
 
-// Add this useEffect to fetch history when page or user changes
-useEffect(() => {
-  if (userId) {
-    fetchUserHistory();
-  }
-}, [userId, historyPage, fetchUserHistory]);
+  // Add this useEffect to fetch history when page or user changes
+  useEffect(() => {
+    if (userId) {
+      fetchUserHistory();
+    }
+  }, [userId, historyPage, fetchUserHistory]);
 
-// Add these pagination handlers
-const handleNextHistory = () => {
-  setHistoryPage(prev => prev + 1);
-};
+  // Add these pagination handlers
+  const handleNextHistory = () => {
+    setHistoryPage((prev) => prev + 1);
+  };
 
-const handlePrevHistory = () => {
-  setHistoryPage(prev => Math.max(1, prev - 1));
-};
-
+  const handlePrevHistory = () => {
+    setHistoryPage((prev) => Math.max(1, prev - 1));
+  };
 
   const handleConfirmBet = async () => {
     // Remove isLoading check to allow multiple submissions
@@ -185,20 +200,19 @@ const handlePrevHistory = () => {
     // if(totalAmount < 100)
     // const charge = totalAmount *  1;
 
-
     const totalDeduction = totalAmount;
-  
+
     // Create a copy of current balance for this transaction
     const currentBalance = userBalance;
-    
-    console.log("userbalances",userBalance);
-    
+
+    console.log("userbalances", userBalance);
+
     if (currentBalance < totalDeduction) {
       setError("Insufficient balance. Please recharge.");
       setShowPopup(true);
       return;
     }
-  
+
     // Optimistic update with local balance copy
     setUserBalance((prev) => prev - totalDeduction);
     setSelectedNumbers((prev) => [
@@ -207,7 +221,7 @@ const handlePrevHistory = () => {
     ]);
     setError("");
     setShowPopup(false);
-  
+
     try {
       const token = localStorage.getItem("token");
       await axios.post(
@@ -223,7 +237,7 @@ const handlePrevHistory = () => {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-  
+
       // Update bet status on success
       await fetchUserBalance();
     } catch (error) {
@@ -236,12 +250,9 @@ const handlePrevHistory = () => {
       setContractMoney(10);
     }
   };
-  
 
   // Fetch countdown time from the API
   useEffect(() => {
-
-
     let timerId;
     const updateTimer = async () => {
       try {
@@ -255,20 +266,19 @@ const handlePrevHistory = () => {
         console.error("Error updating timer:", error);
       }
     };
-  
+
     // Initial fetch
     updateTimer();
-  
+
     // Set up interval for updates
     timerId = setInterval(updateTimer, 1000);
-  
+
     return () => {
       clearInterval(timerId);
     };
   }, []);
-  
 
-    // Timer logic
+  // Timer logic
   useEffect(() => {
     let timerId;
 
@@ -288,9 +298,8 @@ const handlePrevHistory = () => {
     return () => clearInterval(timerId);
   }, []);
 
-
-   // Reset timer after 1 minute when it reaches 0
-   useEffect(() => {
+  // Reset timer after 1 minute when it reaches 0
+  useEffect(() => {
     if (timeLeft === 0) {
       setTimeout(() => {
         setTimeLeft(90); // Reset timer to 90 seconds after 1 minute
@@ -306,7 +315,8 @@ const handlePrevHistory = () => {
         <div style={styles.rulesContent}>
           <div style={styles.ruleSection}>
             <p style={styles.ruleTime}>
-              ⏰ 3 minutes per issue, 2m 30s to order, 30s to show result<br />
+              ⏰ 3 minutes per issue, 2m 30s to order, 30s to show result
+              <br />
               🕒 480 issues/day | 💰 Contract amount after 2% fee: 98
             </p>
 
@@ -333,8 +343,9 @@ const handlePrevHistory = () => {
             </div>
 
             <p style={styles.ruleNote}>
-              * Service fee: 2% deducted from all trades<br />
-              * All payouts based on 98 contract amount after fee deduction
+              * Service fee: 2% deducted from all trades
+              <br />* All payouts based on 98 contract amount after fee
+              deduction
             </p>
           </div>
         </div>
@@ -347,7 +358,6 @@ const handlePrevHistory = () => {
       </div>
     </div>
   );
-
 
   // Fetch last 10 random numbers based on the   page
   const fetchLastTenRandomNumbers = useCallback(async (page = 1) => {
@@ -374,14 +384,14 @@ const handlePrevHistory = () => {
     fetchLastTenRandomNumbers(page);
   }, [fetchLastTenRandomNumbers, page]);
 
-
-   // Format time in MM:SS format
-   const formatTime = (seconds) => {
+  // Format time in MM:SS format
+  const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins.toString().padStart(2, "0")} : ${secs.toString().padStart(2, "0")}`;
+    return `${mins.toString().padStart(2, "0")} : ${secs
+      .toString()
+      .padStart(2, "0")}`;
   };
-
 
   // Handle "Next 10 Records" button click
   const handleNextRecords = () => {
@@ -484,20 +494,22 @@ const handlePrevHistory = () => {
   const renderNumberCircle = (number) => {
     const num = parseInt(number, 10);
     const backgroundColor = getBackgroundColor(num);
-  
+
     return (
-      <div style={{
-        backgroundColor,
-        width: "30px",
-        height: "30px",
-        borderRadius: "50%",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center", 
-        color: "white",
-        fontWeight: "bold",
-        margin: "0 auto" 
-      }}>
+      <div
+        style={{
+          backgroundColor,
+          width: "30px",
+          height: "30px",
+          borderRadius: "50%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          color: "white",
+          fontWeight: "bold",
+          margin: "0 auto",
+        }}
+      >
         {number}
       </div>
     );
@@ -505,6 +517,7 @@ const handlePrevHistory = () => {
 
   return (
     <div style={styles.container}>
+            {showLoginPopup && renderLoginPopup()}
       {/* Balance and Recharge Section */}
       <div style={styles.balanceContainer}>
         <div style={styles.balanceGroup}>
@@ -527,39 +540,41 @@ const handlePrevHistory = () => {
         </div>
       </div>
       {showRecharge && (
-  <div style={styles.popupOverlay}>
-    <RechargePage 
-      user={user} 
-      onClose={() => setShowRecharge(false)}
-      currentPeriod={currentPeriod}
-      timeLeft={timeLeft}
-    />
-  </div>
-)}
+        <div style={styles.popupOverlay}>
+          <RechargePage
+            user={user}
+            onClose={() => setShowRecharge(false)}
+            currentPeriod={currentPeriod}
+            timeLeft={timeLeft}
+          />
+        </div>
+      )}
 
       {showRulesPopup && renderRulesPopup()}
 
       {/* Rest of the game UI remains same */}
       <div style={styles.combinedBox}>
-      <FaSyncAlt 
-        style={styles.refreshIcon} 
-        onClick={handleRefresh}
-        title="Refresh Data"
-      />
-      <div style={styles.combinedContent}>
-        <div style={styles.periodSection}>
-          <FaTrophy style={styles.trophyIcon} />
-          <span style={styles.periodText}>Period #{currentPeriod}</span>
-        </div>
-        <div style={styles.timerSection}>
-          <div style={styles.timerLabel}>Countdown</div> 
-          <div style={styles.timer}>
-            {Math.floor(timeLeft / 60).toString().padStart(2, '0')} : 
-            {(timeLeft % 60).toString().padStart(2, '0')}
+        <FaSyncAlt
+          style={styles.refreshIcon}
+          onClick={handleRefresh}
+          title="Refresh Data"
+        />
+        <div style={styles.combinedContent}>
+          <div style={styles.periodSection}>
+            <FaTrophy style={styles.trophyIcon} />
+            <span style={styles.periodText}>Period #{currentPeriod}</span>
+          </div>
+          <div style={styles.timerSection}>
+            <div style={styles.timerLabel}>Countdown</div>
+            <div style={styles.timer}>
+              {Math.floor(timeLeft / 60)
+                .toString()
+                .padStart(2, "0")}{" "}
+              :{(timeLeft % 60).toString().padStart(2, "0")}
+            </div>
           </div>
         </div>
       </div>
-    </div>
 
       <div
         style={{ justifyContent: "space-around" }}
@@ -767,80 +782,81 @@ const handlePrevHistory = () => {
             onClick={handleNextRecords}
             disabled={records.length <= page * 10}
           >
-            Next 
+            Next
           </button>
         </div>
       </div>
 
-<div style={historyStyles.container}>
-  <span className="flex items-center justify-center mt-[5px] pb-[10px] [border-bottom:1px_solid_#0067CC]">
-    <FaTrophy /> &nbsp; User History
-  </span>
-  <div className="mt-[10px] " style={historyStyles.header}>
-    <span>Amount</span>
-    <span>Selection</span>
-    {/* <span>Result</span> */}
-    <span>P/L</span>
-  </div>
+      <div style={historyStyles.container}>
+        <span className="flex items-center justify-center mt-[5px] pb-[10px] [border-bottom:1px_solid_#0067CC]">
+          <FaTrophy /> &nbsp; User History
+        </span>
+        <div className="mt-[10px] " style={historyStyles.header}>
+          <span>Amount</span>
+          <span>Selection</span>
+          {/* <span>Result</span> */}
+          <span>P/L</span>
+        </div>
 
-{userHistory.map((history, index) => {
-  let profit  = 0;
+        {userHistory.map((history, index) => {
+          let profit = 0;
 
-  if (history.result === "WIN") {
-        const sprofit = history.betAmount * 2;
-        const charge = sprofit * 0.02;
-        const finalAmounts = sprofit - charge;
-        profit = finalAmounts || 0;
-      } 
-      else {
-        const sprofit = history.betAmount;
-        profit =-sprofit || 0;
-      }
-  return (
-    <div key={index} style={historyStyles.row}>
-      <span style={{ color: '#000' }}>₹{history.betAmount}</span>
-      <span>
-        {isNaN(history.selection) ? (
-          <span style={{ 
-            color: '#000',
-            backgroundColor: getBackgroundColor(history.selection),
-            padding: "2px 8px",
-            borderRadius: "4px",
-            display: 'inline-block',
-            minWidth: '60px'        
-          }}>
-            {history.selectedColor}
-          </span>
-        ) : (
-          renderNumberCircle(history.selection)
-        )}
-      </span>
-      <span style={{ color: profit >= 0 ? 'green' : 'red' }}>
-        ₹{profit.toFixed(2)}
-      </span>
-    </div>
-  );
-})}
+          if (history.result === "WIN") {
+            const sprofit = history.betAmount * 2;
+            const charge = sprofit * 0.02;
+            const finalAmounts = sprofit - charge;
+            profit = finalAmounts || 0;
+          } else {
+            const sprofit = history.betAmount;
+            profit = -sprofit || 0;
+          }
+          return (
+            <div key={index} style={historyStyles.row}>
+              <span style={{ color: "#000" }}>₹{history.betAmount}</span>
+              <span>
+                {isNaN(history.selection) ? (
+                  <span
+                    style={{
+                      color: "#000",
+                      backgroundColor: getBackgroundColor(history.selection),
+                      padding: "2px 8px",
+                      borderRadius: "4px",
+                      display: "inline-block",
+                      minWidth: "60px",
+                    }}
+                  >
+                    {history.selectedColor}
+                  </span>
+                ) : (
+                  renderNumberCircle(history.selection)
+                )}
+              </span>
+              <span style={{ color: profit >= 0 ? "green" : "red" }}>
+                ₹{profit.toFixed(2)}
+              </span>
+            </div>
+          );
+        })}
 
-  <div style={historyStyles.pagination}>
-    <button
-      style={styles.paginationButton}
-      onClick={handlePrevHistory}
-      disabled={historyPage === 1}
-    >
-      Previous
-    </button>
-    <button
-      style={styles.paginationButton}
-      onClick={handleNextHistory}
-      disabled={userHistory.length < 10}
-    >
-      Next 
-    </button>
+        <div style={historyStyles.pagination}>
+          <button
+            style={styles.paginationButton}
+            onClick={handlePrevHistory}
+            disabled={historyPage === 1}
+          >
+            Previous
+          </button>
+          <button
+            style={styles.paginationButton}
+            onClick={handleNextHistory}
+            disabled={userHistory.length < 10}
+          >
+            Next
+          </button>
 
-    <div className="mb-[20px]"></div>
-  </div>
-</div>
+          <div className="mb-[20px]"></div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -1276,6 +1292,30 @@ const styles = {
     flex: 1,
     margin: "0 5px",
   },
+  loginPopup: {
+    backgroundColor: "#ffffff",
+    padding: "25px",
+    borderRadius: "12px",
+    width: "320px",
+    textAlign: "center",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
+  },
+  loginButton: {
+    backgroundColor: "#3498db",
+    color: "white",
+    padding: "12px 24px",
+    borderRadius: "8px",
+    border: "none",
+    cursor: "pointer",
+    fontSize: "16px",
+    fontWeight: "500",
+    marginTop: "15px",
+    width: "100%",
+    transition: "background-color 0.3s ease",
+    ":hover": {
+      backgroundColor: "#2980b9",
+    }
+  },
 };
 
 const historyStyles = {
@@ -1285,7 +1325,7 @@ const historyStyles = {
     borderRadius: "8px",
     boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
     marginTop: "20px",
-    overflowX: "auto" // मोबाइल पर horizontal scroll
+    overflowX: "auto", // मोबाइल पर horizontal scroll
   },
   header: {
     display: "flex",
@@ -1293,7 +1333,7 @@ const historyStyles = {
     marginBottom: "12px",
     fontWeight: "bold",
     color: "#333",
-    minWidth: "300px" // मोबाइल पर minimum width
+    minWidth: "300px", // मोबाइल पर minimum width
   },
   row: {
     display: "flex",
@@ -1302,15 +1342,16 @@ const historyStyles = {
     color: "#666",
     alignItems: "center",
     minWidth: "300px", // मोबाइल पर minimum width
-    '& > span': {      // सभी span elements के लिए
+    "& > span": {
+      // सभी span elements के लिए
       flex: 1,
       textAlign: "center",
-      padding: "0 5px"
-    }
+      padding: "0 5px",
+    },
   },
   pagination: {
     display: "flex",
     justifyContent: "space-between",
-    marginTop: "10px"
-  }
+    marginTop: "10px",
+  },
 };
