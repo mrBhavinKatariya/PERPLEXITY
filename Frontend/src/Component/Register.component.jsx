@@ -17,6 +17,7 @@ function RegisterPage() {
     const navigate = useNavigate();
 
     const handleRegister = async () => {
+        console.log("Using API URL:", process.env.REACT_APP_API_URL);
         try {
             const response = await axios.post(`${API_URL}/api/v1/users/register`, credentials, {
                 headers: {
@@ -25,7 +26,7 @@ function RegisterPage() {
             });
 
             console.log("Register Response:", response.data);
-
+            console.log("Using API URL:", process.env.REACT_APP_API_URL);
             const { accessToken } = response.data.data;
 
             // Store the token in localStorage
