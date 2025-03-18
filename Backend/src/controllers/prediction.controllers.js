@@ -25,31 +25,42 @@ const handleRandomNumberGeneration = async () => {
   if (!isGenerating) {
     isGenerating = true;
     try {
-      const currentNumber = generateSecureRandomNumber(); // अब असली रैंडम नंबर आएगा
-      const price = Math.floor(Math.random() * 965440); // Price भी पूरी तरह से रैंडम होगा
-
-      // Get last period number
+      // पिछला रिकॉर्ड ढूंढें
       const lastRecord = await Prediction.findOne().sort({ createdAt: -1 });
+      
+      let currentNumber;
+      let nextNumber;
+      
+      if (lastRecord) {
+        // अगले नंबर को करंट नंबर बनाएं और नया नेक्स्ट जनरेट करें
+        currentNumber = lastRecord.nextNumber;
+        nextNumber = generateSecureRandomNumber();
+      } else {
+        // पहली बार दोनों नंबर जनरेट करें
+        currentNumber = generateSecureRandomNumber();
+        nextNumber = generateSecureRandomNumber();
+      }
+
+      // नया पीरियड नंबर
       const period = lastRecord ? lastRecord.period + 1 : 1;
-
-      console.log("Current Random Number:", currentNumber);
-
-      // Save to database
-      const prediction = new Prediction({
+      
+      // डेटाबेस में सेव करें
+      const newPrediction = new Prediction({
         number: currentNumber,
-        price: price,
+        nextNumber: nextNumber, // अगले इंटरवाल के लिए नंबर
+        price: Math.floor(Math.random() * 965440),
         period: period,
-        result: currentNumber,
+        result: currentNumber
       });
 
-      await prediction.save();
+      await newPrediction.save();
 
-      console.log("This number will be used in the next 90s interval");
-      countdownStartTime = Date.now();
+      console.log("Current Number:", currentNumber);
+      console.log("Next Number (Predetermined):", nextNumber);
 
       return currentNumber;
     } catch (error) {
-      console.error("Error saving random number:", error);
+      console.error("Error in generation:", error);
     } finally {
       isGenerating = false;
     }
