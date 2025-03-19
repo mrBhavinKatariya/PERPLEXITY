@@ -437,7 +437,7 @@ const handleUserBetEndpoint = asyncHandler(async (req, res) => {
     // Save bet history
     const betHistory = new BetHistory({
       userId,
-      betType: typeof number === 'number' ? 'number' : 'color',
+      selectedColor: typeof number === 'number' ? 'number' : 'color',
       selection: number,
       betAmount: totalAmount,
       contractMoney,
