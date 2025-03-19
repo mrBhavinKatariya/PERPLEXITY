@@ -353,6 +353,29 @@ const handleUserBetEndpoint = asyncHandler(async (req, res) => {
     deductionSession = await mongoose.startSession();
     deductionSession.startTransaction();
 
+    const currentPrediction = await Prediction.findOne().sort({ createdAt: -1 });
+    if (!currentPrediction) {
+      return res.status(500).json(
+        new ApiResponse(500, null, "Game information not available")
+      );
+    }
+
+    const currentPredictionId = currentPrediction._id;
+    const gameStartTime = currentPrediction.createdAt.getTime();
+
+    const elapsed = Date.now() - gameStartTime;
+    const remainingTime = Math.max(90 - Math.floor(elapsed / 1000), 0);
+    await new Promise(resolve => setTimeout(resolve, remainingTime * 1000));
+
+
+    const gameResult = await Prediction.findById(currentPredictionId);
+    if (!gameResult) {
+      return res.status(500).json(
+        new ApiResponse(500, null, "Game result not found")
+      );
+    }
+    const randomNumber = gameResult.number;
+
     // Deduct balance
     const user = await User.findById(userId).session(deductionSession);
     if (user.balance < totalAmount) {
@@ -440,6 +463,7 @@ const handleUserBetEndpoint = asyncHandler(async (req, res) => {
     // Save bet history
     const betHistory = new BetHistory({
       userId,
+      gameId: currentPredictionId,
       selectedColor: typeof number === 'number' ? 'number' : 'color',
       selection: number,
       betAmount: totalAmount,
