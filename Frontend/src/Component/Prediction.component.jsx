@@ -851,7 +851,7 @@ export default function ColorPredictionGame() {
             onClick={handleNextHistory}
             disabled={userHistory.length < 10}
           >
-            Next
+            Next Me
           </button>
 
           <div className="mb-[20px]"></div>
