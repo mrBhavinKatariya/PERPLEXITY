@@ -453,7 +453,8 @@ const handleUserBetEndpoint = asyncHandler(async (req, res) => {
         result: randomNumber,
         multiplier,
         status: result,
-        contractMoney
+        contractMoney,
+        winnings
       }, "Bet processed successfully")
     );
 
