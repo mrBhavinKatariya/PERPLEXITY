@@ -151,10 +151,9 @@ export default function ColorPredictionGame() {
   }, [userId, fetchUserBalance]);
 
   // Add this function to fetch user history
-  const fetchUserHistory = useCallback(async (page) => {
+  const fetchUserHistory = useCallback(async () => {
     try {
       const token = localStorage.getItem("token");
-      const targetPage = page !== undefined ? page : historyPage;
       const response = await axios.get(
         `${API_URL}/api/v1/users/bet-history/${userId}`,
         {
@@ -162,7 +161,7 @@ export default function ColorPredictionGame() {
             Authorization: `Bearer ${token}`,
           },
           params: {
-            page: targetPage,
+            page: historyPage,
             limit: 10,
           },
         }
@@ -170,11 +169,44 @@ export default function ColorPredictionGame() {
   
       if (response.data.success) {
         setUserHistory(response.data.data);
+        // Add total pages if available from API
+        // setTotalHistoryPages(response.data.totalPages);
       }
     } catch (error) {
       console.error("Error fetching user history:", error);
     }
   }, [userId, historyPage]);
+
+const handlePrevHistory = () => {
+  setHistoryPage((prev) => Math.max(1, prev - 1));
+};
+
+  // Add these pagination handlers
+  const handleNextHistory = () => {
+    setHistoryPage((prev) => prev + 1);
+  };
+
+// In the JSX for pagination buttons
+<div style={historyStyles.pagination}>
+  <button
+    style={styles.paginationButton}
+    onClick={handlePrevHistory}
+    disabled={historyPage === 1}
+  >
+    Previous
+  </button>
+  <button
+    style={styles.paginationButton}
+    onClick={handleNextHistory}
+    disabled={userHistory.length <= historyPage * 10}
+  >
+    Next
+  </button>
+  <div className="mb-[20px]"></div>
+</div>
+
+
+
 
   // Add this useEffect to fetch history when page or user changes
   useEffect(() => {
@@ -183,15 +215,8 @@ export default function ColorPredictionGame() {
     }
   }, [userId, historyPage, fetchUserHistory]);
 
-  // Add these pagination handlers
-  const handleNextHistory = () => {
-    setHistoryPage((prev) => prev + 1);
-  };
 
-  const handlePrevHistory = () => {
-    setHistoryPage((prev) => Math.max(1, prev - 1));
-  };
-
+ 
   const handleConfirmBet = async () => {
     // Remove isLoading check to allow multiple submissions
     setShowPopup(false);
@@ -790,73 +815,75 @@ export default function ColorPredictionGame() {
       </div>
 
       <div style={historyStyles.container}>
-        <span className="flex items-center justify-center mt-[5px] pb-[10px] [border-bottom:1px_solid_#0067CC]">
-          <FaTrophy /> &nbsp; User History
+  <span className="flex items-center justify-center mt-[5px] pb-[10px] [border-bottom:1px_solid_#0067CC]">
+    <FaTrophy /> &nbsp; User History
+  </span>
+  <div className="mt-[10px] " style={historyStyles.header}>
+    <span>Amount</span>
+    <span>Selection</span>
+    {/* <span>Result</span> */}
+    <span>P/L</span>
+  </div>
+
+  {userHistory.slice((historyPage - 1) * 10, historyPage * 10)
+  .map((history, index) => {
+    let profit = 0;
+
+    if (history.result === "WIN") {
+      const finalAmounts = history.winnings;
+      profit = finalAmounts || 0;
+    } else {
+      const sprofit = history.winnings;
+      profit = -sprofit || 0;
+    }
+
+    return (
+      <div key={index} style={historyStyles.row}>
+        <span style={{ color: "#000" }}>₹{history.betAmount}</span>
+        <span>
+          {history.selectedType === 'number' ? (
+            renderNumberCircle(history.selectedNumber) 
+          ) : (
+            <span
+              style={{
+                color: "#000",
+                backgroundColor: getBackgroundColor(history.selectedColor), // Use selectedColor for background
+                padding: "2px 8px",
+                borderRadius: "4px",
+                display: "inline-block",
+                minWidth: "60px",
+              }}
+            >
+              {history.selectedColor ? history.selectedColor.toUpperCase() : ""} 
+            </span>
+          )}
         </span>
-        <div className="mt-[10px] " style={historyStyles.header}>
-          <span>Amount</span>
-          <span>Selection</span>
-          {/* <span>Result</span> */}
-          <span>P/L</span>
-        </div>
-
-        {userHistory.map((history, index) => {
-          let profit = 0;
-
-          if (history.result === "WIN") {
-            const finalAmounts = history.winnings
-            profit = finalAmounts || 0;
-          } else {
-            const sprofit = history.winnings
-            profit = -sprofit || 0;
-          }
-          return (
-            <div key={index} style={historyStyles.row}>
-              <span style={{ color: "#000" }}>₹{history.betAmount}</span>
-              <span>
-                {isNaN(history.selection) ? (
-                  <span
-                    style={{
-                      color: "#000",
-                      backgroundColor: getBackgroundColor(history.selection),
-                      padding: "2px 8px",
-                      borderRadius: "4px",
-                      display: "inline-block",
-                      minWidth: "60px",
-                    }}
-                  >
-                    {history.selectedColor}
-                  </span>
-                ) : (
-                  renderNumberCircle(history.selection)
-                )}
-              </span>
-              <span style={{ color: profit >= 0 ? "green" : "red" }}>
-                ₹{profit.toFixed(2)}
-              </span>
-            </div>
-          );
-        })}
-
-        <div style={historyStyles.pagination}>
-          <button
-            style={styles.paginationButton}
-            onClick={handlePrevHistory}
-            disabled={historyPage === 1}
-          >
-            Previous
-          </button>
-          <button
-            style={styles.paginationButton}
-            onClick={handleNextHistory}
-            disabled={userHistory.length < 10}
-          >
-            Next Me
-          </button>
-
-          <div className="mb-[20px]"></div>
-        </div>
+        <span style={{ color: profit >= 0 ? "green" : "red" }}>
+          ₹{profit.toFixed(2)}
+        </span>
       </div>
+    );
+  })}
+
+  <div style={historyStyles.pagination}>
+    <button
+      style={styles.paginationButton}
+      onClick={handlePrevHistory}
+      disabled={historyPage === 1}
+    >
+      Previous
+    </button>
+    <button
+      style={styles.paginationButton}
+      onClick={handleNextHistory}
+      disabled={userHistory.length <= historyPage * 10}
+    >
+      Next
+    </button>
+
+    <div className="mb-[20px]"></div>
+  </div>
+</div>
     </div>
   );
 }

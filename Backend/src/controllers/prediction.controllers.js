@@ -322,6 +322,11 @@ const handleUserBetEndpoint = asyncHandler(async (req, res) => {
 
   console.log("req.body",req.body);
   
+
+  const selectedType = isNumber ? 'number' : 'color';
+  const selectedValue = number;
+
+
   // Initial validation
   if (!mongoose.Types.ObjectId.isValid(userId)) {
     return res.status(400).json(
@@ -439,25 +444,30 @@ const handleUserBetEndpoint = asyncHandler(async (req, res) => {
 
     // Save bet history
     const betHistory = new BetHistory({
-      userId,
-      selectedColor: typeof number === 'number' ? 'number' : 'color',
-      selection: number,
-      betAmount: totalAmount,
-      contractMoney,
-      randomNumber,
-      multiplier,
-      result,
-      winnings: multiplier > 0 ? Number((contractMoney * multiplier).toFixed(2)) : 0
-    });
-    await betHistory.save();
-
+    userId,
+    selectedType,
+    selectedValue,
+    betAmount: totalAmount,
+    contractMoney,
+    randomNumber,
+    multiplier,
+    result,
+    winnings: multiplier > 0 ? Number((contractMoney * multiplier).toFixed(2)) : 0
+  });
+  await betHistory.save();
+  
+    // Return response
     return res.status(200).json(
       new ApiResponse(200, {
         result: randomNumber,
         multiplier,
         status: result,
         contractMoney,
-        winnings: (contractMoney * multiplier)
+        winnings: (contractMoney * multiplier),
+        selection: {
+          type: selectedType,
+          value: selectedValue
+        }
       }, "Bet processed successfully")
     );
 

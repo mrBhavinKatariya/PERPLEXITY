@@ -31,6 +31,16 @@ const betHistorySchema = new Schema({
         type: Number,
         required: true
     },
+    selectedType: {
+        type: String,
+        enum: ['number', 'color'],
+        required: true
+      },
+      selectedValue: {
+        type: mongoose.Schema.Types.Mixed,
+        required: true
+      },
+
 }, { timestamps: true });
 
 export const BetHistory = mongoose.model("BetHistory", betHistorySchema);
