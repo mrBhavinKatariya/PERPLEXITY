@@ -30,7 +30,7 @@ const handleRandomNumberGeneration = async () => {
       let nextNumber;
 
       // Debugging: Log the last record
-      console.log("Last Record:", lastRecord);
+      // console.log("Last Record:", lastRecord);
 
       if (lastRecord) {
         // If lastRecord.nextNumber is missing, generate a new random number
@@ -318,139 +318,94 @@ const deductUserBalance = async (userId, totalAmount) => {
 };
 
 const handleUserBetEndpoint = asyncHandler(async (req, res) => {
-  const { userId, totalAmount, betType, number } = req.body;
+  const { userId, totalAmount, number } = req.body;
 
-  console.log("req.body", req.body);
+  console.log("req.body",req.body);
   
-  // Enhanced validation
-  if (!mongoose.Types.ObjectId.isValid(userId)) {
+  // Enhanced validation for number/color input
+  const validColors = ['green', 'red', 'violet'];
+  const isColor = validColors.includes(number);
+  const isNumber = !isNaN(number) && number >= 0 && number <= 9;
+  
+  if (!isColor && !isNumber) {
     return res.status(400).json(
-      new ApiResponse(400, null, "Invalid User ID format")
+      new ApiResponse(400, null, "Invalid selection - must be valid color or number (0-9)")
     );
   }
 
+  // Validate amount
   if (typeof totalAmount !== 'number' || totalAmount <= 0) {
     return res.status(400).json(
       new ApiResponse(400, null, "Valid positive amount required")
     );
   }
 
-  if (!['number', 'color'].includes(betType)) {
-    return res.status(400).json(
-      new ApiResponse(400, null, "Invalid bet type")
-    );
-  }
-
-  if (betType === 'color') {
-    const validColors = ['green', 'red', 'violet'];
-    if (!validColors.includes(number)) {
-      return res.status(400).json(
-        new ApiResponse(400, null, "Invalid color selection")
-      );
-    }
-  } else if (betType === 'number') {
-    const numberValue = parseInt(number, 10);
-    if (isNaN(numberValue) || numberValue < 0 || numberValue > 9) {
-      return res.status(400).json(
-        new ApiResponse(400, null, "Invalid number selection (0-9 only)")
-      );
-    }
-  }
-
   const session = await mongoose.startSession();
   session.startTransaction();
 
   try {
-    // Charge calculation and balance deduction
-    const charge = Number((totalAmount * 0.02).toFixed(2));
-    const totalDeduction = Number((totalAmount + charge).toFixed(2));
+    // Calculate contract money after 2% fee
+    const contractMoney = Number((totalAmount * 0.98).toFixed(2));
 
+    // Deduct full amount from balance
     const user = await User.findById(userId).session(session);
-    if (!user) {
-      await session.abortTransaction();
-      return res.status(404).json(
-        new ApiResponse(404, null, "User not found")
-      );
-    }
-
-    if (user.balance < totalDeduction) {
+    if (user.balance < totalAmount) {
       await session.abortTransaction();
       return res.status(400).json(
         new ApiResponse(400, null, "Insufficient balance")
       );
     }
 
-    user.balance = Number((user.balance - totalDeduction).toFixed(2));
+    user.balance = Number((user.balance - totalAmount).toFixed(2));
     await user.save({ session });
-
     await session.commitTransaction();
     session.endSession();
 
-    // Wait for game result
-    const currentTime = Date.now();
-    const elapsed = Math.floor((currentTime - countdownStartTime) / 1000);
-    const remainingTime = Math.max(90 - elapsed, 0);
+    // Wait for countdown completion
+    const remainingTime = Math.max(90 - Math.floor((Date.now() - countdownStartTime) / 1000), 0);
     await new Promise(resolve => setTimeout(resolve, remainingTime * 1000));
 
-    // Get result number
-    const latestPrediction = await Prediction.findOne()
-      .sort({ createdAt: -1 })
-      .lean();
+    // Get result
+    const latestPrediction = await Prediction.findOne().sort({ createdAt: -1 }).lean();
     const randomNumber = latestPrediction?.number;
 
-    if (typeof randomNumber === 'undefined') {
-      return res.status(500).json(
-        new ApiResponse(500, null, "Result not available")
-      );
-    }
-
-    // Calculate winnings
+    // Calculate multiplier
     let multiplier = 0;
-    let result = "LOSS";
-
-    if (betType === 'number') {
-      const selectedNumber = parseInt(number, 10);
-      if (selectedNumber === randomNumber) {
-        multiplier = [0, 5].includes(selectedNumber) ? 4.5 : 9;
-        result = "WIN";
+    if (typeof number === 'number') {
+      // Number bet logic
+      if (randomNumber === number) {
+        multiplier = [0, 5].includes(number) ? 4.5 : 9;
       }
-    } else if (betType === 'color') {
+    } else {
+      // Color bet logic
       switch(number) {
         case 'green':
-          if ([1, 3, 5, 7, 9].includes(randomNumber)) {
-            multiplier = randomNumber === 5 ? 1.5 : 2;
-            result = "WIN";
-          }
+          if ([1, 3, 7, 9].includes(randomNumber)) multiplier = 2;
+          else if (randomNumber === 5) multiplier = 1.5;
           break;
         case 'red':
-          if ([0, 2, 4, 6, 8].includes(randomNumber)) {
-            multiplier = randomNumber === 0 ? 1.5 : 2;
-            result = "WIN";
-          }
+          if ([2, 4, 6, 8].includes(randomNumber)) multiplier = 2;
+          else if (randomNumber === 0) multiplier = 1.5;
           break;
         case 'violet':
-          if ([0, 5].includes(randomNumber)) {
-            multiplier = 1.5;
-            result = "WIN";
-          }
+          if ([0, 5].includes(randomNumber)) multiplier = 1.5;
           break;
       }
     }
 
-    // Process winnings if any
+    // Process winnings
+    let result = "LOSS";
     if (multiplier > 0) {
       const winSession = await mongoose.startSession();
       winSession.startTransaction();
       
       try {
         const winningUser = await User.findById(userId).session(winSession);
-        const winnings = Number((totalAmount * multiplier).toFixed(2));
+        const winnings = Number((contractMoney * multiplier).toFixed(2));
         winningUser.balance = Number((winningUser.balance + winnings).toFixed(2));
         await winningUser.save({ session: winSession });
         await winSession.commitTransaction();
-      } catch (error) {
-        await winSession.abortTransaction();
-        throw error;
+        result = "WIN";
       } finally {
         winSession.endSession();
       }
@@ -459,23 +414,23 @@ const handleUserBetEndpoint = asyncHandler(async (req, res) => {
     // Save detailed bet history
     const betHistory = new BetHistory({
       userId,
-      betType,
+      betType: typeof number === 'number' ? 'number' : 'color',
+      selection: number,
       betAmount: totalAmount,
-      selectedNumber: betType === 'number' ? parseInt(number, 10) : null,
-      selectedColor: betType === 'color' ? number : null,
+      contractMoney,
       randomNumber,
       multiplier,
-      result
+      result,
+      winnings: multiplier > 0 ? Number((contractMoney * multiplier).toFixed(2)) : 0
     });
     await betHistory.save();
 
     return res.status(200).json(
-      new ApiResponse(200, { 
+      new ApiResponse(200, {
         result: randomNumber,
-        betType,
-        selected: number,
         multiplier,
-        status: result
+        status: result,
+        contractMoney
       }, "Bet processed successfully")
     );
 
@@ -488,7 +443,6 @@ const handleUserBetEndpoint = asyncHandler(async (req, res) => {
     );
   }
 });
-
 const getUserBetHistoryEndpoint = asyncHandler(async (req, res) => {
   const { userId } = req.params;
 
