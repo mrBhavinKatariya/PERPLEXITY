@@ -829,32 +829,27 @@ const handlePrevHistory = () => {
   .map((history, index) => {
     let profit = 0;
 
-    if (history.result === "WIN") {
-      const finalAmounts = history.winnings;
-      profit = finalAmounts || 0;
-    } else {
-      const sprofit = history.winnings;
-      profit = -sprofit || 0;
-    }
+    // Simplified profit calculation
+    profit = history.result === "WIN" ? history.winnings : -history.contractMoney;
 
     return (
       <div key={index} style={historyStyles.row}>
-        <span style={{ color: "#000" }}>₹{history.betAmount}</span>
+        <span style={{ color: "#000" }}>₹{history.betAmount.toFixed(2)}</span>
         <span>
           {history.selectedType === 'number' ? (
-            renderNumberCircle(history.selectedNumber) 
+            renderNumberCircle(history.selectedValue) // Use selectedValue for numbers
           ) : (
             <span
               style={{
                 color: "#000",
-                backgroundColor: getBackgroundColor(history.selectedColor), // Use selectedColor for background
+                backgroundColor: getBackgroundColor(history.selectedValue), // Use selectedValue for color
                 padding: "2px 8px",
                 borderRadius: "4px",
                 display: "inline-block",
                 minWidth: "60px",
               }}
             >
-              {history.selectedColor ? history.selectedColor.toUpperCase() : ""} 
+              {history.selectedValue?.toUpperCase() || ""}
             </span>
           )}
         </span>

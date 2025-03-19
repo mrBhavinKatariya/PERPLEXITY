@@ -320,12 +320,15 @@ const deductUserBalance = async (userId, totalAmount) => {
 const handleUserBetEndpoint = asyncHandler(async (req, res) => {
   const { userId, totalAmount, number } = req.body;
 
-  console.log("req.body",req.body);
-  
+  console.log("req.body", req.body);
 
-  const selectedType = isNumber ? 'number' : 'color';
+  // Input type validation
+  const validColors = ['green', 'red', 'violet'];
+  const isColor = validColors.includes(number);
+  const isNumber = !isNaN(number) && number >= 0 && number <= 9; // Declare and initialize isNumber here
+
+  const selectedType = isNumber ? 'number' : 'color'; // Now isNumber is defined
   const selectedValue = number;
-
 
   // Initial validation
   if (!mongoose.Types.ObjectId.isValid(userId)) {
@@ -334,11 +337,7 @@ const handleUserBetEndpoint = asyncHandler(async (req, res) => {
     );
   }
 
-  // Input type validation
-  const validColors = ['green', 'red', 'violet'];
-  const isColor = validColors.includes(number);
-  const isNumber = !isNaN(number) && number >= 0 && number <= 9;
-  
+  // Validate selection
   if (!isColor && !isNumber) {
     return res.status(400).json(
       new ApiResponse(400, null, "Invalid selection")
@@ -370,7 +369,7 @@ const handleUserBetEndpoint = asyncHandler(async (req, res) => {
 
     user.balance = Number((user.balance - totalAmount).toFixed(2));
     await user.save({ session: deductionSession });
-    
+
     await deductionSession.commitTransaction();
   } catch (error) {
     if (deductionSession?.inTransaction()) {
@@ -408,7 +407,7 @@ const handleUserBetEndpoint = asyncHandler(async (req, res) => {
         result = "WIN";
       }
     } else {
-      switch(number) {
+      switch (number) {
         case 'green':
           if ([1, 3, 7, 9].includes(randomNumber)) multiplier = 2;
           else if (randomNumber === 5) multiplier = 1.5;
@@ -444,18 +443,18 @@ const handleUserBetEndpoint = asyncHandler(async (req, res) => {
 
     // Save bet history
     const betHistory = new BetHistory({
-    userId,
-    selectedType,
-    selectedValue,
-    betAmount: totalAmount,
-    contractMoney,
-    randomNumber,
-    multiplier,
-    result,
-    winnings: multiplier > 0 ? Number((contractMoney * multiplier).toFixed(2)) : 0
-  });
-  await betHistory.save();
-  
+      userId,
+      selectedType,
+      selectedValue,
+      betAmount: totalAmount,
+      contractMoney,
+      randomNumber,
+      multiplier,
+      result,
+      winnings: multiplier > 0 ? Number((contractMoney * multiplier).toFixed(2)) : 0
+    });
+    await betHistory.save();
+
     // Return response
     return res.status(200).json(
       new ApiResponse(200, {
@@ -478,7 +477,6 @@ const handleUserBetEndpoint = asyncHandler(async (req, res) => {
     );
   }
 });
-
 
 
 const getUserBetHistoryEndpoint = asyncHandler(async (req, res) => {
