@@ -26,7 +26,11 @@ const betHistorySchema = new Schema({
         type: String,
         enum: ["WIN", "LOSS"],
         required: true
-    }
+    },
+    winnings:{
+        type: Number,
+        required: true
+    },
 }, { timestamps: true });
 
 export const BetHistory = mongoose.model("BetHistory", betHistorySchema);
