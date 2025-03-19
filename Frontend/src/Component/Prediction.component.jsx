@@ -804,12 +804,10 @@ export default function ColorPredictionGame() {
           let profit = 0;
 
           if (history.result === "WIN") {
-            const sprofit = history.betAmount * 2;
-            const charge = sprofit * 0.02;
-            const finalAmounts = sprofit - charge;
+            const finalAmounts = history.winnings
             profit = finalAmounts || 0;
           } else {
-            const sprofit = history.betAmount;
+            const sprofit = history.winnings
             profit = -sprofit || 0;
           }
           return (
