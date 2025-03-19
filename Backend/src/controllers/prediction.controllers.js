@@ -320,6 +320,8 @@ const deductUserBalance = async (userId, totalAmount) => {
 const handleUserBetEndpoint = asyncHandler(async (req, res) => {
   const { userId, totalAmount, betType, number } = req.body;
 
+  console.log("req.body", req.body);
+  
   // Enhanced validation
   if (!mongoose.Types.ObjectId.isValid(userId)) {
     return res.status(400).json(
