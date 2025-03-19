@@ -829,30 +829,35 @@ const handlePrevHistory = () => {
   .map((history, index) => {
     let profit = 0;
 
-    // Simplified profit calculation
-    profit = history.result === "WIN" ? history.winnings : -history.contractMoney;
+    // Calculate profit based on result
+    profit = history.result === "WIN" ? history.winnings : -history.betAmount;
 
     return (
       <div key={index} style={historyStyles.row}>
+        {/* Display bet amount */}
         <span style={{ color: "#000" }}>₹{history.betAmount.toFixed(2)}</span>
+
+        {/* Display selection (number or color) */}
         <span>
-          {history.selectedType === 'number' ? (
-            renderNumberCircle(history.selectedValue) // Use selectedValue for numbers
+          {history.selectedColor === 'number' ? (
+            renderNumberCircle(history.randomNumber) // Display the random number
           ) : (
             <span
               style={{
                 color: "#000",
-                backgroundColor: getBackgroundColor(history.selectedValue), // Use selectedValue for color
+                backgroundColor: getBackgroundColor(history.selectedColor), // Use selectedColor for background
                 padding: "2px 8px",
                 borderRadius: "4px",
                 display: "inline-block",
                 minWidth: "60px",
               }}
             >
-              {history.selectedValue?.toUpperCase() || ""}
+              {history.selectedColor?.toUpperCase() || ""} 
             </span>
           )}
         </span>
+
+        {/* Display profit/loss */}
         <span style={{ color: profit >= 0 ? "green" : "red" }}>
           ₹{profit.toFixed(2)}
         </span>
