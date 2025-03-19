@@ -104,6 +104,7 @@ export default function ColorPredictionGame() {
       await fetchUserHistory();
       setPage(1);
       setHistoryPage(1);
+      await fetchUserHistory(1);
     } catch (error) {
       console.error("Refresh error:", error);
     }
@@ -150,31 +151,30 @@ export default function ColorPredictionGame() {
   }, [userId, fetchUserBalance]);
 
   // Add this function to fetch user history
-  // Add this function to fetch user history
-  const fetchUserHistory = useCallback(async () => {
+  const fetchUserHistory = useCallback(async (page) => {
     try {
       const token = localStorage.getItem("token");
+      const targetPage = page !== undefined ? page : historyPage;
       const response = await axios.get(
-        `${API_URL}/api/v1/users/bet-history/${userId}`, // Fixed URL with actual userId
+        `${API_URL}/api/v1/users/bet-history/${userId}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
           },
           params: {
-            page: historyPage,
+            page: targetPage,
             limit: 10,
           },
         }
       );
-
+  
       if (response.data.success) {
         setUserHistory(response.data.data);
-        console.log("UserHistory", response.data.data);
       }
     } catch (error) {
       console.error("Error fetching user history:", error);
     }
-  }, [userId, historyPage]); // Added userId to dependencies
+  }, [userId, historyPage]);
 
   // Add this useEffect to fetch history when page or user changes
   useEffect(() => {
@@ -430,14 +430,16 @@ export default function ColorPredictionGame() {
 
     const fetchRandomNumber = async () => {
       try {
-        const response = await axios.get(
-          `${API_URL}/api/v1/users/randomeNumber`
-        );
+        const response = await axios.get(`${API_URL}/api/v1/users/randomeNumber`);
         const newNumber = response.data.data.number;
         console.log("New Random Number:", newNumber);
-
+    
         // Immediately fetch the latest records
         await fetchLastTenRandomNumbers(1);
+        
+        // Refresh user history to show settled bets
+        await fetchUserHistory(1);
+        setHistoryPage(1);
       } catch (error) {
         console.error("Error fetching random number:", error);
       }
@@ -457,7 +459,7 @@ export default function ColorPredictionGame() {
     return () => {
       if (intervalId) clearInterval(intervalId);
     };
-  }, [timeLeft, fetchLastTenRandomNumbers, selectedNumbers]);
+  }, [timeLeft, fetchLastTenRandomNumbers, selectedNumbers, fetchUserHistory]);
 
   // // Format time in MM:SS format
   // const formatTime = (seconds) => {
