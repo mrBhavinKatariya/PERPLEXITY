@@ -394,6 +394,7 @@ const handleUserBetEndpoint = asyncHandler(async (req, res) => {
     let multiplier = 0;
     let result = "LOSS";
     const contractMoney = Number((totalAmount * 0.98).toFixed(2));
+    let winnings = 0;
 
     // Winning calculation logic
     if (typeof number === 'number') {
@@ -456,7 +457,7 @@ const handleUserBetEndpoint = asyncHandler(async (req, res) => {
         multiplier,
         status: result,
         contractMoney,
-        winnings
+        winnings: (contractMoney * multiplier)
       }, "Bet processed successfully")
     );
 
