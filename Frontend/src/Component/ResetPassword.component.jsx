@@ -81,8 +81,8 @@ const ResetPassword = () => {
     setIsLoading(true);
 
     try {
-      const response = await axios.patch(
-        `${API_URL}/api/v1/users/reset-password/${token}`,
+      const response = await axios.post(
+        `${API_URL}/api/v1/users/reset-password`,
         {
           oldPassword,
           newPassword: password,

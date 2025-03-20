@@ -257,7 +257,7 @@ const SettingsPage = () => {
                 onClick={() => {
                   const token = localStorage.getItem("token");
                   if (token) {
-                    navigate(`/reset-password/${token}`);
+                    navigate(`/reset-password`);
                   } else {
                     console.error("Token not found. Please log in again.");
                   }

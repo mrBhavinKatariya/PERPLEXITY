@@ -45,7 +45,7 @@ const router = createBrowserRouter(
       <Route path="/risk-Disclosure-agreement" element={<RiskDisclosure/> } />
       <Route path="/forgot-password" element={<ForgotPassword/>} />
       {/* <Route path="/reset-password" element={</rese>} /> */}
-      <Route path="/reset-password/:token" element={<ResetPassword/>} />
+      <Route path="/reset-password" element={<ResetPassword/>} />
       {/* <Route path="/video/:videoId" element={<VideoDetails/>} /> */}
       {/* <Route path="/channel" element={<Channel/>} /> */}
       {/* <Route path="/channel/:username" element={<Channel/>} />
