@@ -602,6 +602,10 @@ const RazorpayPaymentAndUpdateBalance = asyncHandler(async (req, res) => {
 const changeCurrentPassword = asyncHandler(async(req, res) => {
   const {oldPassword, newPassword} = req.body
 
+  console.log("oldpass",oldPassword);
+  console.log("newpas",newPassword);
+
+  
   console.log("req.body",req.body);
   
 
