@@ -3,12 +3,12 @@ import { motion } from 'framer-motion';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 
-const ResetPassword = () => {
+const ResetnewPassword = () => {
     const { token } = useParams();
-    const [password, setPassword] = useState('');
-    const [passwordConfirm, setPasswordConfirm] = useState('');
+    const [newPassword, setnewPassword] = useState('');
+    const [confirmNewPassword, setconfirmNewPassword] = useState('');
     const [errors, setErrors] = useState({});
-    const [showPassword, setShowPassword] = useState(false);
+    const [shownewPassword, setShownewPassword] = useState(false);
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
     const [apiError, setApiError] = useState('');
@@ -54,14 +54,14 @@ const ResetPassword = () => {
    
 
   
-    if (!password) {
-        newErrors.password = 'Password is required';
-      } else if (password.length < 4) {  // Changed '>' to '<'
-        newErrors.password = 'Password must contain at least 4 characters';
+    if (!newPassword) {
+        newErrors.newPassword = 'newPassword is required';
+      } else if (newPassword.length < 4) {  // Changed '>' to '<'
+        newErrors.newPassword = 'newPassword must contain at least 4 characters';
       }
 
-    if (password !== passwordConfirm) {
-      newErrors.passwordConfirm = 'Passwords do not match';
+    if (newPassword !== confirmNewPassword) {
+      newErrors.confirmNewPassword = 'newPasswords do not match';
     }
 
     setErrors(newErrors);
@@ -78,10 +78,10 @@ const ResetPassword = () => {
 
     try {
       const response = await axios.patch(
-        `${API_URL}/api/v1/users/reset-password/${token}`,
+        `${API_URL}/api/v1/users/reset-newPassword/${token}`,
         {
-          password,
-          passwordConfirm
+          newPassword,
+          confirmNewPassword
         },
         {
           headers: {
@@ -95,7 +95,7 @@ const ResetPassword = () => {
     } catch (error) {
       let errorMessage = 'An error occurred. Please try again.';
       if (error.response) {
-        errorMessage = error.response.data?.message || 'Password reset failed';
+        errorMessage = error.response.data?.message || 'newPassword reset failed';
       } else if (error.request) {
         errorMessage = 'Network error - please check your connection';
       }
@@ -132,61 +132,61 @@ const ResetPassword = () => {
             )}
 
             <div className="text-center">
-              <h1 className="text-3xl font-bold text-gray-800 mb-2">Reset Password</h1>
-              <p className="text-gray-500">Create a new secure password</p>
+              <h1 className="text-3xl font-bold text-gray-800 mb-2">Reset newPassword</h1>
+              <p className="text-gray-500">Create a new secure newPassword</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  New Password
+                  New newPassword
                 </label>
                 <div className="relative">
                   <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
                     <LockIcon />
                   </div>
                   <input
-                    type={showPassword ? "text" : "password"}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    type={shownewPassword ? "text" : "newPassword"}
+                    value={newPassword}
+                    onChange={(e) => setnewPassword(e.target.value)}
                     className="w-full pl-10 pr-10 py-3 rounded-lg border border-gray-300 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 transition-colors"
-                    placeholder="Enter new password"
+                    placeholder="Enter new newPassword"
                   />
                   <button
                     type="button"
-                    onClick={() => setShowPassword(!showPassword)}
+                    onClick={() => setShownewPassword(!shownewPassword)}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-indigo-500"
                   >
-                    <EyeIcon show={showPassword} />
+                    <EyeIcon show={shownewPassword} />
                   </button>
                 </div>
-                {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
+                {errors.newPassword && <p className="text-red-500 text-sm mt-1">{errors.newPassword}</p>}
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Confirm Password
+                  Confirm newPassword
                 </label>
                 <div className="relative">
                   <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
                     <LockIcon />
                   </div>
                   <input
-                    type={showPassword ? "text" : "password"}
-                    value={passwordConfirm}
-                    onChange={(e) => setPasswordConfirm(e.target.value)}
+                    type={shownewPassword ? "text" : "newPassword"}
+                    value={confirmNewPassword}
+                    onChange={(e) => setconfirmNewPassword(e.target.value)}
                     className="w-full pl-10 pr-10 py-3 rounded-lg border border-gray-300 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 transition-colors"
-                    placeholder="Confirm new password"
+                    placeholder="Confirm new newPassword"
                   />
                   <button
                     type="button"
-                    onClick={() => setShowPassword(!showPassword)}
+                    onClick={() => setShownewPassword(!shownewPassword)}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-indigo-500"
                   >
-                    <EyeIcon show={showPassword} />
+                    <EyeIcon show={shownewPassword} />
                   </button>
                 </div>
-                {errors.passwordConfirm && <p className="text-red-500 text-sm mt-1">{errors.passwordConfirm}</p>}
+                {errors.confirmNewPassword && <p className="text-red-500 text-sm mt-1">{errors.confirmNewPassword}</p>}
               </div>
 
               <button
@@ -194,7 +194,7 @@ const ResetPassword = () => {
                 disabled={isLoading}
                 className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isLoading ? 'Processing...' : 'Reset Password'}
+                {isLoading ? 'Processing...' : 'Reset newPassword'}
               </button>
             </form>
 
@@ -214,9 +214,9 @@ const ResetPassword = () => {
             className="bg-white rounded-2xl shadow-xl p-8 text-center"
           >
             <CheckIcon />
-            <h2 className="text-2xl font-bold text-gray-800 mb-2">Password Updated!</h2>
+            <h2 className="text-2xl font-bold text-gray-800 mb-2">newPassword Updated!</h2>
             <p className="text-gray-500 mb-6">
-              Your password has been successfully reset
+              Your newPassword has been successfully reset
             </p>
             <a
               href="/login"
@@ -231,4 +231,4 @@ const ResetPassword = () => {
   );
 };
 
-export default ResetPassword;
+export default ResetnewPassword;
