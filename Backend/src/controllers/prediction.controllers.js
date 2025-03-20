@@ -656,24 +656,26 @@ const forgotPassword = asyncHandler(async (req, res) => {
 
 // Reset Password Controller
 const resetPassword = asyncHandler(async (req, res) => {
+  const { newPassword, confirmNewPassword } = req.body;
+  const { token } = req.params;
 
   console.log("req.body", req.body);
   console.log("req.params", req.params);
 
-  
   try {
-    // 1. Get user based on token
+    // 1. Hash the token provided in the request
     const hashedToken = crypto
       .createHash('sha256')
-      .update(req.params.token)
+      .update(token)
       .digest('hex');
 
+    // 2. Find the user with the matching hashed token and check if the token has expired
     const user = await User.findOne({
       passwordResetToken: hashedToken,
       passwordResetExpires: { $gt: Date.now() },
     });
 
-    // 2. Check token validity
+    // 3. Check token validity
     if (!user) {
       return res.status(400).json({
         status: 'fail',
@@ -681,21 +683,22 @@ const resetPassword = asyncHandler(async (req, res) => {
       });
     }
 
-    // 3. Update password
-    if (req.body.password !== req.body.passwordConfirm) {
+    // 4. Check if passwords match
+    if (newPassword !== confirmNewPassword) {
       return res.status(400).json({
         status: 'fail',
         message: 'Passwords do not match',
       });
     }
 
-    user.password = req.body.password;
+    // 5. Update password and clear reset token fields
+    user.password = newPassword;
     user.passwordResetToken = undefined;
     user.passwordResetExpires = undefined;
 
     await user.save();
 
-    // 4. Send success response
+    // 6. Send success response
     res.status(200).json({
       status: 'success',
       message: 'Password reset successfully!',
@@ -707,6 +710,7 @@ const resetPassword = asyncHandler(async (req, res) => {
     });
   }
 });
+
 
 
 export {
