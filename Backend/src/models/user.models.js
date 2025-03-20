@@ -45,12 +45,12 @@ const userSchema = new Schema({
     }],
     passwordResetToken:{
         type:String,
-        default:null,
+        default:"",
     },
 
     passwordResetExpires:{
         type: Date,
-        default:null,
+        default:"",
      }, // Added missing field
 
 
