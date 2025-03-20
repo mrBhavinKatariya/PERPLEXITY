@@ -1,11 +1,9 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate, useParams  } from 'react-router-dom';
-
+import { useNavigate, useParams } from 'react-router-dom';
 
 const ResetPassword = () => {
-    const { token } = useParams();
-    const [oldPassword, setOldPassword] = useState('');
+  const { token } = useParams();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [errors, setErrors] = useState({});
@@ -13,12 +11,9 @@ const ResetPassword = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState('');
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
 
-
-  const API_URL =
-  import.meta.env.REACT_APP_API_URL || "https://perplexity-bd2d.onrender.com";
-
+  const API_URL = import.meta.env.REACT_APP_API_URL || "https://perplexity-bd2d.onrender.com";
 
   const ArrowLeftIcon = () => (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -26,7 +21,6 @@ const ResetPassword = () => {
     </svg>
   );
 
-  // SVG Icons
   const LockIcon = () => (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -58,11 +52,6 @@ const ResetPassword = () => {
     const newErrors = {};
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{4,}$/;
 
-    if (!oldPassword) {
-        newErrors.oldPassword = 'Old password is required';
-      }
-
-      
     if (!password) {
       newErrors.password = 'Password is required';
     } else if (!passwordRegex.test(password)) {
@@ -80,7 +69,7 @@ const ResetPassword = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setApiError('');
-    
+
     if (!validateForm()) return;
 
     setIsLoading(true);
@@ -92,9 +81,8 @@ const ResetPassword = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-        //   oldPassword,
           newPassword: password,
-          confirmNewPassword: passwordConfirm
+          confirmNewPassword: confirmPassword,
         }),
       });
 
@@ -113,7 +101,6 @@ const ResetPassword = () => {
     }
   };
 
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-600 to-purple-500 flex items-center justify-center p-4">
       <motion.div
@@ -124,15 +111,14 @@ const ResetPassword = () => {
       >
         {!isSubmitted ? (
           <div className="bg-white rounded-2xl shadow-xl p-8 space-y-6">
-
-<button 
+            <button
               onClick={() => navigate('/setting')}
               className="flex items-center gap-2 text-indigo-600 hover:text-indigo-700"
             >
               <ArrowLeftIcon />
               <span className="font-medium">Back to Setting</span>
             </button>
-            
+
             {apiError && (
               <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
                 {apiError}
@@ -145,34 +131,6 @@ const ResetPassword = () => {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Old Password
-                </label>
-                <div className="relative">
-                  <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-                    <LockIcon />
-                  </div>
-
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    value={oldPassword}
-                    onChange={(e) => setOldPassword(e.target.value)}
-                    className="w-full pl-10 pr-10 py-3 rounded-lg border border-gray-300 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 transition-colors"
-                    placeholder="Enter old password"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-indigo-500"
-                  >
-                    <EyeIcon show={showPassword} />
-                  </button>
-                </div>
-                {errors.oldPassword && <p className="text-red-500 text-sm mt-1">{errors.oldPassword}</p>}
-              </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   New Password
