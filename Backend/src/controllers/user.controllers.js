@@ -152,4 +152,6 @@ export {
     registerUser,
     loginUser,
     logOutUser,
+    getCurrentUser,
+  
 };
