@@ -602,13 +602,17 @@ const RazorpayPaymentAndUpdateBalance = asyncHandler(async (req, res) => {
 const changeCurrentPassword = asyncHandler(async(req, res) => {
   const {oldPassword, newPassword} = req.body
 
+  console.log("req.body",req.body);
   
 
   const user = await User.findById(req.user?._id)
+
+  console.log("user", user);
+  
   const isPasswordCorrect = await user.isPasswordCorrect(oldPassword)
 
   if (!isPasswordCorrect) {
-      throw new ApiError(400, "Invalid old password")
+      throw new ApiErrors(400, "Invalid old password")
   }
 
   user.password = newPassword
