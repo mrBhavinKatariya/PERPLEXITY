@@ -3,7 +3,7 @@ import { loginUser, logOutUser, registerUser } from "../controllers/user.control
 // import { upload } from "../middlewares/multer.middlewares.js";
 import { verifyJWT } from "../middlewares/auth.middlewares.js";
 import { getCurrentUser } from "../controllers/user.controllers.js";
-import { deductUserBalance, deleteOldRandomNumbers, forgotPassword, getCountdownTimeEndpoint, getLastTenRandomNumbersEndpoint, getRandomNumberEndpoint, getUserBalanceEndpoint, getUserBetHistoryEndpoint, handleUserBetEndpoint, RazorPayCreatePaymentOrder, RazorpayPaymentAndUpdateBalance, storeUTRNumberEndpoint, updateUserBalanceEndpoint , resetPassword} from "../controllers/prediction.controllers.js";
+import { deductUserBalance, deleteOldRandomNumbers, forgotPassword, getCountdownTimeEndpoint, getLastTenRandomNumbersEndpoint, getRandomNumberEndpoint, getUserBalanceEndpoint, getUserBetHistoryEndpoint, handleUserBetEndpoint, RazorPayCreatePaymentOrder, RazorpayPaymentAndUpdateBalance, storeUTRNumberEndpoint, updateUserBalanceEndpoint , resetPassword, ResetForForgot} from "../controllers/prediction.controllers.js";
 // import { generateRandomNumber, generateRandomNumberEndpoint, getCountdownTimeEndpoint, handleRandomNumberGeneration } from "../controllers/prediction.controllers.js";
 
 const router = Router();
@@ -27,6 +27,8 @@ router.route("/create-razorpay-order").post(RazorPayCreatePaymentOrder);
 router.route("/verify-razorpay-payment").post(RazorpayPaymentAndUpdateBalance);
 router.route("/forgot-password").post(forgotPassword);
 router.route("/reset-password/:token").patch(resetPassword);
+router.route("/reset-passwordd/:token").get(ResetForForgot);
+
 
 
 
