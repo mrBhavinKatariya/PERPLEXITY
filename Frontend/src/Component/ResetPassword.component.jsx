@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
+import useAuth from '../hooks/useAuth';
 
 const ResetPassword = () => {
   const { token } = useParams();
@@ -14,6 +15,7 @@ const ResetPassword = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState('');
   const navigate = useNavigate();
+  const { auth } = useAuth()
 
   const API_URL = import.meta.env.VITE_API_URL || "https://perplexity-bd2d.onrender.com";
 
@@ -90,6 +92,7 @@ const ResetPassword = () => {
         {
           headers: {
             'Content-Type': 'application/json',
+             Authorization: `Bearer ${auth?.accessToken}`
           },
         }
       );
@@ -97,19 +100,37 @@ const ResetPassword = () => {
       setIsSubmitted(true);
       setTimeout(() => navigate('/login'), 3000);
     } catch (error) {
-      let errorMessage = 'An error occurred. Please try again.';
+        let errorMessage = 'An error occurred. Please try again.';
 
-      if (error.response) {
-        errorMessage = error.response.data?.message || 'Password reset failed';
-      } else if (error.request) {
-        errorMessage = 'Network error - please check your connection';
+        if (error.response) {
+          switch (error.response.status) {
+            case 401:
+              errorMessage = 'Session expired. Please login again.';
+              break;
+            case 404:
+              errorMessage = 'User not found.';
+              break;
+            case 400:
+              errorMessage = error.response.data?.message || 'Invalid old password';
+              break;
+            default:
+              errorMessage = error.response.data?.message || 'Password reset failed';
+          }
+        } else if (error.request) {
+          errorMessage = 'Network error - please check your connection';
+        }
+  
+        setApiError(errorMessage);
+      } finally {
+        setIsLoading(false);
       }
-
-      setApiError(errorMessage);
-    } finally {
-      setIsLoading(false);
-    }
   };
+
+  useEffect(() => {
+    if (!auth?.accessToken) {
+      navigate('/login');
+    }
+  }, [auth, navigate]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-600 to-purple-500 flex items-center justify-center p-4">
