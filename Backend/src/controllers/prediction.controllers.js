@@ -599,210 +599,26 @@ const RazorpayPaymentAndUpdateBalance = asyncHandler(async (req, res) => {
   }
 });
 
+const changeCurrentPassword = asyncHandler(async(req, res) => {
+  const {oldPassword, newPassword} = req.body
 
-const ResetForForgot = (asyncHandler(async (req, res) => {
-  const { token } = req.params;
-
-  console.log("reset token",token);
-  
-  // Hash the token
-  const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
-
-  console.log("hashed token", hashedToken);
-  
-  // Find the user with the matching token
-  const user = await User.findOne({
-    passwordResetToken: hashedToken,
-    passwordResetExpires: { $gt: Date.now() },
-  });
-
-  console.log("For user",user);
   
 
+  const user = await User.findById(req.user?._id)
+  const isPasswordCorrect = await user.isPasswordCorrect(oldPassword)
 
-  if (!user) {
-    return res.status(400).json({
-      status: "fail",
-      message: "Token is invalid or has expired",
-    });
+  if (!isPasswordCorrect) {
+      throw new ApiError(400, "Invalid old password")
   }
 
-  res.status(200).json({
-    status: "success",
-    message: "Token is valid",
-  });
-}));
+  user.password = newPassword
+  await user.save({validateBeforeSave: false})
 
+  return res
+  .status(200)
+  .json(new ApiResponse(200, {}, "Password changed successfully"))
+})
 
-const forgotPassword = asyncHandler(async (req, res) => {
-  try {
-    // 1. Get user by email
-    const user = await User.findOne({ email: req.body.email });
-    if (!user) {
-      return res.status(404).json({ 
-        status: 'fail', 
-        message: 'No user found with that email' 
-      });
-    }
-
-    console.log("user",user);
-    
-
-    // 2. Generate reset token
-    const resetToken = user.createPasswordResetToken();
-    
-    // 🛠️ Add error handling for save operation
-    try {
-      await user.save({ validateBeforeSave: false });
-    } catch (saveError) {
-      console.error("Error saving user:", saveError);
-      return res.status(500).json({
-        status: 'error',
-        message: 'Failed to save reset token'
-      });
-    }
-    
-    // 3. Send email with reset URL
-   const resetURL = `${req.protocol}://${req.get('host')}/api/v1/users/reset-password/${resetToken}`;
-
-    console.log("reqURL",resetURL);
-    
-
-    const message = `
-      <p>Forgot your password?</p>
-      <p>Click the link below to reset your password:</p>
-      <a href="${resetURL}" target="_blank">${resetURL}</a>
-      <p>If you didn't request a password reset, please ignore this email.</p>
-    `;
-
-    try {
-      await sendEmail({
-        email: user.email,
-        subject: 'Your password reset token (valid for 10 minutes)',
-        message: '',
-        html: message, // Use HTML for better formatting
-      });
-
-      res.status(200).json({
-        status: 'success',
-        message: 'Token sent to email!',
-      });
-    } catch (err) {
-      user.passwordResetToken = undefined;
-      user.passwordResetExpires = undefined;
-      await user.save({ validateBeforeSave: false });
-
-      return res.status(500).json({
-        status: 'error',
-        message: 'There was an error sending the email. Try again later!',
-      });
-    }
-  } catch (err) {
-    res.status(500).json({
-      status: 'error',
-      message: err.message,
-    });
-  }
-});
-
-// Reset Password Controller
-// const resetPassword = asyncHandler(async (req, res) => {
-//   const { newPassword, confirmNewPassword } = req.body;
-//   const { token } = req.params;
-
-//   console.log("req.body", req.body);
-//   console.log("req.params", req.params);
-
-//   try {
-//     // 1. Hash the token provided in the request
-//     const hashedToken = crypto
-//       .createHash('sha256')
-//       .update(token)
-//       .digest('hex');
-
-//     // 2. Find the user with the matching hashed token and check if the token has expired
-//     const user = await User.findOne({
-//       passwordResetToken: hashedToken,
-//       passwordResetExpires: { $gt: Date.now() }, // Ensure token is not expired
-//     });
-
-//     // 3. Check token validity
-//     if (!user) {
-//       return res.status(400).json({
-//         status: 'fail',
-//         message: 'Token is invalid or has expired.',
-//       });
-//     }
-
-//     // 4. Check if passwords match
-//     if (newPassword !== confirmNewPassword) {
-//       return res.status(400).json({
-//         status: 'fail',
-//         message: 'Passwords do not match',
-//       });
-//     }
-
-//     // 5. Update password and clear reset token fields
-//     user.password = newPassword;
-//     user.passwordResetToken = undefined;
-//     user.passwordResetExpires = undefined;
-
-//     await user.save();
-
-//     // 6. Send success response
-//     res.status(200).json({
-//       status: 'success',
-//       message: 'Password reset successfully!',
-//     });
-//   } catch (err) {
-//     res.status(500).json({
-//       status: 'error',
-//       message: err.message,
-//     });
-//   }
-// });
-
-const resetPassword = asyncHandler(async (req, res) => {
-  const { token } = req.params;
-  const { newPassword, confirmNewPassword } = req.body;
-
-  if (newPassword !== confirmNewPassword) {
-    return res.status(400).json({
-      status: "fail",
-      message: "Passwords do not match",
-    });
-  }
-
-  // Hash the token from the URL
-  const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
-  console.log("Hashed token:", hashedToken);
-
-  // Find the user with the matching hashed token and check if the token has expired
-  const user = await User.findOne({
-    passwordResetToken: hashedToken,
-    passwordResetExpires: { $gt: Date.now() },
-  });
-
-  console.log("User found:", user);
-
-  if (!user) {
-    return res.status(400).json({
-      status: "fail",
-      message: "Token is invalid or has expired",
-    });
-  }
-
-  // Hash the new password
-  user.password = await bcrypt.hash(newPassword, 10);
-  user.passwordResetToken = undefined;
-  user.passwordResetExpires = undefined;
-  await user.save();
-
-  res.status(200).json({
-    status: "success",
-    message: "Password reset successfully!",
-  });
-});
 
 
 export {
@@ -818,8 +634,7 @@ export {
   getUserBetHistoryEndpoint,
   RazorPayCreatePaymentOrder,
   RazorpayPaymentAndUpdateBalance,
-  forgotPassword,
-  resetPassword,
-  ResetForForgot
+  changeCurrentPassword
+
 
 };
