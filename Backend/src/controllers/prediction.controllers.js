@@ -655,62 +655,81 @@ const forgotPassword = asyncHandler(async (req, res) => {
 });
 
 // Reset Password Controller
-const resetPassword = asyncHandler(async (req, res) => {
-  const { newPassword, confirmNewPassword } = req.body;
-  const { token } = req.params;
+// const resetPassword = asyncHandler(async (req, res) => {
+//   const { newPassword, confirmNewPassword } = req.body;
+//   const { token } = req.params;
 
-  console.log("req.body", req.body);
-  console.log("req.params", req.params);
+//   console.log("req.body", req.body);
+//   console.log("req.params", req.params);
 
-  try {
-    // 1. Hash the token provided in the request
-    const hashedToken = crypto
-      .createHash('sha256')
-      .update(token)
-      .digest('hex');
+//   try {
+//     // 1. Hash the token provided in the request
+//     const hashedToken = crypto
+//       .createHash('sha256')
+//       .update(token)
+//       .digest('hex');
 
-    // 2. Find the user with the matching hashed token and check if the token has expired
-    const user = await User.findOne({
-      passwordResetToken: hashedToken,
-      passwordResetExpires: { $gt: Date.now() }, // Ensure token is not expired
-    });
+//     // 2. Find the user with the matching hashed token and check if the token has expired
+//     const user = await User.findOne({
+//       passwordResetToken: hashedToken,
+//       passwordResetExpires: { $gt: Date.now() }, // Ensure token is not expired
+//     });
 
-    // 3. Check token validity
-    if (!user) {
-      return res.status(400).json({
-        status: 'fail',
-        message: 'Token is invalid or has expired.',
-      });
-    }
+//     // 3. Check token validity
+//     if (!user) {
+//       return res.status(400).json({
+//         status: 'fail',
+//         message: 'Token is invalid or has expired.',
+//       });
+//     }
 
-    // 4. Check if passwords match
-    if (newPassword !== confirmNewPassword) {
-      return res.status(400).json({
-        status: 'fail',
-        message: 'Passwords do not match',
-      });
-    }
+//     // 4. Check if passwords match
+//     if (newPassword !== confirmNewPassword) {
+//       return res.status(400).json({
+//         status: 'fail',
+//         message: 'Passwords do not match',
+//       });
+//     }
 
-    // 5. Update password and clear reset token fields
-    user.password = newPassword;
-    user.passwordResetToken = undefined;
-    user.passwordResetExpires = undefined;
+//     // 5. Update password and clear reset token fields
+//     user.password = newPassword;
+//     user.passwordResetToken = undefined;
+//     user.passwordResetExpires = undefined;
 
-    await user.save();
+//     await user.save();
 
-    // 6. Send success response
-    res.status(200).json({
-      status: 'success',
-      message: 'Password reset successfully!',
-    });
-  } catch (err) {
-    res.status(500).json({
-      status: 'error',
-      message: err.message,
-    });
+//     // 6. Send success response
+//     res.status(200).json({
+//       status: 'success',
+//       message: 'Password reset successfully!',
+//     });
+//   } catch (err) {
+//     res.status(500).json({
+//       status: 'error',
+//       message: err.message,
+//     });
+//   }
+// });
+
+const resetPassword = asyncHandler(async(req, res) => {
+  const {oldPassword, newPassword} = req.body
+
+  
+
+  const user = await User.findById(req.user?._id)
+  const isPasswordCorrect = await user.isPasswordCorrect(oldPassword)
+
+  if (!isPasswordCorrect) {
+      throw new ApiError(400, "Invalid old password")
   }
-});
 
+  user.password = newPassword
+  await user.save({validateBeforeSave: false})
+
+  return res
+  .status(200)
+  .json(new ApiResponse(200, {}, "Password changed successfully"))
+})
 
 
 export {
