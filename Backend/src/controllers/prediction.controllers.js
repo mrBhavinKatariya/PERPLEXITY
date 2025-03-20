@@ -612,6 +612,7 @@ const ResetForForgot = (asyncHandler(async (req, res) => {
     passwordResetExpires: { $gt: Date.now() },
   });
 
+  
   if (!user) {
     return res.status(400).json({
       status: "fail",
