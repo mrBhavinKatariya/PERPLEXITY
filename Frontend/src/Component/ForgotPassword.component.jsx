@@ -33,7 +33,7 @@ export default function ForgotPassword() {
     setError('');
 
     try {
-      const response = await fetch(`${API_URL}/api/v1/auth/forgot-password`, {
+      const response = await fetch(`${API_URL}/api/v1/users/forgot-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
