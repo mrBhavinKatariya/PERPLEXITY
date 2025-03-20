@@ -741,6 +741,8 @@ const resetPassword = asyncHandler(async (req, res) => {
       passwordResetExpires: { $gt: Date.now() }, // Ensure token is not expired
     });
 
+    console.log("user",user);
+    
     if (!user) {
       throw new ApiErrors(400, "Token is invalid or has expired");
     }
