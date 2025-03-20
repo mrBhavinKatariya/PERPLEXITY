@@ -78,7 +78,7 @@ const ResetnewPassword = () => {
 
     try {
       const response = await axios.patch(
-        `${API_URL}/api/v1/users/reset-newPassword/${token}`,
+        `${API_URL}/api/v1/users/reset-Password/${token}`,
         {
           newPassword,
           confirmNewPassword
@@ -150,7 +150,7 @@ const ResetnewPassword = () => {
                     value={newPassword}
                     onChange={(e) => setnewPassword(e.target.value)}
                     className="w-full pl-10 pr-10 py-3 rounded-lg border border-gray-300 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 transition-colors"
-                    placeholder="Enter new newPassword"
+                    placeholder="Enter new Password"
                   />
                   <button
                     type="button"
@@ -176,7 +176,7 @@ const ResetnewPassword = () => {
                     value={confirmNewPassword}
                     onChange={(e) => setconfirmNewPassword(e.target.value)}
                     className="w-full pl-10 pr-10 py-3 rounded-lg border border-gray-300 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 transition-colors"
-                    placeholder="Confirm new newPassword"
+                    placeholder="Confirm new Password"
                   />
                   <button
                     type="button"
