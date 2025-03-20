@@ -767,34 +767,42 @@ const resetPassword = asyncHandler(async (req, res) => {
   const { newPassword, confirmNewPassword } = req.body;
 
   if (newPassword !== confirmNewPassword) {
-    throw new ApiErrors(400, "Passwords do not match");
+    return res.status(400).json({
+      status: "fail",
+      message: "Passwords do not match",
+    });
   }
 
-  const hashedToken = crypto
-    .createHash('sha256')
-    .update(token)
-    .digest('hex');
+  // Hash the token from the URL
+  const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+  console.log("Hashed token:", hashedToken);
 
+  // Find the user with the matching hashed token and check if the token has expired
   const user = await User.findOne({
     passwordResetToken: hashedToken,
-    passwordResetExpires: { $gt: Date.now() }
+    passwordResetExpires: { $gt: Date.now() },
   });
 
-  console.log("user",user);
-  
+  console.log("User found:", user);
 
   if (!user) {
-    throw new ApiError(400, "Token is invalid or expired");
+    return res.status(400).json({
+      status: "fail",
+      message: "Token is invalid or has expired",
+    });
   }
 
+  // Hash the new password
   user.password = await bcrypt.hash(newPassword, 10);
   user.passwordResetToken = undefined;
   user.passwordResetExpires = undefined;
   await user.save();
 
-  res.status(200).json(new ApiResponse(200, {}, "Password reset successful"));
+  res.status(200).json({
+    status: "success",
+    message: "Password reset successfully!",
+  });
 });
-
 
 
 export {

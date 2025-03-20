@@ -61,16 +61,16 @@ const userSchema = new Schema({
 
 // Password reset token methods
 userSchema.methods.createPasswordResetToken = function () {
-    const passwordResetToken = crypto.randomBytes(32).toString('hex');
+    const resetToken = crypto.randomBytes(32).toString("hex");
   
     this.passwordResetToken = crypto
-      .createHash('sha256')
-      .update(passwordResetToken)
-      .digest('hex');
+      .createHash("sha256")
+      .update(resetToken)
+      .digest("hex");
   
     this.passwordResetExpires = Date.now() + 10 * 60 * 1000; // Token valid for 10 minutes
   
-    return passwordResetToken;
+    return resetToken;
   };
 
 
