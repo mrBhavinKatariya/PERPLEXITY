@@ -656,6 +656,9 @@ const forgotPassword = asyncHandler(async (req, res) => {
 
 // Reset Password Controller
 const resetPassword = asyncHandler(async (req, res) => {
+
+  console.log("req.body", req.body);
+  
   try {
     // 1. Get user based on token
     const hashedToken = crypto
