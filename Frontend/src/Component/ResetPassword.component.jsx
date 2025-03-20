@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
-import useAuth from '../hooks/useAuth';
 
 const ResetPassword = () => {
   const { token } = useParams();
@@ -15,7 +14,6 @@ const ResetPassword = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState('');
   const navigate = useNavigate();
-  const { auth } = useAuth()
 
   const API_URL = import.meta.env.VITE_API_URL || "https://perplexity-bd2d.onrender.com";
 
@@ -90,47 +88,33 @@ const ResetPassword = () => {
           newPassword: password,
         },
         {
-          headers: {
-            'Content-Type': 'application/json',
-             Authorization: `Bearer ${auth?.accessToken}`
-          },
+            headers: {
+              'Content-Type': 'application/json',
+              Authorization: `Bearer ${user?.token}`, // Current user का token यहाँ प्रयोग करें
+            },
+
         }
       );
 
       setIsSubmitted(true);
       setTimeout(() => navigate('/login'), 3000);
     } catch (error) {
-        let errorMessage = 'An error occurred. Please try again.';
+      let errorMessage = 'An error occurred. Please try again.';
 
-        if (error.response) {
-          switch (error.response.status) {
-            case 401:
-              errorMessage = 'Session expired. Please login again.';
-              break;
-            case 404:
-              errorMessage = 'User not found.';
-              break;
-            case 400:
-              errorMessage = error.response.data?.message || 'Invalid old password';
-              break;
-            default:
-              errorMessage = error.response.data?.message || 'Password reset failed';
+      if (error.response) {
+        errorMessage = error.response.data?.message || 'Password reset failed';
+        if (error.response.status === 401) {
+            errorMessage = 'Authentication failed. Please login again.';
           }
-        } else if (error.request) {
-          errorMessage = 'Network error - please check your connection';
-        }
-  
-        setApiError(errorMessage);
-      } finally {
-        setIsLoading(false);
+      } else if (error.request) {
+        errorMessage = 'Network error - please check your connection';
       }
-  };
 
-  useEffect(() => {
-    if (!auth?.accessToken) {
-      navigate('/login');
+      setApiError(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
-  }, [auth, navigate]);
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-600 to-purple-500 flex items-center justify-center p-4">
