@@ -632,13 +632,12 @@ const ResetForForgot = (asyncHandler(async (req, res) => {
 
 const forgotPassword = asyncHandler(async (req, res) => {
   try {
-    // 1. Get user based on email
+    // 1. Get user by email
     const user = await User.findOne({ email: req.body.email });
-
     if (!user) {
-      return res.status(404).json({
-        status: 'fail',
-        message: 'No user found with that email address',
+      return res.status(404).json({ 
+        status: 'fail', 
+        message: 'No user found with that email' 
       });
     }
 
@@ -646,13 +645,21 @@ const forgotPassword = asyncHandler(async (req, res) => {
     
 
     // 2. Generate reset token
-    const passwordResetToken = await user.createPasswordResetToken();
-    await user.save({ validateBeforeSave: false });
-
-    console.log("resettoken",passwordResetToken);
+    const resetToken = user.createPasswordResetToken();
+    
+    // 🛠️ Add error handling for save operation
+    try {
+      await user.save({ validateBeforeSave: false });
+    } catch (saveError) {
+      console.error("Error saving user:", saveError);
+      return res.status(500).json({
+        status: 'error',
+        message: 'Failed to save reset token'
+      });
+    }
     
     // 3. Send email with reset URL
-    const resetURL = `${req.protocol}://${req.get('host')}/api/v1/users/reset-passwordd/${passwordResetToken}`;
+    const resetURL = `${req.protocol}://${req.get('host')}/api/v1/users/reset-password/${resetToken}`;
 
     console.log("reqURL",resetURL);
     

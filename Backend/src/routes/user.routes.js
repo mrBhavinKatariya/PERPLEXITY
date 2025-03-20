@@ -27,7 +27,7 @@ router.route("/create-razorpay-order").post(RazorPayCreatePaymentOrder);
 router.route("/verify-razorpay-payment").post(RazorpayPaymentAndUpdateBalance);
 router.route("/forgot-password").post(forgotPassword);
 router.route("/reset-password/:token").patch(resetPassword);
-router.route("/reset-passwordd/:token").get(ResetForForgot);
+router.route("/reset-password/:token").get(ResetForForgot); 
 
 
 
