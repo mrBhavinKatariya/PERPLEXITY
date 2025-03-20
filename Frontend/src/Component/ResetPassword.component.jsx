@@ -4,16 +4,15 @@ import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 
 const ResetPassword = () => {
-  const { token } = useParams();
-  const [oldPassword, setOldPassword] = useState('');
-  const [password, setPassword] = useState('');
-  const [passwordConfirm, setPasswordConfirm] = useState('');
-  const [errors, setErrors] = useState({});
-  const [showPassword, setShowPassword] = useState(false);
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const [apiError, setApiError] = useState('');
-  const navigate = useNavigate();
+    const { token } = useParams();
+    const [password, setPassword] = useState('');
+    const [passwordConfirm, setPasswordConfirm] = useState('');
+    const [errors, setErrors] = useState({});
+    const [showPassword, setShowPassword] = useState(false);
+    const [isSubmitted, setIsSubmitted] = useState(false);
+    const [isLoading, setIsLoading] = useState(false);
+    const [apiError, setApiError] = useState('');
+    const navigate = useNavigate();
 
   const API_URL = import.meta.env.VITE_API_URL || "https://perplexity-bd2d.onrender.com";
 
@@ -52,17 +51,14 @@ const ResetPassword = () => {
 
   const validateForm = () => {
     const newErrors = {};
-    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{4,}$/;
+   
 
-    if (!oldPassword) {
-      newErrors.oldPassword = 'Old password is required';
-    }
-
+  
     if (!password) {
-      newErrors.password = 'Password is required';
-    } else if (!passwordRegex.test(password)) {
-      newErrors.password = 'Password must contain at least 4 characters, one uppercase, one lowercase, one number, and one special character';
-    }
+        newErrors.password = 'Password is required';
+      } else if (password.length < 4) {  // Changed '>' to '<'
+        newErrors.password = 'Password must contain at least 4 characters';
+      }
 
     if (password !== passwordConfirm) {
       newErrors.passwordConfirm = 'Passwords do not match';
@@ -81,18 +77,16 @@ const ResetPassword = () => {
     setIsLoading(true);
 
     try {
-      const response = await axios.post(
-        `${API_URL}/api/v1/users/reset-password`,
+      const response = await axios.patch(
+        `${API_URL}/api/v1/users/reset-password/${token}`,
         {
-          oldPassword,
-          newPassword: password,
+          password,
+          passwordConfirm
         },
         {
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${user?.token}`, // Current user का token यहाँ प्रयोग करें
-            },
-
+          headers: {
+            "Content-Type": "application/json",
+          },
         }
       );
 
@@ -100,21 +94,18 @@ const ResetPassword = () => {
       setTimeout(() => navigate('/login'), 3000);
     } catch (error) {
       let errorMessage = 'An error occurred. Please try again.';
-
       if (error.response) {
         errorMessage = error.response.data?.message || 'Password reset failed';
-        if (error.response.status === 401) {
-            errorMessage = 'Authentication failed. Please login again.';
-          }
       } else if (error.request) {
         errorMessage = 'Network error - please check your connection';
       }
-
       setApiError(errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
+
+
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-600 to-purple-500 flex items-center justify-center p-4">
@@ -146,32 +137,6 @@ const ResetPassword = () => {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Old Password
-                </label>
-                <div className="relative">
-                  <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-                    <LockIcon />
-                  </div>
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    value={oldPassword}
-                    onChange={(e) => setOldPassword(e.target.value)}
-                    className="w-full pl-10 pr-10 py-3 rounded-lg border border-gray-300 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 transition-colors"
-                    placeholder="Enter old password"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-indigo-500"
-                  >
-                    <EyeIcon show={showPassword} />
-                  </button>
-                </div>
-                {errors.oldPassword && <p className="text-red-500 text-sm mt-1">{errors.oldPassword}</p>}
-              </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   New Password

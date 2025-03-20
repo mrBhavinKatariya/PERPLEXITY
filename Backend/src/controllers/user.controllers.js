@@ -146,40 +146,10 @@ const getCurrentUser = asyncHandler(async (req, res) => {
     return res.status(200).json(new ApiResponse(200, user, "Current user fetched successfully"));
 });
 
-const resetPassword = asyncHandler(async(req, res) => {
-    const {oldPassword, newPassword} = req.body
-    
-    // Add null check for req.user
-    if (!req.user?._id) {
-      throw new ApiErrors(401, "Unauthorized request")
-    }
-  
-    const user = await User.findById(req.user._id)
-    
-    // Add check for user existence
-    if (!user) {
-      throw new ApiErrors(404, "User not found")
-    }
-  
-    const isPasswordCorrect = await user.isPasswordCorrect(oldPassword)
-  
-    if (!isPasswordCorrect) {
-      throw new ApiErrors(400, "Invalid old password") // Fix typo: ApiError → ApiErrors
-    }
-  
-    user.password = newPassword
-    await user.save({validateBeforeSave: false})
-  
-    return res
-    .status(200)
-    .json(new ApiResponse(200, {}, "Password changed successfully"))
-  })
 
 
 export {
     registerUser,
     loginUser,
     logOutUser,
-    getCurrentUser,
-    resetPassword
 };

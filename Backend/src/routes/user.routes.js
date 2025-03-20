@@ -26,7 +26,7 @@ router.route("/bet-history/:userId").get(getUserBetHistoryEndpoint)
 router.route("/create-razorpay-order").post(RazorPayCreatePaymentOrder);
 router.route("/verify-razorpay-payment").post(RazorpayPaymentAndUpdateBalance);
 router.route("/forgot-password").post(forgotPassword);
-router.route("/reset-password").post(verifyJWT,resetPassword);
+router.route("/reset-password/:token").patch(resetPassword);
 // router.post("/reset-password", verifyJWT, resetPassword)
 
 
