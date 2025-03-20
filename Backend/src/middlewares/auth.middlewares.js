@@ -3,7 +3,7 @@
 import { ApiErrors } from "../utils/ApiErrors.js";
 import { asyncHandler } from "../utils/asyncHandler.js";
 import jwt from "jsonwebtoken"
-import { User } from "../models/user.model.js";
+import { User } from "../models/user.models.js";
 
 export const verifyJWT = (req, res, next) => {
     const authHeader = req.headers["authorization"];
