@@ -611,13 +611,19 @@ const forgotPassword = asyncHandler(async (req, res) => {
       });
     }
 
+    console.log("user",user);
+    
+
     // 2. Generate reset token
     const resetToken = await user.createPasswordResetToken();
     await user.save({ validateBeforeSave: false });
 
+    console.log("resettoken",resetToken);
+    
     // 3. Send email with reset URL
     const resetURL = `${req.protocol}://${req.get('host')}/api/v1/users/reset-password/${resetToken}`;
 
+    
     const message = `
       <p>Forgot your password?</p>
       <p>Click the link below to reset your password:</p>
