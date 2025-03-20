@@ -641,7 +641,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
       });
     }
 
-    console.log("user",user);
+    console.log("forgotPassword user",user);
     
 
     // 2. Generate reset token
