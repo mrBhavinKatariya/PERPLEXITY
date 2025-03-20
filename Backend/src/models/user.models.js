@@ -169,35 +169,31 @@ const userSchema = new Schema({
     },
 }, { timestamps: true });
 
+// Password reset token methods
+userSchema.methods.createPasswordResetToken = function () {
+    const resetToken = crypto.randomBytes(32).toString('hex');
+  
+    this.passwordResetToken = crypto
+      .createHash('sha256')
+      .update(resetToken)
+      .digest('hex');
+  
+    this.passwordResetExpires = Date.now() + 10 * 60 * 1000; // Token valid for 10 minutes
+  
+    return resetToken;
+  };
 
-userSchema.pre("save", async function(next) {
-    if (!this.isModified("password")) return next();
+
+// userSchema.pre("save", async function(next) {
+//     if (!this.isModified("password")) return next();
     
-    this.password = await bcrypt.hash(this.password, 10)
-    next()
-});
+//     this.password = await bcrypt.hash(this.password, 10)
+//     next()
+// });
 
-userSchema.methods.isPasswordCorrect = async function(password) {
-    return await bcrypt.compare(password, this.password);
-};
-
-
-
-
-// // Password reset token methods
-// userSchema.methods.createPasswordResetToken = function () {
-//     const resetToken = crypto.randomBytes(32).toString('hex');
-  
-//     this.passwordResetToken = crypto
-//       .createHash('sha256')
-//       .update(resetToken)
-//       .digest('hex');
-  
-//     this.passwordResetExpires = Date.now() + 10 * 60 * 1000; // Token valid for 10 minutes
-  
-//     return resetToken;
-//   };
-
+// userSchema.methods.isPasswordCorrect = async function(password) {
+//     return await bcrypt.compare(password, this.password);
+// };
 
 // Removed async from token generators (JWT is synchronous)
 userSchema.methods.generateAccessToken = function() {
