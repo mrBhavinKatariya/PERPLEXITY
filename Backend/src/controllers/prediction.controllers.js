@@ -1,6 +1,7 @@
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { Prediction } from "../models/storeNumber.models.js";
+import { ApiErrors } from "../utils/ApiErrors.js";
 import { UTRNumber } from "../models/UTRNumber.models.js";
 import { User } from "../models/user.models.js";
 import { BetHistory } from "../models/History.models.js";
