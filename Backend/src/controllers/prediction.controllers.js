@@ -612,7 +612,7 @@ const ResetForForgot = (asyncHandler(async (req, res) => {
     passwordResetExpires: { $gt: Date.now() },
   });
 
-  console.log("For user",user);
+  console.log("For  user",user);
   
 
 
