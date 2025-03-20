@@ -78,7 +78,7 @@ const ResetnewPassword = () => {
 
     try {
       const response = await axios.patch(
-        `${API_URL}/api/v1/users/reset-Password/${token}`,
+        `${API_URL}/api/v1/users/reset-password/${token}`,
         {
           newPassword,
           confirmNewPassword
@@ -146,7 +146,7 @@ const ResetnewPassword = () => {
                     <LockIcon />
                   </div>
                   <input
-                    type={shownewPassword ? "text" : "newPassword"}
+                    type={shownewPassword ? "text" : "password"}
                     value={newPassword}
                     onChange={(e) => setnewPassword(e.target.value)}
                     className="w-full pl-10 pr-10 py-3 rounded-lg border border-gray-300 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 transition-colors"
