@@ -607,7 +607,6 @@ const forgotPassword = async (req, res) => {
       // 1. Get user based on email
       const user = await User.findOne({ email: req.body.email });
       
-  console.log("req.body",req.body);
 
       if (!user) {
           return res.status(404).json({
@@ -617,11 +616,12 @@ const forgotPassword = async (req, res) => {
       }
 
       // 2. Generate reset token
-      const resetToken = user.createPasswordResetToken();
+      const resetToken = await generateRefreshToken(user._id);
+      user.passwordResetToken = resetToken;
       await user.save({ validateBeforeSave: false });
 
       // 3. Send email with reset URL
-      const resetURL = `${req.protocol}://${req.get('host')}/api/v1/auth/reset-password/${resetToken}`;
+      const resetURL = `${req.protocol}://${req.get('host')}/api/v1/users/reset-password/${resetToken}`;
       
       const message = `Forgot your password? Submit a PATCH request with your new password and passwordConfirm to: ${resetURL}.\nIf you didn't forget your password, please ignore this email!`;
 
