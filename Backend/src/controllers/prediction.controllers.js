@@ -9,7 +9,8 @@ import mongoose from "mongoose";
 import Razorpay from "razorpay"; // Import Razorpay
 import crypto from "crypto";
 import dotenv from "dotenv";
-
+import bcrypt from 'bcrypt';
+import { sendEmail } from '../utils/email.js';
 
 dotenv.config()
 let isGenerating = false;
@@ -593,6 +594,106 @@ const RazorpayPaymentAndUpdateBalance = asyncHandler(async (req, res) => {
   }
 });
 
+const forgotPassword = async (req, res) => {
+  try {
+      // 1. Get user based on email
+      const user = await User.findOne({ email: req.body.email });
+      if (!user) {
+          return res.status(404).json({
+              status: 'fail',
+              message: 'No user found with that email address'
+          });
+      }
+
+      // 2. Generate reset token
+      const resetToken = user.createPasswordResetToken();
+      await user.save({ validateBeforeSave: false });
+
+      // 3. Send email with reset URL
+      const resetURL = `${req.protocol}://${req.get('host')}/api/v1/auth/reset-password/${resetToken}`;
+      
+      const message = `Forgot your password? Submit a PATCH request with your new password and passwordConfirm to: ${resetURL}.\nIf you didn't forget your password, please ignore this email!`;
+
+      try {
+          await sendEmail({
+              email: user.email,
+              subject: 'Your password reset token (valid for 10 minutes)',
+              message
+          });
+
+          res.status(200).json({
+              status: 'success',
+              message: 'Token sent to email!'
+          });
+      } catch (err) {
+          user.passwordResetToken = undefined;
+          user.passwordResetExpires = undefined;
+          await user.save({ validateBeforeSave: false });
+
+          return res.status(500).json({
+              status: 'error',
+              message: 'There was an error sending the email. Try again later!'
+          });
+      }
+  } catch (err) {
+      res.status(500).json({
+          status: 'error',
+          message: err.message
+      });
+  }
+};
+
+// Reset Password Controller
+ const resetPassword = async (req, res) => {
+  try {
+      // 1. Get user based on token
+      const hashedToken = crypto
+          .createHash('sha256')
+          .update(req.params.token)
+          .digest('hex');
+
+      const user = await User.findOne({
+          passwordResetToken: hashedToken,
+          passwordResetExpires: { $gt: Date.now() }
+      });
+
+      // 2. Check token validity
+      if (!user) {
+          return res.status(400).json({
+              status: 'fail',
+              message: 'Token is invalid or has expired'
+          });
+      }
+
+      // 3. Update password
+      if (req.body.password !== req.body.passwordConfirm) {
+          return res.status(400).json({
+              status: 'fail',
+              message: 'Passwords do not match'
+          });
+      }
+
+      user.password = req.body.password;
+      user.passwordConfirm = req.body.passwordConfirm;
+      user.passwordResetToken = undefined;
+      user.passwordResetExpires = undefined;
+      
+      await user.save();
+
+      // 4. Send success response
+      res.status(200).json({
+          status: 'success',
+          message: 'Password reset successfully!'
+      });
+  } catch (err) {
+      res.status(500).json({
+          status: 'error',
+          message: err.message
+      });
+  }
+};
+
+
 export {
   getCountdownTimeEndpoint,
   getRandomNumberEndpoint,
@@ -605,5 +706,8 @@ export {
   handleUserBetEndpoint,
   getUserBetHistoryEndpoint,
   RazorPayCreatePaymentOrder,
-  RazorpayPaymentAndUpdateBalance
+  RazorpayPaymentAndUpdateBalance,
+  forgotPassword,
+  resetPassword,
+
 };
