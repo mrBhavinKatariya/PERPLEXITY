@@ -606,7 +606,7 @@ const changeCurrentPassword = asyncHandler(async(req, res) => {
   console.log("newpas",newPassword);
 
   
-  console.log("req.body",req.body);
+  // console.log("req.body",req.body);
   
 
   const user = await User.findById(req.user?._id)
