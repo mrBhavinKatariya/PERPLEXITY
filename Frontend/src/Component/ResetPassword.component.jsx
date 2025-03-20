@@ -7,7 +7,7 @@ import axios from 'axios';
 const ResetnewPassword = () => {
     const { token } = useParams();
     const [newPassword, setnewPassword] = useState('');
-    const [confirmNewPassword, setconfirmNewPassword] = useState('');
+    const [oldpassword, setoldpassword] = useState('');
     const [errors, setErrors] = useState({});
     const [shownewPassword, setShownewPassword] = useState(false);
     const [isSubmitted, setIsSubmitted] = useState(false);
@@ -83,9 +83,7 @@ const ResetnewPassword = () => {
         newErrors.newPassword = 'newPassword must contain at least 4 characters';
       }
 
-    if (newPassword !== confirmNewPassword) {
-      newErrors.confirmNewPassword = 'newPasswords do not match';
-    }
+ 
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -104,7 +102,7 @@ const ResetnewPassword = () => {
         `${API_URL}/api/v1/users/change-password`,
         {
           newPassword,
-          confirmNewPassword
+          oldpassword
         },
         {
           headers: {
@@ -197,8 +195,8 @@ const ResetnewPassword = () => {
                   </div>
                   <input
                     type={shownewPassword ? "text" : "newPassword"}
-                    value={confirmNewPassword}
-                    onChange={(e) => setconfirmNewPassword(e.target.value)}
+                    value={oldpassword}
+                    onChange={(e) => setoldpassword(e.target.value)}
                     className="w-full pl-10 pr-10 py-3 rounded-lg border border-gray-300 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 transition-colors"
                     placeholder="Confirm new Password"
                   />
@@ -210,7 +208,7 @@ const ResetnewPassword = () => {
                     <EyeIcon show={shownewPassword} />
                   </button>
                 </div>
-                {errors.confirmNewPassword && <p className="text-red-500 text-sm mt-1">{errors.confirmNewPassword}</p>}
+                {errors.oldpassword && <p className="text-red-500 text-sm mt-1">{errors.oldpassword}</p>}
               </div>
 
               <button
