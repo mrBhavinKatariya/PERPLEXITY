@@ -7,7 +7,7 @@ import axios from 'axios';
 const ResetnewPassword = () => {
     const { token } = useParams();
     const [newPassword, setnewPassword] = useState('');
-    const [oldpassword, setoldpassword] = useState('');
+    const [oldPassword, setoldPassword] = useState('');
     const [errors, setErrors] = useState({});
     const [shownewPassword, setShownewPassword] = useState(false);
     const [isSubmitted, setIsSubmitted] = useState(false);
@@ -101,7 +101,7 @@ const ResetnewPassword = () => {
       const response = await axios.post(
         `${API_URL}/api/v1/users/change-password`,
         {
-          oldpassword,
+          oldPassword,
           newPassword,
         },
         {
@@ -195,8 +195,8 @@ const ResetnewPassword = () => {
                   </div>
                   <input
                     type={shownewPassword ? "text" : "newPassword"}
-                    value={oldpassword}
-                    onChange={(e) => setoldpassword(e.target.value)}
+                    value={oldPassword}
+                    onChange={(e) => setoldPassword(e.target.value)}
                     className="w-full pl-10 pr-10 py-3 rounded-lg border border-gray-300 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 transition-colors"
                     placeholder="Confirm new Password"
                   />
@@ -208,7 +208,7 @@ const ResetnewPassword = () => {
                     <EyeIcon show={shownewPassword} />
                   </button>
                 </div>
-                {errors.oldpassword && <p className="text-red-500 text-sm mt-1">{errors.oldpassword}</p>}
+                {errors.oldPassword && <p className="text-red-500 text-sm mt-1">{errors.oldPassword}</p>}
               </div>
 
               <button
