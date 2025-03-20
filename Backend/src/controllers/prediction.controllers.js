@@ -603,21 +603,20 @@ const RazorpayPaymentAndUpdateBalance = asyncHandler(async (req, res) => {
 const ResetForForgot = (asyncHandler(async (req, res) => {
   const { token } = req.params;
 
-  console.log("token",token);
+  console.log("reset token",token);
   
   // Hash the token
   const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
 
-
-  console.log("hashed token",hashedToken);
+  console.log("hashed token", hashedToken);
   
   // Find the user with the matching token
   const user = await User.findOne({
-    refreshToken: hashedToken,
+    passwordResetToken: hashedToken,
     passwordResetExpires: { $gt: Date.now() },
   });
 
-  console.log("ResetForForgot  user",user);
+  console.log("For user",user);
   
 
 
@@ -646,7 +645,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
       });
     }
 
-    console.log("forgotPassword user",user);
+    console.log("user",user);
     
 
     // 2. Generate reset token
@@ -664,7 +663,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
     }
     
     // 3. Send email with reset URL
-    const resetURL = `${req.protocol}://${req.get('host')}/api/v1/users/reset-password/${resetToken}`;
+   const resetURL = `${req.protocol}://${req.get('host')}/api/v1/users/reset-password/${resetToken}`;
 
     console.log("reqURL",resetURL);
     
