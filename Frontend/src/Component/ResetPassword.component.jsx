@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate, useParams  } from 'react-router-dom';
-
+import axios from 'axios';
 
 const ResetPassword = () => {
     const { token } = useParams();
@@ -85,34 +85,43 @@ const ResetPassword = () => {
 
     setIsLoading(true);
 
-    try {
-      const response = await fetch(`${API_URL}/api/v1/users/reset-password/${token}`, {
-        method: 'PATCH',
+
+  try {
+    const response = await axios.patch(
+      `${API_URL}/api/v1/users/reset-password/${token}`,
+      {
+        oldPassword,
+        newPassword: password,
+        // confirmNewPassword: passwordConfirm  // Uncomment if needed
+      },
+      {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          oldPassword,
-          newPassword: password,
-        //   confirmNewPassword: passwordConfirm
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Password reset failed');
       }
-
-      setIsSubmitted(true);
-      setTimeout(() => navigate('/login'), 3000); // Redirect after 3 seconds
-    } catch (error) {
-      setApiError(error.message || 'An error occurred. Please try again.');
-    } finally {
-      setIsLoading(false);
+    );
+  
+    // Success case (2xx status)
+    setIsSubmitted(true);
+    setTimeout(() => navigate('/login'), 3000);
+  
+  } catch (error) {
+    // Enhanced error handling
+    let errorMessage = 'An error occurred. Please try again.';
+    
+    if (error.response) {
+      // Server responded with non-2xx status
+      errorMessage = error.response.data?.message || 'Password reset failed';
+    } else if (error.request) {
+      // Request was made but no response received
+      errorMessage = 'Network error - please check your connection';
     }
-  };
-
+  
+    setApiError(errorMessage);
+  
+  } finally {
+    setIsLoading(false);
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-600 to-purple-500 flex items-center justify-center p-4">
