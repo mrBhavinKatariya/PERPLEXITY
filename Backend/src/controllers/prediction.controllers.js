@@ -716,6 +716,12 @@ const resetPassword = asyncHandler(async (req, res) => {
   const { token } = req.params; // Token from the URL
   const { newPassword, confirmNewPassword } = req.body; // Passwords from the request body
 
+
+  console.log("newpa",newPassword);
+  console.log("confpass",confirmNewPassword);
+  console.log("req.body",req.body);
+  
+  
   // Validate passwords
   if (!newPassword || !confirmNewPassword) {
     throw new ApiErrors(400, "Both newPassword and confirmNewPassword are required");
