@@ -101,8 +101,8 @@ const ResetnewPassword = () => {
       const response = await axios.post(
         `${API_URL}/api/v1/users/change-password`,
         {
+          oldpassword,
           newPassword,
-          oldpassword
         },
         {
           headers: {
