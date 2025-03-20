@@ -7,7 +7,7 @@ const ResetPassword = () => {
     const { token } = useParams();
     const [oldPassword, setOldPassword] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordConfirm, setpasswordConfirm] = useState('');
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -69,8 +69,8 @@ const ResetPassword = () => {
       newErrors.password = 'Password must contain at least 4 characters, one uppercase, one lowercase, one number, and one special character';
     }
 
-    if (password !== confirmPassword) {
-      newErrors.confirmPassword = 'Passwords do not match';
+    if (password !== passwordConfirm) {
+      newErrors.passwordConfirm = 'Passwords do not match';
     }
 
     setErrors(newErrors);
@@ -209,8 +209,8 @@ const ResetPassword = () => {
                   </div>
                   <input
                     type={showPassword ? "text" : "password"}
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    value={passwordConfirm}
+                    onChange={(e) => setpasswordConfirm(e.target.value)}
                     className="w-full pl-10 pr-10 py-3 rounded-lg border border-gray-300 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 transition-colors"
                     placeholder="Confirm new password"
                   />
@@ -222,7 +222,7 @@ const ResetPassword = () => {
                     <EyeIcon show={showPassword} />
                   </button>
                 </div>
-                {errors.confirmPassword && <p className="text-red-500 text-sm mt-1">{errors.confirmPassword}</p>}
+                {errors.passwordConfirm && <p className="text-red-500 text-sm mt-1">{errors.passwordConfirm}</p>}
               </div>
 
               <button
