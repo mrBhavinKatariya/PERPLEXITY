@@ -256,7 +256,7 @@ const SettingsPage = () => {
           {showAccountSecurityDropdown && (
             <div className="space-y-3">
               <button
-                onClick={() => navigate("/reset-password")} // Navigate to reset-password
+                onClick={() => navigate(`/reset-password/${token}`)} // Navigate to reset-password
                 className="w-full p-3 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-all duration-300 font-semibold"
               >
                 Reset Password
