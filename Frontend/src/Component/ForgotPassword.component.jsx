@@ -13,6 +13,10 @@ export default function ForgotPassword() {
     const [isSubmitted, setIsSubmitted] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
 
+    const API_URL =
+    import.meta.env.REACT_APP_API_URL || "https://perplexity-bd2d.onrender.com";
+
+
   const validateEmail = (email) => {
     const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return re.test(String(email).toLowerCase());
@@ -29,7 +33,7 @@ export default function ForgotPassword() {
     setError('');
 
     try {
-      const response = await fetch('/api/v1/forgot-password', {
+      const response = await fetch(`${API_URL}/api/v1/users/forgot-password`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

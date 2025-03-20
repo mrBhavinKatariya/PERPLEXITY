@@ -16,6 +16,10 @@ const ResetPassword = () => {
   const navigate = useNavigate(); 
 
 
+  const API_URL =
+  import.meta.env.REACT_APP_API_URL || "https://perplexity-bd2d.onrender.com";
+
+
   const ArrowLeftIcon = () => (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -82,7 +86,7 @@ const ResetPassword = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch(`/api/v1/reset-password/${token}`, {
+      const response = await fetch(`${API_URL}/api/v1/users/reset-password/${token}`, {
         method: 'PATCH',
         headers: {
           'Content-Type': 'application/json',
