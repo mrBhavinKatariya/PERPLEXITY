@@ -608,7 +608,7 @@ const ResetForForgot = (asyncHandler(async (req, res) => {
 
   // Find the user with the matching token
   const user = await User.findOne({
-    passwordResetToken: hashedToken,
+    refreshToken: hashedToken,
     passwordResetExpires: { $gt: Date.now() },
   });
 
