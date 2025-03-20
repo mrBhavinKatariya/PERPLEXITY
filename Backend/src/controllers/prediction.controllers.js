@@ -603,9 +603,14 @@ const RazorpayPaymentAndUpdateBalance = asyncHandler(async (req, res) => {
 const ResetForForgot = (asyncHandler(async (req, res) => {
   const { token } = req.params;
 
+  console.log("token",token);
+  
   // Hash the token
   const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
 
+
+  console.log("hashed token",hashedToken);
+  
   // Find the user with the matching token
   const user = await User.findOne({
     refreshToken: hashedToken,
