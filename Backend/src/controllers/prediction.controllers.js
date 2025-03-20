@@ -595,9 +595,14 @@ const RazorpayPaymentAndUpdateBalance = asyncHandler(async (req, res) => {
 });
 
 const forgotPassword = async (req, res) => {
+
+
   try {
       // 1. Get user based on email
       const user = await User.findOne({ email: req.body.email });
+      
+  console.log("req.body",req.body);
+
       if (!user) {
           return res.status(404).json({
               status: 'fail',
