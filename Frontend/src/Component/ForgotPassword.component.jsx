@@ -40,10 +40,12 @@ export default function ForgotPassword() {
         },
         body: JSON.stringify({ email }),
       });
+      const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error('Failed to send password reset email');
-      }
+                  if (!response.ok) {
+                throw new Error(data.message || 'Failed to send password reset email');
+            }
+
 
       setIsSubmitted(true);
     } catch (error) {
