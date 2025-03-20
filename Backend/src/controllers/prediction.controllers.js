@@ -10,7 +10,7 @@ import Razorpay from "razorpay"; // Import Razorpay
 import crypto from "crypto";
 import dotenv from "dotenv";
 import bcrypt from 'bcrypt';
-import { sendEmail } from '../utils/email.js';
+import { sendEmail } from "../utils/SendEmail.utils.js";
 
 dotenv.config()
 let isGenerating = false;
