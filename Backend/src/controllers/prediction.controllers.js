@@ -623,7 +623,9 @@ const forgotPassword = asyncHandler(async (req, res) => {
     // 3. Send email with reset URL
     const resetURL = `${req.protocol}://${req.get('host')}/api/v1/users/reset-password/${resetToken}`;
 
+    console.log("reqURL",resetURL);
     
+
     const message = `
       <p>Forgot your password?</p>
       <p>Click the link below to reset your password:</p>
