@@ -103,13 +103,13 @@ const ResetnewPassword = () => {
       const response = await axios.post(
         `${API_URL}/api/v1/users/change-password`,
         {
-          token,
           newPassword,
           confirmNewPassword
         },
         {
           headers: {
             "Content-Type": "application/json",
+            Authorization: `Bearer ${token}` // Add this line
           },
         }
       );
