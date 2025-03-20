@@ -1,24 +1,21 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate, useParams  } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import axios from 'axios';
 
 const ResetPassword = () => {
-    const { token } = useParams();
-    const [oldPassword, setOldPassword] = useState('');
+  const { token } = useParams();
+  const [oldPassword, setOldPassword] = useState('');
   const [password, setPassword] = useState('');
-  const [passwordConfirm, setpasswordConfirm] = useState('');
+  const [passwordConfirm, setPasswordConfirm] = useState('');
   const [errors, setErrors] = useState({});
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [apiError, setApiError] = useState('');
-  const navigate = useNavigate(); 
+  const navigate = useNavigate();
 
-
-  const API_URL =
-  import.meta.env.REACT_APP_API_URL || "https://perplexity-bd2d.onrender.com";
-
+  const API_URL = import.meta.env.VITE_API_URL || "https://perplexity-bd2d.onrender.com";
 
   const ArrowLeftIcon = () => (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -26,7 +23,6 @@ const ResetPassword = () => {
     </svg>
   );
 
-  // SVG Icons
   const LockIcon = () => (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
@@ -59,10 +55,9 @@ const ResetPassword = () => {
     const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{4,}$/;
 
     if (!oldPassword) {
-        newErrors.oldPassword = 'Old password is required';
-      }
+      newErrors.oldPassword = 'Old password is required';
+    }
 
-      
     if (!password) {
       newErrors.password = 'Password is required';
     } else if (!passwordRegex.test(password)) {
@@ -80,48 +75,41 @@ const ResetPassword = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setApiError('');
-    
+
     if (!validateForm()) return;
 
     setIsLoading(true);
 
-
-  try {
-    const response = await axios.patch(
-      `${API_URL}/api/v1/users/reset-password/${token}`,
-      {
-        oldPassword,
-        newPassword: password,
-        // confirmNewPassword: passwordConfirm  // Uncomment if needed
-      },
-      {
-        headers: {
-          'Content-Type': 'application/json',
+    try {
+      const response = await axios.patch(
+        `${API_URL}/api/v1/users/reset-password/${token}`,
+        {
+          oldPassword,
+          newPassword: password,
         },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      setIsSubmitted(true);
+      setTimeout(() => navigate('/login'), 3000);
+    } catch (error) {
+      let errorMessage = 'An error occurred. Please try again.';
+
+      if (error.response) {
+        errorMessage = error.response.data?.message || 'Password reset failed';
+      } else if (error.request) {
+        errorMessage = 'Network error - please check your connection';
       }
-    );
-  
-    // Success case (2xx status)
-    setIsSubmitted(true);
-    setTimeout(() => navigate('/login'), 3000);
-  
-  } catch (error) {
-    // Enhanced error handling
-    let errorMessage = 'An error occurred. Please try again.';
-    
-    if (error.response) {
-      // Server responded with non-2xx status
-      errorMessage = error.response.data?.message || 'Password reset failed';
-    } else if (error.request) {
-      // Request was made but no response received
-      errorMessage = 'Network error - please check your connection';
+
+      setApiError(errorMessage);
+    } finally {
+      setIsLoading(false);
     }
-  
-    setApiError(errorMessage);
-  
-  } finally {
-    setIsLoading(false);
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-600 to-purple-500 flex items-center justify-center p-4">
@@ -133,15 +121,14 @@ const ResetPassword = () => {
       >
         {!isSubmitted ? (
           <div className="bg-white rounded-2xl shadow-xl p-8 space-y-6">
-
-<button 
+            <button
               onClick={() => navigate('/setting')}
               className="flex items-center gap-2 text-indigo-600 hover:text-indigo-700"
             >
               <ArrowLeftIcon />
               <span className="font-medium">Back to Setting</span>
             </button>
-            
+
             {apiError && (
               <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative">
                 {apiError}
@@ -155,15 +142,13 @@ const ResetPassword = () => {
 
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
-
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-700 mb-1">
                   Old Password
                 </label>
                 <div className="relative">
                   <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
                     <LockIcon />
                   </div>
-
                   <input
                     type={showPassword ? "text" : "password"}
                     value={oldPassword}
@@ -219,7 +204,7 @@ const ResetPassword = () => {
                   <input
                     type={showPassword ? "text" : "password"}
                     value={passwordConfirm}
-                    onChange={(e) => setpasswordConfirm(e.target.value)}
+                    onChange={(e) => setPasswordConfirm(e.target.value)}
                     className="w-full pl-10 pr-10 py-3 rounded-lg border border-gray-300 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 transition-colors"
                     placeholder="Confirm new password"
                   />
@@ -275,7 +260,5 @@ const ResetPassword = () => {
     </div>
   );
 };
-
-}
 
 export default ResetPassword;
