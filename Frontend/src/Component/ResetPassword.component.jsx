@@ -173,7 +173,7 @@ const ResetnewPassword = () => {
                     value={oldPassword}
                     onChange={(e) => setoldPassword(e.target.value)}
                     className="w-full pl-10 pr-10 py-3 rounded-lg border border-gray-300 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 transition-colors"
-                    placeholder="Confirm new Password"
+                    placeholder="Enter Old Password"
                   />
                   <button
                     type="button"
@@ -185,7 +185,7 @@ const ResetnewPassword = () => {
                 </div>
                 {errors.oldPassword && <p className="text-red-500 text-sm mt-1">{errors.oldPassword}</p>}
               </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   New Password
