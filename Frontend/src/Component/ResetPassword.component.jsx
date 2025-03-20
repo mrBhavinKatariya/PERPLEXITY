@@ -92,9 +92,9 @@ const ResetPassword = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-        //   oldPassword,
+          oldPassword,
           newPassword: password,
-          confirmNewPassword: passwordConfirm
+        //   confirmNewPassword: passwordConfirm
         }),
       });
 
