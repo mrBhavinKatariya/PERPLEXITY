@@ -16,6 +16,10 @@ dotenv.config()
 let isGenerating = false;
 let countdownStartTime = Date.now();
 
+const generateRefreshToken = async (userId) => {
+    return jwt.sign({ _id: userId }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: "30d" });
+};
+
 // Function to generate a secure random number between 0 and 9
 const generateSecureRandomNumber = () => {
   return crypto.randomInt(0, 10); // Generates a number between 0 and 9
