@@ -155,9 +155,18 @@ const userSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: "BetHistory"
     }],
-    passwordResetToken: String,
-    passwordResetExpires: Date, // Added missing field
-    refreshToken: String
+    passwordResetToken:{
+        type:String,
+    },
+
+    passwordResetExpires:{
+        type: Date,
+     }, // Added missing field
+
+
+    refreshToken:{
+        type: String
+    },
 }, { timestamps: true });
 
 // Password reset token methods

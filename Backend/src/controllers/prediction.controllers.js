@@ -611,7 +611,7 @@ const forgotPassword = asyncHandler(async (req, res) => {
     }
 
     // 2. Generate reset token
-    const resetToken = user.createPasswordResetToken();
+    const resetToken = await user.createPasswordResetToken();
     await user.save({ validateBeforeSave: false });
 
     // 3. Send email with reset URL
@@ -672,7 +672,7 @@ const resetPassword = asyncHandler(async (req, res) => {
     // 2. Find the user with the matching hashed token and check if the token has expired
     const user = await User.findOne({
       passwordResetToken: hashedToken,
-      passwordResetExpires: { $gt: Date.now() },
+      passwordResetExpires: { $gt: Date.now() }, // Ensure token is not expired
     });
 
     // 3. Check token validity
