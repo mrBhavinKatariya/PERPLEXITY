@@ -69,7 +69,6 @@ const SettingsPage = () => {
       {/* Top Section */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
         {/* Available Balance */}
-
         <div className="bg-white p-6 rounded-xl shadow-sm">
           <div className="flex items-center mb-4">
             <HiCurrencyRupee className="w-6 h-6 text-green-500 mr-2" />
@@ -92,6 +91,7 @@ const SettingsPage = () => {
           </button>
         </div>
 
+        {/* Promotions Section */}
         <div className="bg-white p-6 rounded-xl shadow-sm">
           <div
             className="flex items-center justify-between mb-4 cursor-pointer"
@@ -120,7 +120,6 @@ const SettingsPage = () => {
         </div>
 
         {/* Recharge Section */}
-        {/* Recharge Section with Dropdown */}
         <div className="bg-white p-6 rounded-xl shadow-sm">
           <div
             className="flex items-center justify-between mb-4 cursor-pointer"
@@ -149,7 +148,7 @@ const SettingsPage = () => {
 
       {/* Main Content */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Wallet Section with Dropdown */}
+        {/* Wallet Section */}
         <div className="bg-white p-6 rounded-xl shadow-sm">
           <div
             className="flex items-center justify-between mb-4 cursor-pointer"
@@ -233,9 +232,8 @@ const SettingsPage = () => {
         </div>
       </div>
 
-      {/* Main Content */}
+      {/* Account Security Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Account Security */}
         <div className="bg-white p-6 rounded-xl shadow-sm">
           <div
             className="flex items-center justify-between mb-4 cursor-pointer"
@@ -256,7 +254,14 @@ const SettingsPage = () => {
           {showAccountSecurityDropdown && (
             <div className="space-y-3">
               <button
-                onClick={() => navigate(`/reset-password/${token}`)} // Navigate to reset-password
+                onClick={() => {
+                  const token = localStorage.getItem("token");
+                  if (token) {
+                    navigate(`/reset-password/${token}`);
+                  } else {
+                    console.error("Token not found. Please log in again.");
+                  }
+                }}
                 className="w-full p-3 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-all duration-300 font-semibold"
               >
                 Reset Password
@@ -275,6 +280,7 @@ const SettingsPage = () => {
           )}
         </div>
 
+        {/* Logout/Login Section */}
         <div className="bg-white p-6 rounded-xl shadow-sm">
           <div className="space-y-3">
             {user ? (
@@ -294,14 +300,11 @@ const SettingsPage = () => {
             )}
           </div>
         </div>
-
-        {/* Other sections remain same... */}
       </div>
 
       {/* Recharge Modal */}
       {showRechargeModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
-          {/* Add risk disclosure content */}
           <RechargePage
             user={user}
             onClose={() => setShowRechargeModal(false)}
@@ -330,8 +333,6 @@ const SettingsPage = () => {
           </div>
         </div>
       )}
-
-      {/* Existing Reset Password Modal remains same... */}
     </div>
   );
 };
