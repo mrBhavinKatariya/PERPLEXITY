@@ -161,18 +161,18 @@ const userSchema = new Schema({
 }, { timestamps: true });
 
 // Password reset token methods
-userSchema.methods.createPasswordResetToken = function() {
+userSchema.methods.createPasswordResetToken = function () {
     const resetToken = crypto.randomBytes(32).toString('hex');
-
+  
     this.passwordResetToken = crypto
-        .createHash('sha256')
-        .update(resetToken)
-        .digest('hex');
-
-    this.passwordResetExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
-
+      .createHash('sha256')
+      .update(resetToken)
+      .digest('hex');
+  
+    this.passwordResetExpires = Date.now() + 10 * 60 * 1000; // Token valid for 10 minutes
+  
     return resetToken;
-};
+  };
 
 
 userSchema.pre("save", async function(next) {

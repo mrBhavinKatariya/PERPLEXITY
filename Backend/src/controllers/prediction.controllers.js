@@ -598,61 +598,61 @@ const RazorpayPaymentAndUpdateBalance = asyncHandler(async (req, res) => {
   }
 });
 
-const forgotPassword = async (req, res) => {
-
-  console.log("req",req);
-  
-
+const forgotPassword = asyncHandler(async (req, res) => {
   try {
-      // 1. Get user based on email
-      const user = await User.findOne({ email: req.body.email });
-      
+    // 1. Get user based on email
+    const user = await User.findOne({ email: req.body.email });
 
-      if (!user) {
-          return res.status(404).json({
-              status: 'fail',
-              message: 'No user found with that email address'
-          });
-      }
+    if (!user) {
+      return res.status(404).json({
+        status: 'fail',
+        message: 'No user found with that email address',
+      });
+    }
 
-      // 2. Generate reset token
-      const resetToken = await generateRefreshToken(user._id);
-      user.passwordResetToken = resetToken;
+    // 2. Generate reset token
+    const resetToken = user.createPasswordResetToken();
+    await user.save({ validateBeforeSave: false });
+
+    // 3. Send email with reset URL
+    const resetURL = `${req.protocol}://${req.get('host')}/api/v1/users/reset-password/${resetToken}`;
+
+    const message = `
+      <p>Forgot your password?</p>
+      <p>Click the link below to reset your password:</p>
+      <a href="${resetURL}" target="_blank">${resetURL}</a>
+      <p>If you didn't request a password reset, please ignore this email.</p>
+    `;
+
+    try {
+      await sendEmail({
+        email: user.email,
+        subject: 'Your password reset token (valid for 10 minutes)',
+        message: '',
+        html: message, // Use HTML for better formatting
+      });
+
+      res.status(200).json({
+        status: 'success',
+        message: 'Token sent to email!',
+      });
+    } catch (err) {
+      user.passwordResetToken = undefined;
+      user.passwordResetExpires = undefined;
       await user.save({ validateBeforeSave: false });
 
-      // 3. Send email with reset URL
-      const resetURL = `${req.protocol}://${req.get('host')}/api/v1/users/reset-password/${resetToken}`;
-      
-      const message = `Forgot your password? Submit a PATCH request with your new password and passwordConfirm to: ${resetURL}.\nIf you didn't forget your password, please ignore this email!`;
-
-      try {
-          await sendEmail({
-              email: user.email,
-              subject: 'Your password reset token (valid for 10 minutes)',
-              message
-          });
-
-          res.status(200).json({
-              status: 'success',
-              message: 'Token sent to email!'
-          });
-      } catch (err) {
-          user.passwordResetToken = undefined;
-          user.passwordResetExpires = undefined;
-          await user.save({ validateBeforeSave: false });
-
-          return res.status(500).json({
-              status: 'error',
-              message: 'There was an error sending the email. Try again later!'
-          });
-      }
-  } catch (err) {
-      res.status(500).json({
-          status: 'error',
-          message: err.message
+      return res.status(500).json({
+        status: 'error',
+        message: 'There was an error sending the email. Try again later!',
       });
+    }
+  } catch (err) {
+    res.status(500).json({
+      status: 'error',
+      message: err.message,
+    });
   }
-};
+});
 
 // Reset Password Controller
  const resetPassword = async (req, res) => {
@@ -672,7 +672,7 @@ const forgotPassword = async (req, res) => {
       if (!user) {
           return res.status(400).json({
               status: 'fail',
-              message: 'Token is invalid or has expired'
+              message: 'Token is invalid or has expired.'
           });
       }
 
