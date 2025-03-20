@@ -713,55 +713,36 @@ const forgotPassword = asyncHandler(async (req, res) => {
 // });
 
 const resetPassword = asyncHandler(async (req, res) => {
-  const { token } = req.params; // Token from the URL
-  const { newPassword, confirmNewPassword } = req.body; // Passwords from the request body
-
-
-  console.log("newpa",newPassword);
-  console.log("confpass",confirmNewPassword);
-  console.log("req.body",req.body);
-  
-  
-  // Validate passwords
-  if (!newPassword || !confirmNewPassword) {
-    throw new ApiErrors(400, "Both newPassword and confirmNewPassword are required");
-  }
+  const { token } = req.params;
+  const { newPassword, confirmNewPassword } = req.body;
 
   if (newPassword !== confirmNewPassword) {
     throw new ApiErrors(400, "Passwords do not match");
   }
 
-  try {
-    // Hash the token from the URL
-    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+  const hashedToken = crypto
+    .createHash('sha256')
+    .update(token)
+    .digest('hex');
 
-    // Find the user with the matching hashed token and check if the token has expired
-    const user = await User.findOne({
-      passwordResetToken: hashedToken,
-      passwordResetExpires: { $gt: Date.now() }, // Ensure token is not expired
-    });
+  const user = await User.findOne({
+    passwordResetToken: hashedToken,
+    passwordResetExpires: { $gt: Date.now() }
+  });
 
-    console.log("user",user);
-    
-    if (!user) {
-      throw new ApiErrors(400, "Token is invalid or has expired");
-    }
+  console.log("user",user);
+  
 
-    // Hash the new password
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
-
-    // Update the user's password and clear the reset token fields
-    user.password = hashedPassword;
-    user.passwordResetToken = undefined;
-    user.passwordResetExpires = undefined;
-
-    await user.save();
-
-    // Send success response
-    res.status(200).json(new ApiResponse(200, {}, "Password reset successfully"));
-  } catch (error) {
-    res.status(500).json(new ApiResponse(500, {}, error.message));
+  if (!user) {
+    throw new ApiError(400, "Token is invalid or expired");
   }
+
+  user.password = await bcrypt.hash(newPassword, 10);
+  user.passwordResetToken = undefined;
+  user.passwordResetExpires = undefined;
+  await user.save();
+
+  res.status(200).json(new ApiResponse(200, {}, "Password reset successful"));
 });
 
 
