@@ -189,7 +189,7 @@ const SettingsPage = () => {
         </div>
 
         {/* About Section */}
-        <div className="bg-white p-6 rounded-xl shadow-sm">
+        <div className="bg-white p-6 rounded-xl shadow-sm  mb-[15px]">
           <div
             className="flex items-center justify-between mb-4 cursor-pointer"
             onClick={() => setShowAboutDropdown(!showAboutDropdown)}
@@ -233,7 +233,7 @@ const SettingsPage = () => {
       </div>
 
       {/* Account Security Section */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 ">
         <div className="bg-white p-6 rounded-xl shadow-sm">
           <div
             className="flex items-center justify-between mb-4 cursor-pointer"

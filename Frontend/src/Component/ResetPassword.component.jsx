@@ -154,7 +154,7 @@ const ResetnewPassword = () => {
             )}
 
             <div className="text-center">
-              <h1 className="text-3xl font-bold text-gray-800 mb-2">Reset newPassword</h1>
+              <h1 className="text-3xl font-bold text-gray-800 mb-2">Reset new Password</h1>
               <p className="text-gray-500">Create a new secure newPassword</p>
             </div>
 
@@ -217,7 +217,7 @@ const ResetnewPassword = () => {
                 disabled={isLoading}
                 className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 rounded-lg transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {isLoading ? 'Processing...' : 'Reset newPassword'}
+                {isLoading ? 'Processing...' : 'Reset new Password'}
               </button>
             </form>
 

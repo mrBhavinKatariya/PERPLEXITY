@@ -827,15 +827,16 @@ const handlePrevHistory = () => {
 
   {userHistory.slice((historyPage - 1) * 10, historyPage * 10)
   .map((history, index) => {
-    let profit = 0;
+    const betAmount = parseFloat(history.betAmount) || 0;
+    const winnings = parseFloat(history.winnings) || 0
 
     // Calculate profit based on result
-    profit = history.result === "WIN" ? history.winnings : -history.betAmount;
+    const profit = history.result === "WIN" ? winnings : -betAmount;
 
     return (
       <div key={index} style={historyStyles.row}>
         {/* Display bet amount */}
-        <span style={{ color: "#000" }}>₹{history.betAmount.toFixed(2)}</span>
+        <span style={{ color: "#000" }}>₹{betAmount.toFixed(2)}</span>
 
         {/* Display selection (number or color) */}
         <span>
