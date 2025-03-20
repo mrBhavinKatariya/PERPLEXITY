@@ -14,7 +14,29 @@ const ResetnewPassword = () => {
     const [apiError, setApiError] = useState('');
     const navigate = useNavigate();
 
-  const API_URL = import.meta.env.VITE_API_URL || "https://perplexity-bd2d.onrender.com";
+  const API_URL = import.meta.env.REACT_APP_API_URL || "https://perplexity-bd2d.onrender.com";
+
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
+
+        const response = await axios.get(
+          `${API_URL}/api/v1/users/current-user`,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+        setUser(response.data.data);
+        // Set balance from API response (adjust according to your API structure)
+        setBalance(response.data.data.balance || 0);
+      } catch (err) {
+        console.error("Error fetching user:", err);
+      }
+    };
+
+    fetchUser();
+  }, []);
 
   const ArrowLeftIcon = () => (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
