@@ -159,35 +159,10 @@ const ResetnewPassword = () => {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  New newPassword
-                </label>
-                <div className="relative">
-                  <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
-                    <LockIcon />
-                  </div>
-                  <input
-                    type={shownewPassword ? "text" : "password"}
-                    value={newPassword}
-                    onChange={(e) => setnewPassword(e.target.value)}
-                    className="w-full pl-10 pr-10 py-3 rounded-lg border border-gray-300 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 transition-colors"
-                    placeholder="Enter new Password"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShownewPassword(!shownewPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-indigo-500"
-                  >
-                    <EyeIcon show={shownewPassword} />
-                  </button>
-                </div>
-                {errors.newPassword && <p className="text-red-500 text-sm mt-1">{errors.newPassword}</p>}
-              </div>
 
-              <div>
+            <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Confirm newPassword
+                  Old Password
                 </label>
                 <div className="relative">
                   <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
@@ -209,6 +184,32 @@ const ResetnewPassword = () => {
                   </button>
                 </div>
                 {errors.oldPassword && <p className="text-red-500 text-sm mt-1">{errors.oldPassword}</p>}
+              </div>
+              
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  New Password
+                </label>
+                <div className="relative">
+                  <div className="absolute left-3 top-1/2 transform -translate-y-1/2">
+                    <LockIcon />
+                  </div>
+                  <input
+                    type={shownewPassword ? "text" : "password"}
+                    value={newPassword}
+                    onChange={(e) => setnewPassword(e.target.value)}
+                    className="w-full pl-10 pr-10 py-3 rounded-lg border border-gray-300 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-200 transition-colors"
+                    placeholder="Enter new Password"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShownewPassword(!shownewPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-indigo-500"
+                  >
+                    <EyeIcon show={shownewPassword} />
+                  </button>
+                </div>
+                {errors.newPassword && <p className="text-red-500 text-sm mt-1">{errors.newPassword}</p>}
               </div>
 
               <button
