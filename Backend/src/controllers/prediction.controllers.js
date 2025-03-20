@@ -671,7 +671,7 @@ const resetPassword = asyncHandler(async (req, res) => {
 
     // 2. Find the user with the matching hashed token and check if the token has expired
     const user = await User.findOne({
-      passwordResetToken: hashedToken,
+      refreshToken: hashedToken,
       passwordResetExpires: { $gt: Date.now() }, // Ensure token is not expired
     });
 
