@@ -788,58 +788,58 @@ const handlePayoutWebhook = asyncHandler(async (req, res) => {
 //   }
 // });
 
+
+
 const createFundAccount = asyncHandler(async (req, res) => {
   try {
     const { userId, name, accountNumber, ifscCode } = req.body;
 
-    // 1. कॉन्टैक्ट बनाएँ
-    const contact = await razorpay.contacts.create({
+    console.log("Razorpay Instance:", razorpay);
+
+    // Create Razorpay Contact
+    const contact = await razorpay.customers.create({
       name: name,
+      contact: "9876543210", // Required field
+      email: "test@example.com", // Required field
       type: "customer",
-      email: "user@example.com", // Optional
     });
 
-    // 2. फंड अकाउंट बनाएँ (fundAccounts का उपयोग करें)
-    const fundAccount = await razorpay.fundAccounts.create({
+    console.log("Contact Created:", contact);
+
+    // Create Fund Account
+    const fundAccount = await razorpay.fund_accounts.create({
       contact_id: contact.id,
       account_type: "bank_account",
       bank_account: {
-        name: name,
-        account_number: accountNumber.toString(), // स्ट्रिंग में कन्वर्ट करें
-        ifsc: ifscCode.toUpperCase(), // IFSC अपरकेस करें
+        name,
+        account_number: accountNumber,
+        ifsc: ifscCode,
       },
     });
 
-    // 3. यूज़र अपडेट करें
-    await User.findByIdAndUpdate(
-      userId,
-      {
-        $push: {
-          bankAccounts: {
-            fundAccountId: fundAccount.id,
-            last4: accountNumber.slice(-4),
-            bankName: "Kotak Mahindra Bank", // IFSC KKBK0000883 के लिए
-            ifsc: ifscCode,
-          },
+    console.log("Fund Account Created:", fundAccount);
+
+    // Save fund account ID to user profile
+    await User.findByIdAndUpdate(userId, {
+      $push: {
+        bankAccounts: {
+          fundAccountId: fundAccount.id,
+          last4: accountNumber.slice(-4),
+          bankName: "Bank Name",
         },
       },
-      { new: true }
-    );
+    });
 
-    res.status(201).json({
+    res.status(200).json({
       success: true,
       fundAccountId: fundAccount.id,
     });
-
   } catch (error) {
-    console.error("Full Error:", error);
-    res.status(500).json({
-      success: false,
-      message: error.error?.description || "Bank account creation failed",
-      errorCode: error.error?.code,
-    });
+    console.error("Fund account error:", error);
+    res.status(500).json({ success: false, message: "Failed to add bank account" });
   }
 });
+
 
 const changeCurrentPassword = asyncHandler(async(req, res) => {
   const {oldPassword, newPassword} = req.body
