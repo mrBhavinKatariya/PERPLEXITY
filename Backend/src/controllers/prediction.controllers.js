@@ -599,6 +599,173 @@ const RazorpayPaymentAndUpdateBalance = asyncHandler(async (req, res) => {
   }
 });
 
+// Initiate Withdrawal Request
+const initiateWithdrawal = asyncHandler(async (req, res) => {
+  try {
+    const { userId, amount, fundAccountId } = req.body;
+
+    // Validate input
+    if (!userId || !amount || !fundAccountId) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
+
+    // Find user and check balance
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    if (user.balance < amount) {
+      return res.status(400).json({ message: "Insufficient balance" });
+    }
+
+    // Deduct balance immediately
+    user.balance -= amount;
+    await user.save();
+
+    // Create transaction record
+    const transaction = new Transaction({
+      userId,
+      amount,
+      type: "withdrawal",
+      paymentMethod: "Razorpay Payout",
+      status: "processing",
+    });
+    await transaction.save();
+
+    // Create Razorpay payout
+    const payoutOptions = {
+      account_number: process.env.RAZORPAY_KEY_ID, // Merchant's account
+      fund_account_id: fundAccountId,
+      amount: amount * 100, // Convert to paise
+      currency: "INR",
+      mode: "IMPS",
+      purpose: "payout",
+      reference_id: `WITHDRAWAL_${transaction._id}`,
+    };
+
+    const payout = await razorpay.payouts.create(payoutOptions);
+
+    // Update transaction with payout ID
+    transaction.transactionId = payout.id;
+    await transaction.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Withdrawal initiated",
+      payoutId: payout.id,
+    });
+
+  } catch (error) {
+    console.error("Withdrawal error:", error);
+    
+    // Revert balance deduction on error
+    if (user) {
+      user.balance += amount;
+      await user.save();
+    }
+    
+    res.status(500).json({ success: false, message: "Withdrawal failed" });
+  }
+});
+
+
+// Razorpay Webhook Handler
+const handlePayoutWebhook = asyncHandler(async (req, res) => {
+  const body = req.body;
+  const signature = req.headers['x-razorpay-signature'];
+
+  // Verify webhook signature
+  const expectedSignature = crypto
+    .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+    .update(JSON.stringify(body))
+    .digest('hex');
+
+  if (signature !== expectedSignature) {
+    return res.status(400).json({ status: 'error', message: 'Invalid signature' });
+  }
+
+  const event = body.event;
+  const payoutId = body.payload.payout.entity.id;
+
+  try {
+    // Find associated transaction
+    const transaction = await Transaction.findOne({ transactionId: payoutId });
+    if (!transaction) {
+      return res.status(404).json({ status: 'error', message: 'Transaction not found' });
+    }
+
+    // Handle payout success
+    if (event === 'payout.processed') {
+      transaction.status = 'completed';
+      await transaction.save();
+    }
+    // Handle payout failure
+    else if (event === 'payout.failed') {
+      transaction.status = 'failed';
+      await transaction.save();
+
+      // Refund user balance
+      const user = await User.findById(transaction.userId);
+      if (user) {
+        user.balance += transaction.amount;
+        await user.save();
+      }
+    }
+
+    res.status(200).json({ status: 'success' });
+  } catch (error) {
+    console.error("Webhook error:", error);
+    res.status(500).json({ status: 'error', message: 'Internal server error' });
+  }
+});
+
+
+
+// Create Fund Account
+const createFundAccount = asyncHandler(async (req, res) => {
+  try {
+    const { userId, name, accountNumber, ifscCode } = req.body;
+
+    // Create Razorpay Contact
+    const contact = await razorpay.contacts.create({
+      name: name,
+      type: "customer",
+    });
+
+    // Create Fund Account
+    const fundAccount = await razorpay.fundAccounts.create({
+      contact_id: contact.id,
+      account_type: "bank_account",
+      bank_account: {
+        name,
+        account_number: accountNumber,
+        ifsc: ifscCode,
+      },
+    });
+
+    // Save fund account ID to user profile
+    await User.findByIdAndUpdate(userId, {
+      $push: {
+        bankAccounts: {
+          fundAccountId: fundAccount.id,
+          last4: accountNumber.slice(-4),
+          bankName: "Bank Name" // Extract from IFSC if needed
+        }
+      }
+    });
+
+    res.status(200).json({
+      success: true,
+      fundAccountId: fundAccount.id,
+    });
+  } catch (error) {
+    console.error("Fund account error:", error);
+    res.status(500).json({ success: false, message: "Failed to add bank account" });
+  }
+});
+
+
 const changeCurrentPassword = asyncHandler(async(req, res) => {
   const {oldPassword, newPassword} = req.body
 
@@ -629,6 +796,7 @@ const changeCurrentPassword = asyncHandler(async(req, res) => {
 
 
 
+
 export {
   getCountdownTimeEndpoint,
   getRandomNumberEndpoint,
@@ -642,7 +810,9 @@ export {
   getUserBetHistoryEndpoint,
   RazorPayCreatePaymentOrder,
   RazorpayPaymentAndUpdateBalance,
-  changeCurrentPassword
-
+  changeCurrentPassword,
+  createFundAccount,
+  handlePayoutWebhook,
+  initiateWithdrawal
 
 };

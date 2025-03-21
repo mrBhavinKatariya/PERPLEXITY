@@ -5,6 +5,41 @@ import bcrypt from "bcrypt";
 import crypto from "crypto"; // Added missing crypto import
 import { BetHistory } from "./History.models.js";
 
+
+const bankAccountSchema = new Schema({
+    fundAccountId: {
+        type: String,
+        required: true,
+    },
+    last4: {
+        type: String,
+        required: true,
+    },
+    bankName: {
+        type: String,
+        required: true,
+    },
+    ifsc: {
+        type: String,
+        required: true,
+        validate: {
+          validator: (v) => /^[A-Za-z]{4}0[A-Z0-9]{6}$/.test(v),
+          message: "Invalid IFSC format"
+        }
+      },
+
+      isDefault: {
+        type: Boolean,
+        default: false
+      },
+      addedOn: {
+        type: Date,
+        default: Date.now
+      }
+      
+}, { _id: false }); 
+
+
 const userSchema = new Schema({
     username: {
         type: String,
@@ -43,6 +78,9 @@ const userSchema = new Schema({
         type: Schema.Types.ObjectId,
         ref: "BetHistory"
     }],
+
+    bankAccounts: [bankAccountSchema],
+
     passwordResetToken:{
         type:String,
     },

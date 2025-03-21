@@ -1,208 +1,294 @@
-import React, { useState, useEffect } from 'react';
-import { HiCurrencyRupee, HiArrowCircleLeft, HiCheckCircle, HiXCircle } from 'react-icons/hi';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { toast } from 'react-toastify';
+import {  FiDollarSign, FiCreditCard, FiArrowUpRight, FiCheckCircle } from 'react-icons/fi';
+import { 
+  FaWallet, 
+  FaMoneyBillWave, 
+  FaCoins, 
+  FaChartLine,
+  FaMoneyCheckAlt
+} from 'react-icons/fa';
 
 const API_URL = import.meta.env.REACT_APP_API_URL || "https://perplexity-bd2d.onrender.com";
 
-const WithdrawalPage = ({ user, onClose }) => {
-  const [balance, setBalance] = useState(2500.00);
+const Withdrawal = () => {
   const [amount, setAmount] = useState('');
-  const [paymentMethod, setPaymentMethod] = useState('upi');
+  const [bankAccounts, setBankAccounts] = useState([]);
+  const [selectedAccount, setSelectedAccount] = useState('');
   const [transactions, setTransactions] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
+  const [balance, setBalance] = useState(0);
+  const [newAccount, setNewAccount] = useState({
+    name: '',
+    accountNumber: '',
+    ifscCode: ''
+  });
 
-  // Mock transaction history - replace with actual API call
-  const mockTransactions = [
-    { id: 1, amount: 500, status: 'Completed', date: '2024-03-15', method: 'UPI' },
-    { id: 2, amount: 1000, status: 'Pending', date: '2024-03-14', method: 'Bank Transfer' },
-  ];
+  // Fetch user data on component mount
+  // useEffect(() => {
+  //   const fetchUserData = async () => {
+  //     try {
+  //       const { data } = await axios.get(`${API_URL}/api/v1/users/me`);
+  //       setBalance(data.balance);
+  //       setBankAccounts(data.bankAccounts);
+  //     } catch (error) {
+  //       toast.error('Failed to load user data');
+  //     }
+  //   };
+  //   fetchUserData();
+  // }, []);
 
   useEffect(() => {
-    // Fetch withdrawal history
-    const fetchWithdrawals = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const response = await axios.get(
-          `${API_URL}/api/v1/transactions/withdrawals`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        setTransactions(response.data.data);
-      } catch (err) {
-        setTransactions(mockTransactions); // Remove this line in production
-        console.error("Error fetching withdrawals:", err);
-      }
-    };
-
-    fetchWithdrawals();
+      const fetchUser = async () => {
+        try {
+          const token = localStorage.getItem("token");
+          if (!token) return;
+  
+          const response = await axios.get(
+            `${API_URL}/api/v1/users/current-user`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          setUser(response.data.data);
+          // Set balance from API response (adjust according to your API structure)
+          setBalance(response.data.data.balance || 0);
+          setBankAccounts(data.bankAccounts);
+        } catch (err) {
+          console.error("Error fetching user:", err);
+        }
+      };
+      fetchUser();
   }, []);
 
-  const validateForm = () => {
-    if (!amount || isNaN(amount) || amount <= 0) {
-      setError('Please enter a valid amount');
-      return false;
+  // Handle withdrawal submission
+  const handleWithdrawal = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await axios.post(`${API_URL}/api/v1/users/withdraw`, {
+        userId: 'current_user_id', // Replace with actual user ID from auth
+        amount: parseFloat(amount),
+        fundAccountId: selectedAccount
+      });
+
+      if (response.data.success) {
+        toast.success('Withdrawal initiated successfully!');
+        setBalance(prev => prev - parseFloat(amount));
+        setAmount('');
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Withdrawal failed');
     }
-    if (amount > balance) {
-      setError('Insufficient balance');
-      return false;
-    }
-    if (!paymentMethod) {
-      setError('Please select a payment method');
-      return false;
-    }
-    return true;
   };
 
-  const handleSubmit = async (e) => {
+  // Handle new bank account submission
+  const handleAddAccount = async (e) => {
     e.preventDefault();
-    setError('');
-    setSuccess('');
-
-    if (!validateForm()) return;
-
-    setLoading(true);
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Actual API call would look like:
-      // const token = localStorage.getItem("token");
-      // await axios.post(`${API_URL}/api/v1/transactions/withdraw`, {
-      //   amount: parseFloat(amount),
-      //   paymentMethod
-      // }, { headers: { Authorization: `Bearer ${token}` } });
+      const response = await axios.post(`${API_URL}/api/v1/users/fund-account`, {
+        userId: 'current_user_id',
+        ...newAccount
+      });
 
-      setSuccess('Withdrawal request submitted successfully!');
-      setBalance(prev => prev - parseFloat(amount));
-      setAmount('');
-      setTransactions(prev => [
-        {
-          id: Date.now(),
-          amount: parseFloat(amount),
-          status: 'Pending',
-          date: new Date().toISOString().split('T')[0],
-          method: paymentMethod.toUpperCase()
-        },
-        ...prev
-      ]);
-    } catch (err) {
-      setError(err.response?.data?.message || 'Withdrawal request failed');
-    } finally {
-      setLoading(false);
+      if (response.data.success) {
+        toast.success('Bank account added successfully!');
+        setBankAccounts([...bankAccounts, {
+          fundAccountId: response.data.fundAccountId,
+          last4: newAccount.accountNumber.slice(-4),
+          bankName: 'Bank Name' // You might want to fetch actual bank name from IFSC
+        }]);
+        setNewAccount({ name: '', accountNumber: '', ifscCode: '' });
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to add account');
     }
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4 md:p-8">
-      <button
-        onClick={onClose}
-        className="mb-6 flex items-center text-blue-600 hover:text-blue-800"
-      >
-        <HiArrowCircleLeft className="mr-2" /> Back to Wallet
-      </button>
-
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-5xl mx-auto space-y-8">
         {/* Balance Card */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
+        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl p-6 shadow-xl transform transition hover:scale-[1.01]">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-semibold flex items-center">
-                <HiCurrencyRupee className="mr-2 text-green-500" />
-                Available Balance
+              <h2 className="text-xl font-semibold text-indigo-100 mb-2 flex items-center gap-2">
+                <FaChartLine className="w-5 h-5" /> Available Balance
               </h2>
-              <p className="text-gray-500 text-sm">Withdrawable amount</p>
+              <div className="text-4xl font-bold text-white">
+                ₹{balance ? balance.toFixed(2) : "0.00"}
+              </div>
             </div>
-            <div className="text-3xl font-bold">₹{balance.toFixed(2)}</div>
+            <div className="bg-white/10 p-4 rounded-xl">
+              <FiDollarSign className="w-8 h-8 text-white" />
+            </div>
           </div>
         </div>
 
-        {/* Withdrawal Form */}
-        <div className="bg-white rounded-lg shadow-sm p-6 mb-8">
-          <h3 className="text-xl font-semibold mb-6">Withdraw Funds</h3>
-          
-          {error && (
-            <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg flex items-center">
-              <HiXCircle className="mr-2" /> {error}
-            </div>
-          )}
+        {/* Main Content Grid */}
+        <div className="grid lg:grid-cols-2 gap-8">
+          {/* Withdrawal Form */}
+          <div className="bg-white rounded-2xl shadow-lg p-6">
+            <h3 className="text-xl font-semibold text-gray-800 mb-6 flex items-center gap-2">
+              <FiArrowUpRight className="w-6 h-6 text-green-600" /> Withdraw Funds
+            </h3>
+            <form onSubmit={handleWithdrawal} className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-gray-600 mb-2 flex items-center gap-2">
+                  <FiDollarSign className="w-4 h-4 text-gray-500" /> Amount (INR)
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    min="100"
+                    required
+                  />
+                  <span className="absolute left-3 top-3 text-gray-400">
+                    ₹
+                  </span>
+                </div>
+              </div>
 
-          {success && (
-            <div className="mb-4 p-3 bg-green-100 text-green-700 rounded-lg flex items-center">
-              <HiCheckCircle className="mr-2" /> {success}
-            </div>
-          )}
+              <div>
+                <label className="block text-sm font-medium text-gray-600 mb-2 flex items-center gap-2">
+                  <FiCreditCard className="w-4 h-4 text-gray-500" /> Select Bank Account
+                </label>
+                <select
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all appearance-none bg-white"
+                  value={selectedAccount}
+                  onChange={(e) => setSelectedAccount(e.target.value)}
+                  required
+                >
+                  <option value="">Choose an account</option>
+                  {bankAccounts?.map((account) => (
+                    <option key={account.fundAccountId} value={account.fundAccountId}>
+                      {account.bankName} ****{account.last4}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
-          <form onSubmit={handleSubmit}>
-            <div className="mb-6">
-              <label className="block text-sm font-medium mb-2">Amount (₹)</label>
-              <input
-                type="number"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                placeholder="Enter withdrawal amount"
-                step="0.01"
-              />
-            </div>
-
-            <div className="mb-6">
-              <label className="block text-sm font-medium mb-2">Payment Method</label>
-              <select
-                value={paymentMethod}
-                onChange={(e) => setPaymentMethod(e.target.value)}
-                className="w-full p-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              <button
+                type="submit"
+                className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-medium py-3 px-6 rounded-xl transition-all duration-200 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={!selectedAccount || !amount}
               >
-                <option value="upi">UPI</option>
-                <option value="bank_transfer">Bank Transfer</option>
-                <option value="paytm">Paytm Wallet</option>
-              </select>
-            </div>
+                Initiate Withdrawal
+              </button>
+            </form>
+          </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-blue-600 text-white p-3 rounded-lg hover:bg-blue-700 disabled:bg-gray-400"
-            >
-              {loading ? 'Processing...' : 'Request Withdrawal'}
-            </button>
-          </form>
+          {/* Add Bank Account Form */}
+          <div className="bg-white rounded-2xl shadow-lg p-6">
+            <h3 className="text-xl font-semibold text-gray-800 mb-6 flex items-center gap-2">
+              <FiCreditCard className="w-6 h-6 text-blue-600" /> Add Bank Account
+            </h3>
+            <form onSubmit={handleAddAccount} className="space-y-6">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-600">Account Holder Name</label>
+                  <input
+                    type="text"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+                    value={newAccount.name}
+                    onChange={(e) => setNewAccount({...newAccount, name: e.target.value})}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-600">Account Number</label>
+                  <input
+                    type="text"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+                    value={newAccount.accountNumber}
+                    onChange={(e) => setNewAccount({...newAccount, accountNumber: e.target.value})}
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-600">IFSC Code</label>
+                  <input
+                    type="text"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+                    value={newAccount.ifscCode}
+                    onChange={(e) => setNewAccount({...newAccount, ifscCode: e.target.value})}
+                    required
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-medium py-3 px-6 rounded-xl transition-all duration-200 transform hover:scale-[1.02]"
+              >
+                Save Bank Account
+              </button>
+            </form>
+          </div>
         </div>
 
         {/* Transaction History */}
-        <div className="bg-white rounded-lg shadow-sm p-6">
-          <h3 className="text-xl font-semibold mb-6">Withdrawal History</h3>
-          
-          {transactions.length === 0 ? (
-            <p className="text-gray-500 text-center py-4">No withdrawal history found</p>
-          ) : (
-            <div className="space-y-4">
-              {transactions.map((transaction) => (
-                <div 
-                  key={transaction.id}
-                  className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
-                >
-                  <div>
-                    <p className="font-medium">₹{transaction.amount.toFixed(2)}</p>
-                    <p className="text-sm text-gray-500">{transaction.method}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className={`text-sm ${
-                      transaction.status === 'Completed' ? 'text-green-600' : 
-                      transaction.status === 'Pending' ? 'text-yellow-600' : 'text-red-600'
-                    }`}>
-                      {transaction.status}
-                    </p>
-                    <p className="text-sm text-gray-500">{transaction.date}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+        <div className="bg-white rounded-2xl shadow-lg p-6">
+          <h3 className="text-xl font-semibold text-gray-800 mb-6 flex items-center gap-2">
+            <FiCheckCircle className="w-6 h-6 text-purple-600" /> Transaction History
+          </h3>
+          <div className="overflow-x-auto rounded-lg border border-gray-100">
+            <table className="w-full">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">Date</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">Amount</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">Status</th>
+                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">Transaction ID</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {transactions?.length > 0 ? (
+                  transactions.map((transaction) => (
+                    <tr key={transaction._id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 text-sm text-gray-700">
+                        {new Date(transaction.createdAt).toLocaleDateString('en-IN')}
+                      </td>
+                      <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                        ₹{transaction.amount}
+                      </td>
+                      <td className="px-6 py-4">
+                        <span
+                          className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium capitalize ${
+                            transaction.status === 'completed'
+                              ? 'bg-green-100 text-green-800'
+                              : transaction.status === 'failed'
+                              ? 'bg-red-100 text-red-800'
+                              : 'bg-amber-100 text-amber-800'
+                          }`}
+                        >
+                          {transaction.status}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-sm text-gray-700 font-mono">
+                        {transaction.transactionId}
+                      </td>
+                    </tr>
+                  ))
+                ) : (
+                  <tr>
+                    <td colSpan="4" className="px-6 py-8 text-center text-gray-400">
+                      <div className="flex flex-col items-center justify-center">
+                        <FiCreditCard className="w-12 h-12 text-gray-300 mb-4" />
+                        No transactions found
+                      </div>
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
   );
 };
 
-export default WithdrawalPage;
+export default Withdrawal;

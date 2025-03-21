@@ -22,6 +22,8 @@ import PrivacyPolicy from "./Component/PrivactPolicy.component";
 import RiskDisclosure from "./Component/RiskDiscloserAgrrmrnt";
 import ForgotPassword from "./Component/ForgotPassword.component";
 import ResetPassword from "./Component/ResetPassword.component";
+import Withdrawal from "./Component/Withdrawal.component";
+import TransactionHistory from "./Component/Transaction.component";
 
 // import VideoDetails from "./Component/Showvideo.component";
 // import VideoDetails from "./Component/Showvideo";
@@ -50,7 +52,8 @@ const router = createBrowserRouter(
       {/* <Route path="/channel" element={<Channel/>} /> */}
       {/* <Route path="/channel/:username" element={<Channel/>} />
       <Route path="/history/:username" element={<History/>} /> */}
-
+      <Route path="/withdrawal" element={<Withdrawal/>} />
+      <Route path="/Transaction-history" element={<TransactionHistory/>} />
 
     </Route>
   )
