@@ -731,6 +731,8 @@ const createFundAccount = asyncHandler(async (req, res) => {
     // ✅ सभी अनिवार्य फ़ील्ड्स लें
     const { userId, name, accountNumber, ifscCode, email, phone } = req.body;
 
+    console.log("req.body",req.body);
+    
     // 1. Contact बनाएँ (Email/Phone के बिना Error)
     const contact = await razorpay.contacts.create({
       name: name,
