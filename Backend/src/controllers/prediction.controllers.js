@@ -738,6 +738,8 @@ const createFundAccount = asyncHandler(async (req, res) => {
       type: "customer",
     });
 
+    console.log("COntact created", contact);
+    
     // Create Fund Account
     const fundAccount = await razorpay.fundAccounts.create({
       contact_id: contact.id,
