@@ -745,7 +745,7 @@ const createFundAccount = asyncHandler(async (req, res) => {
 
 
 
-    console.log("Contact ID:", contact.id); // ✅ चेक करें कि ID मिल रहा है
+    // console.log("Contact ID:", contact.id); // ✅ चेक करें कि ID मिल रहा है
 
     // Create Razorpay Contact
     const contact = await razorpay.contacts.create({
