@@ -725,12 +725,14 @@ const handlePayoutWebhook = asyncHandler(async (req, res) => {
 // Create Fund Account
 const createFundAccount = asyncHandler(async (req, res) => {
   try {
-    const { userId, name, accountNumber, ifscCode } = req.body;
+    const { userId, name, accountNumber, ifscCode, userId2 } = req.body;
 
     console.log("userId",userId);
     console.log("name",name);
     console.log("accountNumber",accountNumber);
     console.log("ifscCode",ifscCode);
+    console.log("userId2",userId2);
+
     console.log("req.body",req.body);
     
     // Create Razorpay Contact
