@@ -739,6 +739,8 @@ const createFundAccount = asyncHandler(async (req, res) => {
       contact: phone // 10 अंकों का फ़ोन नंबर
     });
 
+    console.log("contact",contact);
+    
     // 2. Fund Account बनाएँ
     const fundAccount = await razorpay.fundAccount.create({
       contact_id: contact.id,
@@ -749,6 +751,8 @@ const createFundAccount = asyncHandler(async (req, res) => {
         ifsc: ifscCode.toUpperCase(),
       },
     });
+    console.log("fundAccount",fundAccount);
+
 
     // 3. यूज़र प्रोफाइल अपडेट करें
     await User.findByIdAndUpdate(userId, {
