@@ -805,15 +805,16 @@ const createFundAccount = asyncHandler(async (req, res) => {
     console.log("Contact Created:", contact);
 
     // Create Fund Account
-    const fundAccount = await razorpay.fundAccount.create({
-            contact_id: contact.id,
-            account_type: "bank_account",
-            bank_account: {
-              name,
-              account_number: accountNumber,
-              ifsc: ifscCode,
-            },
-          });
+     // ✅ Correct fund_accounts.create API
+     const fundAccount = await razorpay.fund_accounts.create({
+      contact_id: contact.id,
+      account_type: "bank_account",
+      bank_account: {
+        name,
+        account_number: accountNumber,
+        ifsc: ifscCode,
+      },
+    });
     
 
     console.log("Fund Account Created:", fundAccount);
