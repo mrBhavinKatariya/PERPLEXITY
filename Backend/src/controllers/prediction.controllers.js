@@ -726,71 +726,120 @@ const handlePayoutWebhook = asyncHandler(async (req, res) => {
 
 
 // Create Fund Account
-const createFundAccount = asyncHandler(async (req, res) => {
-  try {
-    const { userId, name, accountNumber, ifscCode,  } = req.body;
+// const createFundAccount = asyncHandler(async (req, res) => {
+//   try {
+//     const { userId, name, accountNumber, ifscCode,  } = req.body;
 
-    console.log("userId",userId);
-    console.log("name",name);
-    console.log("accountNumber",accountNumber);
-    console.log("ifscCode",ifscCode);
+//     console.log("userId",userId);
+//     console.log("name",name);
+//     console.log("accountNumber",accountNumber);
+//     console.log("ifscCode",ifscCode);
   
 
-    // console.log("req.body",req.body);
+//     // console.log("req.body",req.body);
     
 
-    // console.log("Razorpay",razorpay)
-    console.log("process.env.RAZORPAY_KEY_ID",process.env.RAZORPAY_KEY_ID);
-    console.log("process.env.RAZORPAY_KEY_SECRET",process.env.RAZORPAY_KEY_SECRET);
+//     // console.log("Razorpay",razorpay)
+//     console.log("process.env.RAZORPAY_KEY_ID",process.env.RAZORPAY_KEY_ID);
+//     console.log("process.env.RAZORPAY_KEY_SECRET",process.env.RAZORPAY_KEY_SECRET);
 
 
 
-    // console.log("Contact ID:", contact.id); // ✅ चेक करें कि ID मिल रहा है
+//     // console.log("Contact ID:", contact.id); // ✅ चेक करें कि ID मिल रहा है
 
-    // Create Razorpay Contact
+//     // Create Razorpay Contact
+//     const contact = await razorpay.contacts.create({
+//       name: name,
+//       type: "customer",
+//     });
+
+//     console.log("COntact created", contact);
+        
+    
+//     // Create Fund Account
+//     const fundAccount = await razorpay.fundAccount.create({
+//       contact_id: contact.id,
+//       account_type: "bank_account",
+//       bank_account: {
+//         name,
+//         account_number: accountNumber,
+//         ifsc: ifscCode,
+//       },
+//     });
+
+//     // Save fund account ID to user profile
+//     await User.findByIdAndUpdate(userId, {
+//       $push: {
+//         bankAccounts: {
+//           fundAccountId: fundAccount.id,
+//           last4: accountNumber.slice(-4),
+//           bankName: "Bank Name" // Extract from IFSC if needed
+//         }
+//       }
+//     });
+
+//     res.status(200).json({
+//       success: true,
+//       fundAccountId: fundAccount.id,
+//     });
+//   } catch (error) {
+//     console.error("Fund account error:", error);
+//     res.status(500).json({ success: false, message: "Failed to add bank account" });
+//   }
+// });
+
+const createFundAccount = asyncHandler(async (req, res) => {
+  try {
+    const { userId, name, accountNumber, ifscCode } = req.body;
+
+    // 1. कॉन्टैक्ट बनाएँ
     const contact = await razorpay.contacts.create({
       name: name,
       type: "customer",
+      email: "user@example.com", // Optional
     });
 
-    console.log("COntact created", contact);
-    
-
-
-    
-    
-    // Create Fund Account
-    const fundAccount = await razorpay.fundAccount.create({
+    // 2. फंड अकाउंट बनाएँ (fundAccounts का उपयोग करें)
+    const fundAccount = await razorpay.fundAccounts.create({
       contact_id: contact.id,
       account_type: "bank_account",
       bank_account: {
-        name,
-        account_number: accountNumber,
-        ifsc: ifscCode,
+        name: name,
+        account_number: accountNumber.toString(), // स्ट्रिंग में कन्वर्ट करें
+        ifsc: ifscCode.toUpperCase(), // IFSC अपरकेस करें
       },
     });
 
-    // Save fund account ID to user profile
-    await User.findByIdAndUpdate(userId, {
-      $push: {
-        bankAccounts: {
-          fundAccountId: fundAccount.id,
-          last4: accountNumber.slice(-4),
-          bankName: "Bank Name" // Extract from IFSC if needed
-        }
-      }
-    });
+    // 3. यूज़र अपडेट करें
+    await User.findByIdAndUpdate(
+      userId,
+      {
+        $push: {
+          bankAccounts: {
+            fundAccountId: fundAccount.id,
+            last4: accountNumber.slice(-4),
+            bankName: "Kotak Mahindra Bank", // IFSC KKBK0000883 के लिए
+            ifsc: ifscCode,
+          },
+        },
+      },
+      { new: true }
+    );
 
-    res.status(200).json({
+    res.status(201).json({
       success: true,
       fundAccountId: fundAccount.id,
     });
+
   } catch (error) {
-    console.error("Fund account error:", error);
-    res.status(500).json({ success: false, message: "Failed to add bank account" });
+    console.error("Full Error:", error);
+    res.status(500).json({
+      success: false,
+      message: error.error?.description || "Bank account creation failed",
+      errorCode: error.error?.code,
+    });
   }
 });
-
 
 const changeCurrentPassword = asyncHandler(async(req, res) => {
   const {oldPassword, newPassword} = req.body
