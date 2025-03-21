@@ -95,8 +95,7 @@ const Withdrawal = () => {
     e.preventDefault();
     try {
       const response = await axios.post(`${API_URL}/api/v1/users/fund-account`, {
-        userId: 'current_user_id',
-        userId2:current_user_ids,
+        userId: current_user_ids,
         ...newAccount
       });
 
