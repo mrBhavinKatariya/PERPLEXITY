@@ -18,7 +18,7 @@ const Withdrawal = () => {
   const [selectedAccount, setSelectedAccount] = useState('');
   const [transactions, setTransactions] = useState([]);
   const [balance, setBalance] = useState(0);
-  const [current_user_id,setCurrent_User_Id] = useState("");
+  const [current_user_ids,setCurrent_User_Id] = useState("");
   const [newAccount, setNewAccount] = useState({
     name: '',
     accountNumber: '',
@@ -52,7 +52,7 @@ const Withdrawal = () => {
           // setUser(response.data.data);
           // Set balance from API response (adjust according to your API structure)
           console.log("response.data.data._id",response.data.data._id);
-          setCurrent_User_Id(response.data.data._id)
+          setCurrent_User_Id(response.data.data._id);
           setBalance(response.data.data.balance || 0);
           setBankAccounts(data.bankAccounts);
           
@@ -63,6 +63,7 @@ const Withdrawal = () => {
       fetchUser();
   }, []);
 
+  
   // Handle withdrawal submission
   const handleWithdrawal = async (e) => {
     e.preventDefault();
@@ -71,9 +72,12 @@ const Withdrawal = () => {
         userId: 'current_user_id', // Replace with actual user ID from auth
         amount: parseFloat(amount),
         fundAccountId: selectedAccount,
-        userId2:current_user_id,
       });
 
+      console.log("user2",userId2);
+      console.log("current_user_ids",current_user_ids);
+
+      
       if (response.data.success) {
         toast.success('Withdrawal initiated successfully!');
         setBalance(prev => prev - parseFloat(amount));
@@ -82,6 +86,8 @@ const Withdrawal = () => {
     } catch (error) {
       toast.error(error.response?.data?.message || 'Withdrawal failed');
     }
+
+
   };
 
   // Handle new bank account submission
@@ -90,6 +96,7 @@ const Withdrawal = () => {
     try {
       const response = await axios.post(`${API_URL}/api/v1/users/fund-account`, {
         userId: 'current_user_id',
+        userId2:current_user_ids,
         ...newAccount
       });
 
