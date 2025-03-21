@@ -173,13 +173,19 @@ const SettingsPage = () => {
                 Recharge
               </button>
               <button
-                onClick={() => setShowWithdrawalModal(true)}
+                 onClick={() => {
+                  navigate("/withdrawal");
+                  window.scrollTo(0, 0);
+                }}
                 className="w-full bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
               >
                 Withdrawal
               </button>
               <button
-                onClick={() => setShowTransactionModal(true)}
+               onClick={() => {
+                navigate("/transaction-history");
+                window.scrollTo(0, 0);
+              }}
                 className="w-full bg-purple-500 text-white px-4 py-2 rounded-lg hover:bg-purple-600"
               >
                 Transaction History
