@@ -794,13 +794,11 @@ const createFundAccount = asyncHandler(async (req, res) => {
   try {
     const { userId, name, accountNumber, ifscCode } = req.body;
 
-    console.log("Razorpay Instance:", razorpay);
+    // console.log("Razorpay Instance:", razorpay);
 
     // Create Razorpay Contact
     const contact = await razorpay.customers.create({
       name: name,
-      contact: "9876543210", // Required field
-      email: "test@example.com", // Required field
       type: "customer",
     });
 
