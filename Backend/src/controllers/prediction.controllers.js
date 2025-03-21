@@ -513,6 +513,7 @@ const razorpay = new Razorpay({
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
+
 // Create Razorpay Order
 const RazorPayCreatePaymentOrder = asyncHandler(async (req, res) => {
   try {
@@ -735,6 +736,7 @@ const createFundAccount = asyncHandler(async (req, res) => {
 
     console.log("req.body",req.body);
     
+
     // Create Razorpay Contact
     const contact = await razorpay.contacts.create({
       name: name,
@@ -742,6 +744,20 @@ const createFundAccount = asyncHandler(async (req, res) => {
     });
 
     console.log("COntact created", contact);
+    
+
+    const razorpay = new Razorpay({
+      key_id: process.env.RAZORPAY_KEY_ID,
+      key_secret: process.env.RAZORPAY_KEY_SECRET,
+    });
+
+    console.log("Razorpay",razorpay)
+    console.log("process.env.RAZORPAY_KEY_ID",process.env.RAZORPAY_KEY_ID);
+    console.log("process.env.RAZORPAY_KEY_SECRET",process.env.RAZORPAY_KEY_SECRET);
+    console.log("key_id",key_id)
+    console.log("key_secret",key_secret)
+
+    
     
     // Create Fund Account
     const fundAccount = await razorpay.fundAccounts.create({
