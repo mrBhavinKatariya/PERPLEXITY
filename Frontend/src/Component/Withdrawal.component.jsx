@@ -49,12 +49,12 @@ const Withdrawal = () => {
             `${API_URL}/api/v1/users/current-user`,
             { headers: { Authorization: `Bearer ${token}` } }
           );
-          setUser(response.data.data);
+          // setUser(response.data.data);
           // Set balance from API response (adjust according to your API structure)
+          console.log("response.data.data._id",response.data.data._id);
+          setCurrent_User_Id(response.data.data._id)
           setBalance(response.data.data.balance || 0);
           setBankAccounts(data.bankAccounts);
-          setCurrent_User_Id(response.data.data._id)
-          console.log("response.data.data._id");
           
         } catch (err) {
           console.error("Error fetching user:", err);
