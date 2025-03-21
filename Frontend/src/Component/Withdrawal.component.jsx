@@ -54,6 +54,8 @@ const Withdrawal = () => {
           setBalance(response.data.data.balance || 0);
           setBankAccounts(data.bankAccounts);
           setCurrent_User_Id(response.data.data._id)
+          console.log("response.data.data._id");
+          
         } catch (err) {
           console.error("Error fetching user:", err);
         }
