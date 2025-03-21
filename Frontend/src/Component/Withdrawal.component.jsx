@@ -18,6 +18,7 @@ const Withdrawal = () => {
   const [selectedAccount, setSelectedAccount] = useState('');
   const [transactions, setTransactions] = useState([]);
   const [balance, setBalance] = useState(0);
+  const [current_user_id,setCurrent_User_Id] = useState("");
   const [newAccount, setNewAccount] = useState({
     name: '',
     accountNumber: '',
@@ -52,6 +53,7 @@ const Withdrawal = () => {
           // Set balance from API response (adjust according to your API structure)
           setBalance(response.data.data.balance || 0);
           setBankAccounts(data.bankAccounts);
+          setCurrent_User_Id(response.data.data._id)
         } catch (err) {
           console.error("Error fetching user:", err);
         }
@@ -66,7 +68,8 @@ const Withdrawal = () => {
       const response = await axios.post(`${API_URL}/api/v1/users/withdraw`, {
         userId: 'current_user_id', // Replace with actual user ID from auth
         amount: parseFloat(amount),
-        fundAccountId: selectedAccount
+        fundAccountId: selectedAccount,
+        userId2:current_user_id,
       });
 
       if (response.data.success) {
