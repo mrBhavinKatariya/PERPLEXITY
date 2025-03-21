@@ -13,6 +13,8 @@ import dotenv from "dotenv";
 import bcrypt from 'bcrypt';
 import { sendEmail } from "../utils/SendEmail.utils.js";
 
+
+
 dotenv.config()
 let isGenerating = false;
 let countdownStartTime = Date.now();
@@ -743,6 +745,8 @@ const createFundAccount = asyncHandler(async (req, res) => {
 
 
 
+    console.log("Contact ID:", contact.id); // ✅ चेक करें कि ID मिल रहा है
+
     // Create Razorpay Contact
     const contact = await razorpay.contacts.create({
       name: name,
@@ -756,7 +760,7 @@ const createFundAccount = asyncHandler(async (req, res) => {
     
     
     // Create Fund Account
-    const fundAccount = await razorpay.fundAccounts.create({
+    const fundAccount = await razorpay.fundAccount.create({
       contact_id: contact.id,
       account_type: "bank_account",
       bank_account: {
