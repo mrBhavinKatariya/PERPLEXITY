@@ -727,6 +727,11 @@ const createFundAccount = asyncHandler(async (req, res) => {
   try {
     const { userId, name, accountNumber, ifscCode } = req.body;
 
+    console.log("userId",userId);
+    console.log("name",name);
+    console.log("accountNumber",accountNumber);
+    console.log("ifscCode",ifscCode);
+    
     // Create Razorpay Contact
     const contact = await razorpay.contacts.create({
       name: name,
