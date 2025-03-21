@@ -746,11 +746,6 @@ const createFundAccount = asyncHandler(async (req, res) => {
     console.log("COntact created", contact);
     
 
-    const razorpay = new Razorpay({
-      key_id: process.env.RAZORPAY_KEY_ID,
-      key_secret: process.env.RAZORPAY_KEY_SECRET,
-    });
-
     console.log("Razorpay",razorpay)
     console.log("process.env.RAZORPAY_KEY_ID",process.env.RAZORPAY_KEY_ID);
     console.log("process.env.RAZORPAY_KEY_SECRET",process.env.RAZORPAY_KEY_SECRET);
