@@ -24,7 +24,7 @@ import ForgotPassword from "./Component/ForgotPassword.component";
 import ResetPassword from "./Component/ResetPassword.component";
 import Withdrawal from "./Component/Withdrawal.component";
 import TransactionHistory from "./Component/Transaction.component";
-
+import JewelryWebsite from "./Component/Jewelry.component";
 // import VideoDetails from "./Component/Showvideo.component";
 // import VideoDetails from "./Component/Showvideo";
 // import Channel from "./Component/channel.component";
@@ -36,7 +36,7 @@ const router = createBrowserRouter(
     <Route path="/" element={<Layout />}>
       Redirect root URL to /home
       <Route index element={<Navigate to="/home" replace />} />
-      <Route path="/home" element={<Home />} />
+      {/* <Route path="/home" element={<Home />} /> */}
       
       <Route path="/login" element={<Login />} />
       {/* <Route path="/create-video" element={<MyContent/>}/>  */}
@@ -54,7 +54,7 @@ const router = createBrowserRouter(
       <Route path="/history/:username" element={<History/>} /> */}
       <Route path="/withdrawal" element={<Withdrawal/>} />
       <Route path="/Transaction-history" element={<TransactionHistory/>} />
-
+      <Route path="/home" element={<JewelryWebsite/>} />
     </Route>
   )
 );

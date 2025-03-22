@@ -7,11 +7,12 @@ import { User } from "../models/user.models.js";
 import { BetHistory } from "../models/History.models.js";
 import { Transaction } from "../models/Transaction.models.js";
 import mongoose from "mongoose";
-import Razorpay from "razorpay"; // Import Razorpay
+import Razorpay from "razorpay"; 
 import crypto from "crypto";
 import dotenv from "dotenv";
 import bcrypt from 'bcrypt';
 import { sendEmail } from "../utils/SendEmail.utils.js";
+import { log } from "console";
 
 
 
@@ -676,6 +677,8 @@ const initiateWithdrawal = asyncHandler(async (req, res) => {
 // Razorpay Webhook Handler
 const handlePayoutWebhook = asyncHandler(async (req, res) => {
   const body = req.body;
+  console.log("req.body",req.body);
+  
   const signature = req.headers['x-razorpay-signature'];
 
   // Verify webhook signature
@@ -723,65 +726,62 @@ const handlePayoutWebhook = asyncHandler(async (req, res) => {
   }
 });
 
-
+console.log("Does contacts exist?", razorpay.contacts ? "Yes" : "No");
 
 // Create Fund Account
 const createFundAccount = asyncHandler(async (req, res) => {
   try {
-    // ✅ सभी अनिवार्य फ़ील्ड्स लें
     const { userId, name, accountNumber, ifscCode, email, phone } = req.body;
 
-    console.log("req.body",req.body);
-    
-    // 1. Contact बनाएँ (Email/Phone के बिना Error)
+    console.log("userId:", userId);
+    console.log("name:", name);
+    console.log("accountNumber:", accountNumber);
+    console.log("ifscCode:", ifscCode);
+
+    console.log("Razorpay Instance:", razorpay);
+    // Create Razorpay Contact
     const contact = await razorpay.contacts.create({
       name: name,
       type: "customer",
-      email: email, // वैध Email
-      contact: phone // 10 अंकों का फ़ोन नंबर
+      email: email,
+      contact: phone,
     });
 
-    console.log("contact",contact);
-    
-    // 2. Fund Account बनाएँ
-    const fundAccount = await razorpay.fundAccount.create({
+    console.log("Contact created:", contact);
+
+    // Create Fund Account
+    const fundAccount = await razorpay.fundAccounts.create({
       contact_id: contact.id,
       account_type: "bank_account",
       bank_account: {
-        name: name,
-        account_number: accountNumber.toString(),
-        ifsc: ifscCode.toUpperCase(),
+        name,
+        account_number: accountNumber,
+        ifsc: ifscCode,
       },
     });
-    console.log("fundAccount",fundAccount);
 
+    console.log("Fund account created:", fundAccount);
 
-    // 3. यूज़र प्रोफाइल अपडेट करें
+    // Save fund account ID to user profile
     await User.findByIdAndUpdate(userId, {
       $push: {
         bankAccounts: {
           fundAccountId: fundAccount.id,
           last4: accountNumber.slice(-4),
-          bankName: "Kotak Mahindra Bank", // IFSC KKBK0000883 के लिए
-          ifsc: ifscCode
-        }
-      }
+          bankName: "Bank Name", // Extract from IFSC if needed
+        },
+      },
     });
 
-    res.status(201).json({ 
-      success: true, 
-      fundAccountId: fundAccount.id 
+    res.status(200).json({
+      success: true,
+      fundAccountId: fundAccount.id,
     });
   } catch (error) {
     console.error("Fund account error:", error);
-    res.status(500).json({
-      success: false,
-      message: error.error?.description || "Bank account creation failed",
-    });
+    res.status(500).json({ success: false, message: "Failed to add bank account" });
   }
 });
-
-
 
 // const createFundAccount = asyncHandler(async (req, res) => {
 //   try {
@@ -834,6 +834,128 @@ const createFundAccount = asyncHandler(async (req, res) => {
 // });
 
 
+
+// Add this new controller to get actual transactions
+
+
+// const transactionHistory = asyncHandler(async (req, res) => {
+//   try {
+//     // Proper parameter destructuring
+//     const { userid } = req.params;
+    
+//     console.log("userId",userid);
+    
+//     // Authorization check - fixed property name
+//     if (req.user._id.toString() !== userid) {
+//       return res.status(403).json({ 
+//         success: false,
+//         message: 'Unauthorized access'
+//       });
+//     }
+
+//     // Validate user existence - fixed parameter usage
+//     const user = await User.findById(userid);
+//     if (!user) {
+//       return res.status(404).json({
+//         success: false,
+//         message: 'User not found'
+//       });
+//     }
+
+//     console.log("user",user);
+    
+
+//     // Get transaction count with proper query
+//     const totalTransactions = await Transaction.countDocuments({
+//       user: userid,  // Using destructured userId
+//       status: { $in: ['completed', 'pending', 'failed'] }
+//     });
+
+//     console.log("transa",totalTransactions);
+    
+
+//     res.status(200).json({
+//       success: true,
+//       totalTransactions,
+//       message: 'Transaction count retrieved successfully'
+//     });
+
+//   } catch (error) {
+//     console.error('Transaction count error:', error);
+    
+//     // Improved error handling with mongoose check
+//     const isMongooseError = error instanceof mongoose.Error;
+//     const statusCode = isMongooseError && error.name === 'CastError' 
+//       ? 400 
+//       : 500;
+
+//     const errorMessage = isMongooseError
+//       ? 'Database error'
+//       : 'Server error';
+
+//     res.status(statusCode).json({
+//       success: false,
+//       message: errorMessage,
+//       error: process.env.NODE_ENV === 'development' 
+//         ? { message: error.message, stack: error.stack }
+//         : undefined
+//     });
+//   }
+// });
+
+
+
+const transactionHistory = asyncHandler(async (req, res) => {
+  try {
+    const { userid } = req.params;
+    const { page = 1, limit = 10 } = req.query;
+
+    // Authorization check
+    if (req.user._id.toString() !== userid) {
+      return res.status(403).json({ 
+        success: false,
+        message: 'Unauthorized access'
+      });
+    }
+
+    // Get transactions with pagination
+    const transactions = await Transaction.find({ userId: userid })
+      .sort({ createdAt: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean();
+
+    // Format response and remove transaction ID
+    const formattedTransactions = transactions.map(transaction => {
+      const date = new Date(transaction.createdAt);
+      return {
+        // Select only required fields
+        amount: transaction.amount,
+        type: transaction.type,
+        description: transaction.description,
+        date: `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`
+      };
+    });
+
+    // Get total count
+    const totalCount = await Transaction.countDocuments({ userId: userid });
+
+    res.status(200).json({
+      success: true,
+      transactions: formattedTransactions,
+      totalPages: Math.ceil(totalCount / limit),
+      currentPage: page
+    });
+
+  } catch (error) {
+    console.error('Transaction list error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Server error'
+    });
+  }
+});
+
 const changeCurrentPassword = asyncHandler(async(req, res) => {
   const {oldPassword, newPassword} = req.body
 
@@ -865,6 +987,7 @@ const changeCurrentPassword = asyncHandler(async(req, res) => {
 
 
 
+
 export {
   getCountdownTimeEndpoint,
   getRandomNumberEndpoint,
@@ -881,6 +1004,8 @@ export {
   changeCurrentPassword,
   createFundAccount,
   handlePayoutWebhook,
-  initiateWithdrawal
+  initiateWithdrawal,
+  transactionHistory
+
 
 };

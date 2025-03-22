@@ -6,7 +6,9 @@ const app = express();
 
 app.use(
     cors({
-        origin: process.env.CORS_ORIGIN || "https://67d8f666adb4d0ab43b7af8e--myperplexity.netlify.app/",
+        // origin: process.env.CORS_ORIGIN || "https://67d8f666adb4d0ab43b7af8e--myperplexity.netlify.app/",
+        origin: process.env.CORS_ORIGIN || 8000,
+
         credentials: true,
         methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
         allowedHeaders: ["Content-Type", "Authorization", "Current-Type"],

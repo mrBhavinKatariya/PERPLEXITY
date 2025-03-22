@@ -10,7 +10,9 @@ import {
   FaMoneyCheckAlt
 } from 'react-icons/fa';
 
-const API_URL = import.meta.env.REACT_APP_API_URL || "https://perplexity-bd2d.onrender.com";
+// const API_URL = import.meta.env.REACT_APP_API_URL || "http://localhost:8000";
+const API_URL =
+  import.meta.env.REACT_APP_API_URL || "https://perplexity-bd2d.onrender.com";
 
 const Withdrawal = () => {
   const [amount, setAmount] = useState('');
