@@ -6,13 +6,7 @@ const Jewellery = () => {
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   // Sample products data
-  const products = [
-   
-    
-   
-    
-   
-    
+  const products = [  
     
     {
       id: 8,
@@ -219,7 +213,7 @@ const Jewellery = () => {
       {/* Header */}
       <header className="bg-white shadow-md">
         <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-purple-600">Jewellery</h1>
+          <h1 className="text-2xl font-bold text-purple-600">JEWELLERY</h1>
           <div className="flex items-center gap-4">
             <FiHeart className="text-xl cursor-pointer" />
             <FiShoppingCart className="text-xl cursor-pointer" />
