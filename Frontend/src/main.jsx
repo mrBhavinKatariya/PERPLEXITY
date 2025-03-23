@@ -26,6 +26,12 @@ import Withdrawal from "./Component/Withdrawal.component";
 import TransactionHistory from "./Component/Transaction.component";
 import JewelryWebsite from "./Component/Jewelry.component";
 import Jewellery from "./Component/Jewellery.component";
+import AboutUs from "./Component/About.component";
+import ContactPage from "./Component/ContactUs.component";
+import PrivacyPolicyPage from "./Component/PrivacyPolicy.component";
+import RefundPolicyPage from "./Component/RefundPolicy.component";
+import TermsOfUse from "./Component/terms.component";
+import ShippingPolicy from "./Component/Shipping.component";
 // import VideoDetails from "./Component/Showvideo.component";
 // import VideoDetails from "./Component/Showvideo";
 // import Channel from "./Component/channel.component";
@@ -57,7 +63,19 @@ const router = createBrowserRouter(
       <Route path="/history/:username" element={<History/>} /> */}
       <Route path="/withdrawal" element={<Withdrawal/>} />
       <Route path="/Transaction-history" element={<TransactionHistory/>} />
+      {/*------------------ Aaya thi  remove thase -------------- */}
       <Route path="/jewellery" element = {<Jewellery/>} />
+      <Route path="/aboutus" element = {<AboutUs/>} />
+      <Route path="/contactus" element = {<ContactPage/>} />
+      <Route path="/privacypolicy" element = {<PrivacyPolicyPage/>} />
+      <Route path="/refund-policy" element = {<RefundPolicyPage/>} />
+      <Route path="/terms" element = {<TermsOfUse/>} />
+      <Route path="/shipping-policy" element = {<ShippingPolicy/>} />
+
+
+
+
+
     </Route>
   )
 );
