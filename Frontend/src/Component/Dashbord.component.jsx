@@ -87,7 +87,7 @@ export default function Dashboard() {
               ))}
 
               {/* Login / Logout Button */}
-              <li>
+              {/* <li>
                 {isLoggedIn ? (
                   <button
                     onClick={handleLogout}
@@ -103,7 +103,7 @@ export default function Dashboard() {
                     Login
                   </NavLink>
                 )}
-              </li>
+              </li> */}
             </ul>
           </div>
 
