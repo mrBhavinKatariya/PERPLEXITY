@@ -56,7 +56,7 @@ const Jewellery = () => {
     {
       id: 11,
       title: "Glamorous silver ring enhanced by stri...",
-      price: 299,
+      price: 499,
       originalPrice: 464,
       discount: 35,
       setPrice: 159,
