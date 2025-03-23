@@ -35,7 +35,7 @@ const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path="/" element={<Layout />}>
       Redirect root URL to /home
-      <Route index element={<Navigate to="/home" replace />} />
+      <Route index element={<Navigate to="/" replace />} />
       {/* <Route path="/home" element={<Home />} /> */}
       
       <Route path="/login" element={<Login />} />
@@ -54,7 +54,7 @@ const router = createBrowserRouter(
       <Route path="/history/:username" element={<History/>} /> */}
       <Route path="/withdrawal" element={<Withdrawal/>} />
       <Route path="/Transaction-history" element={<TransactionHistory/>} />
-      <Route path="/home" element={<JewelryWebsite/>} />
+      <Route path="/" element={<JewelryWebsite/>} />
     </Route>
   )
 );
