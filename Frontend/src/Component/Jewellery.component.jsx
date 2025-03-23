@@ -1,117 +1,19 @@
 import { useState } from 'react';
 import { FiHeart, FiStar, FiShoppingCart, FiChevronLeft, FiChevronRight,FiX } from 'react-icons/fi';
 
-const JewelryWebsite = () => {
+const Jewellery = () => {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   // Sample products data
   const products = [
-    {
-      id: 1,
-      title: "Stunning Floral Rose Gold AD Finger Ring",
-      price: 449,
-      originalPrice: 999,
-      discount: 60,
-      setPrice: 299,
-      bulkOffer: "Buy any 7 & Get @ ₹130",
-      warranty: "2 Year warranty Gold Plated AD Stone...",
-      rating: 4,
-      images: [
-        '1690539896539.jpeg',
-        '1690539896541.jpeg'
-      ]
-    },
-    {
-      id: 2,
-      title: "Silver AD Finger Ring",
-      price: 499,
-      originalPrice: 964,
-      discount: 35,
-      setPrice: 359,
-      bulkOffer: "Buy any 5 & Get @ ₹140",
-      warranty: "2 Year warranty Rose Gold Plated...",
-      rating: 5,
-      images: [
-        '1690540286587.jpeg',
-        '1690540286589.jpeg'
-      ]
-    },
-    {
-      id: 3,
-      title: "American Diamond Silver White Finger Ring",
-      price: 599,
-      originalPrice: 1464,
-      discount: 35,
-      setPrice: 459,
-      bulkOffer: "Buy any 5 & Get @ ₹140",
-      warranty: "2 Year warranty Rose Gold Plated...",
-      rating: 5,
-      images: [
-        '1690541110336.jpeg',
-        '1690541110338.jpeg'
-      ]
-    },
-    {
-      id: 4,
-      title: "Fancy American Diamond Round Shaped Rose Gold Finger Ring",
-      price: 589,
-      originalPrice: 1299,
-      discount: 35,
-      setPrice: 359,
-      bulkOffer: "Buy any 5 & Get @ ₹140",
-      warranty: "2 Year warranty Rose Gold Plated...",
-      rating: 5,
-      images: [
-        '1690611147876.jpeg',
-        '1690611147878.jpeg'
-      ]
-    },
-    {
-      id: 5,
-      title: "Floral American Diamond White AD Silver Finger Ring",
-      price: 499,
-      originalPrice: 744,
-      discount: 35,
-      setPrice: 209,
-      bulkOffer: "Buy any 5 & Get @ ₹140",
-      warranty: "2 Year warranty Rose Gold Plated...",
-      rating: 5,
-      images: [
-        '1690611999497.jpeg',
-        '1690611999499.jpeg'
-      ]
-    },
-    {
-      id: 6,
-      title: "Rose Gold Plated AD Studded Round Finger Ring",
-      price: 499,
-      originalPrice: 999,
-      discount: 35,
-      setPrice: 359,
-      bulkOffer: "Buy any 5 & Get @ ₹140",
-      warranty: "2 Year warranty Rose Gold Plated...",
-      rating: 5,
-      images: [
-        '1709888706485.jpeg',
-        '1709888706484.jpeg'
-      ]
-    },
-    {
-      id: 7,
-      title: "2 Year warranty Gold Plated Pave AD studded Open Statement Ring",
-      price: 499,
-      originalPrice: 664,
-      discount: 35,
-      setPrice: 259,
-      bulkOffer: "Buy any 5 & Get @ ₹140",
-      warranty: "2 Year warranty Rose Gold Plated...",
-      rating: 5,
-      images: [
-        '1728214154559.jpeg',
-        '1728214154560.jpeg'
-      ]
-    },
+   
+    
+   
+    
+   
+    
+    
     {
       id: 8,
       title: "Flower Shape silver ring featuring lustrous white AD gems",
@@ -186,8 +88,116 @@ const JewelryWebsite = () => {
         '1689920293551.jpeg',
         '1689920293552.jpeg'
       ]
-    }
+    },
+    {
+        id: 1,
+        title: "Stunning Floral Rose Gold AD Finger Ring",
+        price: 449,
+        originalPrice: 999,
+        discount: 60,
+        setPrice: 299,
+        bulkOffer: "Buy any 7 & Get @ ₹130",
+        warranty: "2 Year warranty Gold Plated AD Stone...",
+        rating: 4,
+        images: [
+          '1690539896539.jpeg',
+          '1690539896541.jpeg'
+        ]
+      },
+      {
+        id: 2,
+        title: "Silver AD Finger Ring",
+        price: 499,
+        originalPrice: 964,
+        discount: 35,
+        setPrice: 359,
+        bulkOffer: "Buy any 5 & Get @ ₹140",
+        warranty: "2 Year warranty Rose Gold Plated...",
+        rating: 5,
+        images: [
+          '1690540286587.jpeg',
+          '1690540286589.jpeg'
+        ]
+      },
 
+      {
+        id: 3,
+        title: "American Diamond Silver White Finger Ring",
+        price: 599,
+        originalPrice: 1464,
+        discount: 35,
+        setPrice: 459,
+        bulkOffer: "Buy any 5 & Get @ ₹140",
+        warranty: "2 Year warranty Rose Gold Plated...",
+        rating: 5,
+        images: [
+          '1690541110336.jpeg',
+          '1690541110338.jpeg'
+        ]
+      },
+      {
+        id: 5,
+        title: "Floral American Diamond White AD Silver Finger Ring",
+        price: 499,
+        originalPrice: 744,
+        discount: 35,
+        setPrice: 209,
+        bulkOffer: "Buy any 5 & Get @ ₹140",
+        warranty: "2 Year warranty Rose Gold Plated...",
+        rating: 5,
+        images: [
+          '1690611999497.jpeg',
+          '1690611999499.jpeg'
+        ]
+      },
+
+
+      {
+        id: 4,
+        title: "Fancy American Diamond Round Shaped Rose Gold Finger Ring",
+        price: 589,
+        originalPrice: 1299,
+        discount: 35,
+        setPrice: 359,
+        bulkOffer: "Buy any 5 & Get @ ₹140",
+        warranty: "2 Year warranty Rose Gold Plated...",
+        rating: 5,
+        images: [
+          '1690611147876.jpeg',
+          '1690611147878.jpeg'
+        ]
+      },
+
+      {
+        id: 6,
+        title: "Rose Gold Plated AD Studded Round Finger Ring",
+        price: 499,
+        originalPrice: 999,
+        discount: 35,
+        setPrice: 359,
+        bulkOffer: "Buy any 5 & Get @ ₹140",
+        warranty: "2 Year warranty Rose Gold Plated...",
+        rating: 5,
+        images: [
+          '1709888706485.jpeg',
+          '1709888706484.jpeg'
+        ]
+      },
+      {
+        id: 7,
+        title: "2 Year warranty Gold Plated Pave AD studded Open Statement Ring",
+        price: 499,
+        originalPrice: 664,
+        discount: 35,
+        setPrice: 259,
+        bulkOffer: "Buy any 5 & Get @ ₹140",
+        warranty: "2 Year warranty Rose Gold Plated...",
+        rating: 5,
+        images: [
+          '1728214154559.jpeg',
+          '1728214154560.jpeg'
+        ]
+      },
 
   ];
 
@@ -349,4 +359,4 @@ const JewelryWebsite = () => {
   );
 };
 
-export default JewelryWebsite;
+export default Jewellery;

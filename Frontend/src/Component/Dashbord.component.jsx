@@ -57,16 +57,17 @@ export default function Dashboard() {
         <div className="flex items-center justify-between mx-auto max-w-screen-xl">
           {/* Logo Section */}
           <Link to="/" className="flex items-center">
-            <img src="/perplexity.png" className="h-12 mr-3" alt="Logo" />
+            <img src="/download (3).png" className=" mr-3 h-[80px] w-[90px] ml-[30px]" alt="Logo" />
           </Link>
 
           {/* Desktop Navigation Links */}
           <div className="hidden lg:flex items-center space-x-8">
             <ul className="flex items-center space-x-6">
               {[ 
-                { to: "/home", label: "Home" },
-                { to: "/prediction", label: "Prediction" },
-                { to: "/setting", label: "Setting" },
+                { to: "/", label: "Home" },
+                { to: "/jewellery", label: "Jewellery" },
+                // { to: "/prediction", label: "Prediction" },
+                // { to: "/setting", label: "Setting" },
                 // { to: "/create-video", label: "My Content" },
                 // { to: "/collections", label: "Collections" },
                 // { to: `/channel/${currentUser?.username || "guest"}`, label: "Channel" },
