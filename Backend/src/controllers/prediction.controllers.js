@@ -550,6 +550,9 @@ const razorpay = new Razorpay({
 // });
 
 const RazorPayCreatePaymentOrder = asyncHandler(async (req, res) => {
+
+  console.log("req.body",req.body);
+  
   try {
     const { amount } = req.body;
     
