@@ -26,11 +26,11 @@ const registerUser = asyncHandler(async (req, res) => {
     }
 
     const existedUser = await User.findOne({
-        $or: [{ username }, { email }, { phoneNo }],
+        $or: [{ email }, { phoneNo }],
     });
 
     if (existedUser) {
-        throw new ApiErrors(410, "Username already exists");
+        throw new ApiErrors(410, "email Or phoneNo already exists");
     }
 
     let referredBy = null;
