@@ -553,12 +553,15 @@ const RazorPayCreatePaymentOrder = asyncHandler(async (req, res) => {
   try {
     const { amount } = req.body;
     
-    console.log("req.body",req.body);
-    
     if (!amount) {
       return res
         .status(400)
         .json({ success: false, message: "Amount is required" });
+    }
+
+    // Check authenticated user
+    if (!req.user) {
+      return res.status(401).json({ success: false, message: "User not authenticated" });
     }
 
     // Get current user details

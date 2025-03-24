@@ -107,7 +107,12 @@ const RechargePage = ({ user, onClose }) => {
     try {
       const response = await axios.post(
         `${API_URL}/api/v1/users/create-razorpay-order`,
-        { amount: amount * 100 } // Convert to paise
+        { amount: amount  } ,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // Add auth header
+          },
+        }
       );
 
       const options = {
@@ -132,6 +137,11 @@ const RechargePage = ({ user, onClose }) => {
                 razorpaySignature: response.razorpay_signature,
                 amount: amount,
                 userId: userId,
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`, // Add auth for verification
+                },
               }
             );
 
