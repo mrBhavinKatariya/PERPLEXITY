@@ -10,7 +10,8 @@ function RegisterPage() {
         email: "",
         password: "",
         fullname: "",
-        phoneNo: ""
+        phoneNo: "",
+        refreId: "" ,
     });
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
@@ -59,7 +60,7 @@ function RegisterPage() {
             <div className="relative bg-gray-800 rounded-xl p-8 w-full max-w-lg border border-cyan-500/30 shadow-2xl shadow-cyan-500/20">
                 <div className="relative z-10">
                     <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-purple-500 text-center mb-8">
-                        CYBER SIGNUP
+                        USER SIGNUP
                     </h1>
 
                     <div className="space-y-6">
@@ -120,6 +121,18 @@ function RegisterPage() {
                                 text-white placeholder-gray-400 transition-all"
                                 placeholder="Your Phone Number"
                                 onChange={(e) => setCredentials({ ...credentials, phoneNo: e.target.value })}
+                            />
+                        </div>
+
+                        <div className="group">
+                            <label className="block text-sm font-medium text-cyan-300 mb-2">REFERRAL ID (Optional)</label>
+                            <input
+                                type="text"
+                                className="w-full px-4 py-3 bg-gray-700 border-2 border-gray-600 rounded-lg 
+                                focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50
+                                text-white placeholder-gray-400 transition-all"
+                                placeholder="Referral ID (if any)"
+                                onChange={(e) => setCredentials({ ...credentials, refreId: e.target.value })}
                             />
                         </div>
 
