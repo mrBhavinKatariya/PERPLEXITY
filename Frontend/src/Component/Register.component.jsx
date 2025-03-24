@@ -11,7 +11,7 @@ function RegisterPage() {
         password: "",
         fullname: "",
         phoneNo: "",
-        refreId: "" ,
+        referralCode: "" ,
     });
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
@@ -135,7 +135,7 @@ function RegisterPage() {
                                 focus:outline-none focus:border-cyan-500 focus:ring-2 focus:ring-cyan-500/50
                                 text-white placeholder-gray-400 transition-all"
                                 placeholder="Referral ID (if any)"
-                                onChange={(e) => setCredentials({ ...credentials, refreId: e.target.value })}
+                                onChange={(e) => setCredentials({ ...credentials, referralCode: e.target.value })}
                             />
                         </div>
 

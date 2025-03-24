@@ -16,9 +16,9 @@ const generateRefreshToken = async (userId) => {
 };
 
 const registerUser = asyncHandler(async (req, res) => {
-    const { username, email, password, fullname, phoneNo, refreId   } = req.body;
+    const { username, email, password, fullname, phoneNo, referralCode   } = req.body;
     console.log("req.body",req.body);
-    console.log("refid",refreId);
+    console.log("refid",referralCode);
   
 
     if ([username, email, password, fullname, phoneNo].some((field) => !field || field.trim() === "")) {
@@ -34,8 +34,8 @@ const registerUser = asyncHandler(async (req, res) => {
     }
 
     let referredBy = null;
-    if (refreId) {
-        const referrer = await User.findOne({ refreId });
+    if (referralCode) {
+        const referrer = await User.findOne({ referralCode });
         if (!referrer) {    
             throw new ApiErrors(412, "Invalid referral code");
         }
