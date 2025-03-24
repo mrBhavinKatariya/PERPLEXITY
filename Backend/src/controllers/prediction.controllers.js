@@ -553,6 +553,8 @@ const RazorPayCreatePaymentOrder = asyncHandler(async (req, res) => {
   try {
     const { amount } = req.body;
     
+    console.log("req.body",req.body);
+    
     if (!amount) {
       return res
         .status(400)
