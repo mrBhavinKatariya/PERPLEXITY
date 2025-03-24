@@ -11,7 +11,7 @@ const ContactPage = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
-            className="text-4xl md:text-5xl font-cinzel font-bold text-white mb-4"
+            className="text-4xl md:text-5xl font-cinzel mt-[20px] font-bold text-black mb-4"
           >
             Connect With Us
           </motion.h1>

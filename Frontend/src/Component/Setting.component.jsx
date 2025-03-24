@@ -31,6 +31,7 @@ const SettingsPage = () => {
   const [showRechargeDropdown, setShowRechargeDropdown] = useState(false);
   const [showWalletDropdown, setShowWalletDropdown] = useState(false);
   const [showAboutDropdown, setShowAboutDropdown] = useState(false);
+  const [showCopiedMessage, setShowCopiedMessage] = useState(false);
   const [showAccountSecurityDropdown, setShowAccountSecurityDropdown] =
     useState(false);
 
@@ -64,6 +65,14 @@ const SettingsPage = () => {
     window.location.href = "/login"; // Adjust login route as needed
   };
 
+  const copyReferralCode = () => {
+    if (user?.referralCode) {
+      navigator.clipboard.writeText(user.referralCode);
+      setShowCopiedMessage(true);
+      setTimeout(() => setShowCopiedMessage(false), 2000);
+    }
+  };
+  
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">
       {/* Top Section */}
@@ -79,17 +88,41 @@ const SettingsPage = () => {
 
         {/* Read Section - Modified Button */}
         <div className="bg-white p-6 rounded-xl shadow-sm">
-          <div className="flex items-center mb-4">
-            <HiDocumentText className="w-6 h-6 text-purple-500 mr-2" />
-            <h2 className="text-xl font-semibold">Important Reads</h2>
-          </div>
-          <button
-            onClick={() => setShowRulesModal(true)}
-            className="w-full bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition"
-          >
-            Read Rules
-          </button>
-        </div>
+  <div className="flex items-center mb-4">
+    <HiDocumentText className="w-6 h-6 text-purple-500 mr-2" />
+    <h2 className="text-xl font-semibold">Important Reads</h2>
+  </div>
+  <button
+    onClick={() => setShowRulesModal(true)}
+    className="w-full bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition mb-3"
+  >
+    Read Rules
+  </button>
+  
+  {/* Add Referral Code Section Here */}
+  <div className="border-t pt-3">
+    <div className="flex items-center justify-between">
+      <div className="flex items-center">
+        <span className="text-gray-600 mr-2">Referral ID:</span>
+        <span className="font-medium">{user?.referralCode || "XXXXXX"}</span>
+      </div>
+      <button
+        onClick={copyReferralCode}
+        className="bg-gray-100 hover:bg-gray-200 px-3 py-1 rounded-lg text-sm flex items-center"
+      >
+        <HiDocumentText className="w-4 h-4 mr-1" />
+        Copy
+      </button>
+    </div>
+    
+    {/* Copied Message */}
+    {showCopiedMessage && (
+      <div className="text-green-600 text-sm mt-2 text-center">
+        Code copied to clipboard!
+      </div>
+    )}
+  </div>
+</div>
 
         {/* Promotions Section */}
         <div className="bg-white p-6 rounded-xl shadow-sm">

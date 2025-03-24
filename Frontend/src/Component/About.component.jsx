@@ -1,5 +1,8 @@
 import { motion } from 'framer-motion';
 import { SparklesIcon, ShieldCheckIcon, UserGroupIcon, MapPinIcon } from '@heroicons/react/24/outline';
+import { Link } from 'react-router-dom';
+import { FiArrowLeft, FiPhone, FiGlobe, FiMapPin } from 'react-icons/fi';
+
 
 const AboutUs = () => {
   const milestones = [
@@ -17,22 +20,46 @@ const AboutUs = () => {
 
   return (
     <div className="min-h-screen bg-cream-50">
-      {/* Hero Section */}
-      <section className="relative  bg-gradient-to-b from-gold-500 to-gold-700">
-        <div className="container mx-auto px-4 text-center">
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
-            className="text-4xl md:text-6xl font-cinzel font-bold text-white mb-6"
+
+       {/* Navigation */}
+    <nav className="bg-white shadow-sm">
+        <div className="max-w-6xl mx-auto px-4 py-4">
+          <Link 
+            to="/" 
+            className="flex items-center text-amber-600 hover:text-amber-700 transition-colors"
           >
-            Crafting Timeless Elegance
-          </motion.h1>
-          <p className="text-xl text-gold-100 max-w-2xl mx-auto">
-            Since 2002, India's premier destination for affordable luxury jewellery
-          </p>
+            <FiArrowLeft className="mr-2" />
+            Back to Home
+          </Link>
         </div>
-      </section>
+      </nav>
+
+      {/* Hero Section */}
+      <section className="relative bg-gradient-to-b from-gold-500 to-gold-700 py-20">
+  <div className="container mx-auto px-4 text-center">
+    {/* Styled About Us heading */}
+    <div className="mb-8 relative inline-block">
+      <p className="font-cinzel text-2xl md:text-3xl uppercase tracking-wide mb-4 
+         bg-gradient-to-r from-gold-200 to-gold-400 bg-clip-text text-black">
+        About Us
+      </p>
+      <div className="absolute bottom-0 left-1/2 w-16 h-1 bg-gold-300 transform -translate-x-1/2"></div>
+    </div>
+
+    <motion.h1
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.8 }}
+      className="text-4xl md:text-6xl font-cinzel font-bold text-black mb-6"
+    >
+      Crafting Timeless Elegance
+    </motion.h1>
+    
+    <p className="text-xl text-gold-100 max-w-2xl mx-auto md:text-2xl md:leading-relaxed">
+      Since 2002, India's premier destination for affordable luxury jewellery
+    </p>
+  </div>
+</section>
 
       {/* Brand Story Section */}
       <section className="py-20 bg-white">

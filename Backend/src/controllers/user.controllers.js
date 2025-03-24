@@ -16,7 +16,7 @@ const generateRefreshToken = async (userId) => {
 };
 
 const registerUser = asyncHandler(async (req, res) => {
-    const { username, email, password, fullname, phoneNo } = req.body;
+    const { username, email, password, fullname, phoneNo, referralCode   } = req.body;
 
     if ([username, email, password, fullname, phoneNo].some((field) => !field || field.trim() === "")) {
         throw new ApiErrors(409, "All fields are required");
@@ -30,12 +30,22 @@ const registerUser = asyncHandler(async (req, res) => {
         throw new ApiErrors(409, "Username already exists");
     }
 
+    let referredBy = null;
+    if (referralCode) {
+        const referrer = await User.findOne({ referralCode });
+        if (!referrer) {
+            throw new ApiErrors(400, "Invalid referral code");
+        }
+        referredBy = referrer._id;
+    }
+
     const user = await User.create({
         fullname,
         phoneNo,
         password,
         email,
         username: username.toLowerCase(),
+        referredBy,
     });
 
     
