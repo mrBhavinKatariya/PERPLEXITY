@@ -133,56 +133,56 @@ const TransactionHistory = () => {
         </motion.div>
 
         <div className="bg-white rounded-2xl shadow-sm overflow-hidden">
-          {loading ? (
-            <div className="p-8 space-y-4">
-              {[...Array(5)].map((_, i) => (
-                <div key={i} className="h-16 bg-gray-100 rounded-xl animate-pulse"></div>
-              ))}
-            </div>
-          ) : (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-              <div className="grid grid-cols-4 px-6 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
-                <div>Date</div>
-                <div>Amount</div>
-                <div>Type</div>
-              </div>
+  {loading ? (
+    <div className="p-8 space-y-4">
+      {[...Array(5)].map((_, i) => (
+        <div key={i} className="h-16 bg-gray-100 rounded-xl animate-pulse"></div>
+      ))}
+    </div>
+  ) : (
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
+      {/* Header row - changed to grid */}
+      <div className="grid grid-cols-3 px-6 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white">
+        <div className="text-left">Date</div>
+        <div className="text-center">Amount</div>
+        <div className="text-right">Type</div>
+      </div>
 
-              <div className="divide-y divide-gray-100">
-                {transactions.length > 0 ? (
-                  transactions.map((transaction) => (
-                    <motion.div
-                      key={transaction.date}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="grid grid-cols-4 gap-4 px-4 sm:px-6 py-3 sm:py-4 hover:bg-indigo-50 transition-colors"
-                    >
-                      <div>{transaction.date}</div>
-                      <div className={`font-medium ${
-                        transaction.type === 'credit' ? 'text-green-600' : 'text-red-600'
-                      }`}>
-                        ₹{transaction.amount}
-                      </div>
-                      <div className="capitalize">{transaction.type}</div>
-                      
-                    </motion.div>
-                  ))
-                ) : (
-                  <div className="p-6 sm:p-12 text-center">
-                    <div className="inline-block p-3 sm:p-4 mb-3 sm:mb-4 bg-indigo-100 rounded-full">
-                      <FiCreditCard className="w-8 h-8 sm:w-12 sm:h-12 text-indigo-600" />
-                    </div>
-                    <h4 className="text-sm sm:text-base text-gray-600 font-medium">
-                      No transactions found
-                    </h4>
-                    <p className="text-xs sm:text-sm text-gray-400 mt-1 sm:mt-2">
-                      Your transaction history will appear here
-                    </p>
-                  </div>
-                )}
+      <div className="divide-y divide-gray-100">
+        {transactions.length > 0 ? (
+          transactions.map((transaction) => (
+            <motion.div
+              key={transaction.date}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="grid grid-cols-3 px-6 py-4 hover:bg-indigo-50 transition-colors"
+            >
+              <div className="text-left">{transaction.date}</div>
+              <div className={`text-center font-medium ${
+                transaction.type === 'credit' ? 'text-green-600' : 'text-red-600'
+              }`}>
+                ₹{transaction.amount}
               </div>
+              <div className="text-right capitalize">{transaction.type}</div>
             </motion.div>
-          )}
-        </div>
+          ))
+        ) : (
+          <div className="p-6 sm:p-12 text-center">
+            <div className="inline-block p-3 sm:p-4 mb-3 sm:mb-4 bg-indigo-100 rounded-full">
+              <FiCreditCard className="w-8 h-8 sm:w-12 sm:h-12 text-indigo-600" />
+            </div>
+            <h4 className="text-sm sm:text-base text-gray-600 font-medium">
+              No transactions found
+            </h4>
+            <p className="text-xs sm:text-sm text-gray-400 mt-1 sm:mt-2">
+              Your transaction history will appear here
+            </p>
+          </div>
+        )}
+      </div>
+    </motion.div>
+  )}
+</div>
 
         {totalPages > 1 && <Pagination />}
       </div>
