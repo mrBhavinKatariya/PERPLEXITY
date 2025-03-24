@@ -17,8 +17,8 @@ const generateRefreshToken = async (userId) => {
 
 const registerUser = asyncHandler(async (req, res) => {
     const { username, email, password, fullname, phoneNo, referralCode   } = req.body;
-    console.log("req.body",req.body);
-    console.log("refid",referralCode);
+    // console.log("req.body",req.body);
+    // console.log("refid",referralCode);
   
 
     if ([username, email, password, fullname, phoneNo].some((field) => !field || field.trim() === "")) {
