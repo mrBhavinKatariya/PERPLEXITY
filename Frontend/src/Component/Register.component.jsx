@@ -16,8 +16,12 @@ function RegisterPage() {
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
     const navigate = useNavigate();
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
     const handleRegister = async () => {
+        setIsSubmitting(true); // Start loading
+        setError(""); // Clear previous errors
+
         console.log("Using API URL:", API_URL);
         try {
             const response = await axios.post(`${API_URL}/api/v1/users/register`, credentials, {
@@ -55,7 +59,12 @@ function RegisterPage() {
             } else {
                 setError("Network error. Please check your connection.");
             }
+        } finally {
+            setIsSubmitting(false); // Stop loading regardless of success/error
         }
+        
+        
+        
     };
 
     return (
@@ -140,13 +149,24 @@ function RegisterPage() {
                         </div>
 
                         <button
-                            className="w-full bg-gradient-to-r from-cyan-500 to-purple-600 text-gray-900 py-3.5 rounded-lg
-                            font-bold hover:from-cyan-400 hover:to-purple-500 transition-all transform hover:scale-[1.02]
-                            shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 active:scale-95"
-                            onClick={handleRegister}
-                        >
-                            ACTIVATE ACCOUNT
-                        </button>
+                    className="w-full bg-gradient-to-r from-cyan-500 to-purple-600 text-gray-900 py-3.5 rounded-lg
+                    font-bold hover:from-cyan-400 hover:to-purple-500 transition-all transform hover:scale-[1.02]
+                    shadow-lg shadow-cyan-500/30 hover:shadow-cyan-500/50 active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
+                    onClick={handleRegister}
+                    disabled={isSubmitting} // Disable button during submission
+                >
+                    {isSubmitting ? (
+                        <span className="flex items-center justify-center gap-2">
+                            <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            ACTIVATING ACCOUNT...
+                        </span>
+                    ) : (
+                        "ACTIVATE ACCOUNT"
+                    )}
+                </button>
 
                         {error && <div className="text-red-500 mt-4">{error}</div>}
                         {success && <div className="text-green-500 mt-4">{success}</div>}

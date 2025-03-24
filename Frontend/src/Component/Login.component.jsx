@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState , useRef, useEffect} from "react";
 import { useNavigate } from "react-router-dom";
 import { FaGoogle, FaGithub } from "react-icons/fa";
 import axios from "axios";
@@ -8,8 +8,27 @@ function LoginPage() {
     const navigate = useNavigate();
     const [errorMessage, setErrorMessage] = useState("");
     const [successMessage, setSuccessMessage] = useState("");
+    const [isSubmitting, setIsSubmitting] = useState(false);
+    const timeoutRef = useRef(null);
     
     const API_URL = import.meta.env.REACT_APP_API_URL || "https://perplexity-bd2d.onrender.com";
+
+    // Clear timeout on component unmount
+    useEffect(() => {
+        return () => {
+            if (timeoutRef.current) {
+                clearTimeout(timeoutRef.current);
+            }
+        };
+    }, []);
+
+
+    const setErrorWithTimeout = (message) => {
+        if (timeoutRef.current) clearTimeout(timeoutRef.current);
+        setErrorMessage(message);
+        timeoutRef.current = setTimeout(() => setErrorMessage(""), 5000);
+    };
+
 
     const handleLogin = async (e) => {
         e.preventDefault();
@@ -17,14 +36,15 @@ function LoginPage() {
 
         // Validate input fields
         if (!credentials.username.trim()) {
-            setErrorMessage("Please enter a username.");
+            setErrorWithTimeout("Please enter a username.");
             return;
         }
         if (!credentials.password.trim()) {
-            setErrorMessage("Please enter a password.");
+            setErrorWithTimeout("Please enter a password.");
             return;
         }
 
+        setIsSubmitting(true);
         // Prepare login data
         const loginData = credentials.username.includes("@")
             ? { email: credentials.username, password: credentials.password }
@@ -44,8 +64,6 @@ function LoginPage() {
 
             console.log("Login response:", response.data);
 
-            // Handle successful login
-            setSuccessMessage("User logged in successfully!");
             const { accessToken } = response.data.data;
 
             // Store the token in localStorage
@@ -53,32 +71,35 @@ function LoginPage() {
             console.log("Token stored:", accessToken);
 
             // Redirect to the home page after 2 seconds
-            setTimeout(() => navigate("/prediction"), 2000);
+            setTimeout(() => navigate("/prediction"));
         } catch (error) {
             // Handle errors
             if (error.response) {
                 switch (error.response.status) {
                     case 401:
-                        setErrorMessage("Invalid password.");
+                        setErrorWithTimeout("Invalid password.");
                         break;
                     case 404:
-                        setErrorMessage("User not found.");
+                        setErrorWithTimeout("User not found.");
                         break;
                     case 500:
-                        setErrorMessage("A server error occurred. Please try again later.");
+                        setErrorWithTimeout("A server error occurred. Please try again later.");
                         break;
                     case 400:
-                        setErrorMessage("Username or email required.");
+                        setErrorWithTimeout("Username or email required.");
                         break;
                     default:
-                        setErrorMessage("An unknown error occurred. Please try again.");
+                        setErrorWithTimeout("An unknown error occurred. Please try again.");
                         break;
                 }
             } else {
-                setErrorMessage("Network error. Please check your connection.");
+                setErrorWithTimeout("Network error. Please check your connection.");
             }
 
             console.error("Login error:", error);
+        }
+        finally {
+            setIsSubmitting(false); // Stop loading
         }
     };
 
@@ -117,7 +138,7 @@ function LoginPage() {
                     </h1>
 
                     {errorMessage && (
-                        <div className="text-red-400 bg-red-700/30 p-3 rounded-lg text-center">{errorMessage}</div>
+                        <div className="text-red-400 bg-red-700/30 p-3 rounded-lg text-center mb-[20px]">{errorMessage}</div>
                     )}
                     {successMessage && (
                         <div className="text-green-400 bg-green-700/30 p-3 rounded-lg text-center">{successMessage}</div>
@@ -159,11 +180,40 @@ function LoginPage() {
                         </div>
 
                         <button
-                            type="submit"
-                            className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white py-3.5 rounded-lg font-semibold hover:from-blue-600 hover:to-purple-600 transition-all transform hover:scale-[1.02] active:scale-95 shadow-lg"
-                        >
-                            Sign In
-                        </button>
+                        type="submit"
+                        className="w-full bg-gradient-to-r from-blue-500 to-purple-500 text-white py-3.5 rounded-lg 
+                        font-semibold hover:from-blue-600 hover:to-purple-600 transition-all transform hover:scale-[1.02] 
+                        active:scale-95 shadow-lg disabled:opacity-70 disabled:cursor-not-allowed"
+                        disabled={isSubmitting}
+                    >
+                        {isSubmitting ? (
+                            <span className="flex items-center justify-center gap-2">
+                                <svg 
+                                    className="animate-spin h-5 w-5 text-white" 
+                                    xmlns="http://www.w3.org/2000/svg" 
+                                    fill="none" 
+                                    viewBox="0 0 24 24"
+                                >
+                                    <circle 
+                                        className="opacity-25" 
+                                        cx="12" 
+                                        cy="12" 
+                                        r="10" 
+                                        stroke="currentColor" 
+                                        strokeWidth="4"
+                                    ></circle>
+                                    <path 
+                                        className="opacity-75" 
+                                        fill="currentColor" 
+                                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                    ></path>
+                                </svg>
+                                SIGNING IN...
+                            </span>
+                        ) : (
+                            "SIGN IN"
+                        )}
+                    </button>
                     </form>
 
                     <div className="flex items-center justify-center space-x-4 my-4">
