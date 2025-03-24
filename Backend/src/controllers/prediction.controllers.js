@@ -518,82 +518,18 @@ const razorpay = new Razorpay({
 
 
 // Create Razorpay Order
-const RazorPayCreatePaymentOrder = asyncHandler(async (req, res) => {
-  try {
-    const { amount } = req.body;
-
-    if (!amount) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Amount is required" });
-    }
-
-    const options = {
-      amount: amount * 1, // Convert amount to paise
-      currency: "INR",
-      receipt: crypto.randomBytes(10).toString("hex"),
-      payment_capture: 1,
-    };
-
-    const response = await razorpay.orders.create(options);
-
-    res.status(200).json({
-      success: true,
-      orderId: response.id,
-      amount: response.amount,
-      keyId: process.env.RAZORPAY_KEY_ID,
-    });
-  } catch (error) {
-    console.error("Error creating Razorpay order:", error);
-    res.status(500).json({ success: false, message: "Failed to create order" });
-  }
-});
-
 // const RazorPayCreatePaymentOrder = asyncHandler(async (req, res) => {
 //   try {
 //     const { amount } = req.body;
-    
+
 //     if (!amount) {
 //       return res
 //         .status(400)
 //         .json({ success: false, message: "Amount is required" });
 //     }
 
-//     // Check authenticated user
-//     if (!req.user) {
-//       return res.status(401).json({ success: false, message: "User not authenticated" });
-//     }
-
-//     // Get current user details
-//     const currentUser = await User.findById(req.user._id);
-//     if (!currentUser) {
-//       return res.status(404).json({ success: false, message: "User not found" });
-//     }
-
-//     // Referral logic
-//    // RazorPayCreatePaymentOrder function में referral logic के अंदर
-// if (currentUser.referredBy) {
-//   const referralAmount = amount * 0.1;
-  
-//   // Referrer का बैलेंस अपडेट करें
-//   await User.findByIdAndUpdate(
-//     currentUser.referredBy,
-//     { $inc: { walletBalance: referralAmount } },
-//     { new: true }
-//   );
-
-//   // ReferralEarning रिकॉर्ड बनाएं
-//   await ReferralEarning.create({
-//     referrer: currentUser.referredBy,
-//     referredUser: currentUser._id,
-//     amount: referralAmount,
-//     orderId: response.id // Razorpay ऑर्डर ID
-//   });
-// }
-
-//     // Create Razorpay order
 //     const options = {
-//       amount: amount * 100, // Convert rupees to paise
+//       amount: amount * 1, // Convert amount to paise
 //       currency: "INR",
 //       receipt: crypto.randomBytes(10).toString("hex"),
 //       payment_capture: 1,
@@ -613,10 +549,72 @@ const RazorPayCreatePaymentOrder = asyncHandler(async (req, res) => {
 //   }
 // });
 
+const RazorPayCreatePaymentOrder = asyncHandler(async (req, res) => {
+  try {
+    const { amount } = req.body;
+    
+    if (!amount) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Amount is required" });
+    }
+
+    // Check authenticated user
+    if (!req.user) {
+      return res.status(401).json({ success: false, message: "User not authenticated" });
+    }
+
+    // Get current user details
+    const currentUser = await User.findById(req.user._id);
+    if (!currentUser) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    // Referral logic
+   // RazorPayCreatePaymentOrder function में referral logic के अंदर
+if (currentUser.referredBy) {
+  const referralAmount = amount * 0.1;
+  
+  // Referrer का बैलेंस अपडेट करें
+  await User.findByIdAndUpdate(
+    currentUser.referredBy,
+    { $inc: { walletBalance: referralAmount } },
+    { new: true }
+  );
+
+  // ReferralEarning रिकॉर्ड बनाएं
+  await ReferralEarning.create({
+    referrer: currentUser.referredBy,
+    referredUser: currentUser._id,
+    amount: referralAmount,
+    orderId: response.id // Razorpay ऑर्डर ID
+  });
+}
+
+    // Create Razorpay order
+    const options = {
+      amount: amount * 100, // Convert rupees to paise
+      currency: "INR",
+      receipt: crypto.randomBytes(10).toString("hex"),
+      payment_capture: 1,
+    };
+
+    const response = await razorpay.orders.create(options);
+
+    res.status(200).json({
+      success: true,
+      orderId: response.id,
+      amount: response.amount,
+      keyId: process.env.RAZORPAY_KEY_ID,
+    });
+  } catch (error) {
+    console.error("Error creating Razorpay order:", error);
+    res.status(500).json({ success: false, message: "Failed to create order" });
+  }
+});
+
 
 // Get Referral Earnings
-
-
 const getReferralEarnings = asyncHandler(async (req, res) => {
   try {
     // Authenticated user को पहचानें
