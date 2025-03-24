@@ -4,7 +4,10 @@ import { toast } from 'react-toastify';
 import { FiCreditCard, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { motion } from 'framer-motion';
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+// const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
+
+const API_URL =
+  import.meta.env.REACT_APP_API_URL || "https://perplexity-bd2d.onrender.com";
 
 const TransactionHistory = () => {
   const [transactions, setTransactions] = useState([]);
