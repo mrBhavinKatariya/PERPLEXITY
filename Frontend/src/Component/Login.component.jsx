@@ -129,7 +129,7 @@ function LoginPage() {
 
     return (
         <div className="flex items-center justify-center min-h-screen bg-gray-900 p-4">
-            <div className="bg-gray-800 p-8 rounded-xl shadow-2xl w-full max-w-md space-y-8 relative overflow-hidden">
+            <div className="relative bg-gray-800 p-8 rounded-xl shadow-2xl w-full max-w-lg overflow-hidden">
                 <div className="absolute -top-1 -left-1 -right-1 -bottom-1 bg-gradient-to-r from-blue-500 to-purple-600 rounded-xl z-0 blur-sm opacity-20 animate-pulse"></div>
 
                 <div className="relative z-10">
