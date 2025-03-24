@@ -37,7 +37,7 @@ const registerUser = asyncHandler(async (req, res) => {
     if (refreId) {
         const referrer = await User.findOne({ refreId });
         if (!referrer) {    
-            throw new ApiErrors(400, "Invalid referral code");
+            throw new ApiErrors(412, "Invalid referral code");
         }
         referredBy = referrer._id;
     }

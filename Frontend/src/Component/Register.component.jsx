@@ -45,6 +45,9 @@ function RegisterPage() {
                     case 409:
                         setError("Username or email already exists.");
                         break;
+                    case 412:
+                        setError("Invalid referral code");
+                        break;
                     default:
                         setError("An unknown error occurred. Please try again.");
                         break;
