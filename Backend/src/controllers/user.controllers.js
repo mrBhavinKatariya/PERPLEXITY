@@ -30,7 +30,7 @@ const registerUser = asyncHandler(async (req, res) => {
     });
 
     if (existedUser) {
-        throw new ApiErrors(409, "Username already exists");
+        throw new ApiErrors(410, "Username already exists");
     }
 
     let referredBy = null;

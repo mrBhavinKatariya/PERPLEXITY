@@ -39,10 +39,10 @@ function RegisterPage() {
             console.error("Registration failed:", error);
             if (error.response) {
                 switch (error.response.status) {
-                    case 400:
+                    case 409:
                         setError("All fields are required.");
                         break;
-                    case 409:
+                    case 410:
                         setError("Username or email already exists.");
                         break;
                     case 412:
