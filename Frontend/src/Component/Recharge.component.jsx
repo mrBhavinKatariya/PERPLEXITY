@@ -105,17 +105,21 @@ const RechargePage = ({ user, onClose }) => {
 
   const handleRazorpayPayment = async () => {
     try {
-      // Create common auth config
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("Please login to continue");
+        return;
+      }
+  
       const authConfig = {
         headers: {
           Authorization: `Bearer ${token}`
         }
       };
   
-      // Create order with reusable config
       const response = await axios.post(
         `${API_URL}/api/v1/users/create-razorpay-order`,
-        { amount: amount * 100 },
+        { amount: amount },
         authConfig
       );
   
@@ -129,21 +133,20 @@ const RechargePage = ({ user, onClose }) => {
         prefill: {
           name: name,
           email: email,
-          phoneNo: phoneNo,
+          contact: phoneNo,
         },
         handler: async (response) => {
           try {
-            // Verification request with same auth config
             const verificationResponse = await axios.post(
               `${API_URL}/api/v1/users/verify-razorpay-payment`,
               {
                 razorpayPaymentId: response.razorpay_payment_id,
                 razorpayOrderId: response.razorpay_order_id,
                 razorpaySignature: response.razorpay_signature,
-                amount: amount,
+                amount: amount * 100,
                 userId: userId,
               },
-              authConfig // Reuse config here
+              authConfig
             );
   
             if (verificationResponse.data.success) {
@@ -164,7 +167,7 @@ const RechargePage = ({ user, onClose }) => {
       rzp.open();
     } catch (error) {
       console.error("Razorpay payment failed:", error);
-      alert("Payment initialization failed");
+      alert(`Payment failed: ${error.response?.data?.message || error.message}`);
     }
   };
 
