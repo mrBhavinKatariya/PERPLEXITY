@@ -570,7 +570,7 @@ const handleUserBetEndpoint = asyncHandler(async (req, res) => {
         { 
           _id: userId,
           balance: { $gte: totalAmount },
-          version: req.userVersion  // If available from auth middleware
+          // version: req.userVersion  // If available from auth middleware
         },
         { 
           $inc: { 
