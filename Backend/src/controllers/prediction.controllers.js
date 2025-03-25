@@ -14,7 +14,7 @@ import bcrypt from 'bcrypt';
 import { sendEmail } from "../utils/SendEmail.utils.js";
 import { log } from "console";
 import { ReferralEarning } from "../models/ReferralEarning.models.js";
-import { GameRound } from "../models/GameRound.models.js";
+import { GameRound } from "../models/GameSession.models.js";
 
 
 dotenv.config()
@@ -481,161 +481,285 @@ const deductUserBalance = async (userId, totalAmount) => {
 //   }
 // });
 
+import { GameSession } from "../models/GameSession.models.js";
+import { BetHistory } from "../models/History.models.js";
 
-const handleUserBetEndpoint = asyncHandler(async (req, res) => {
-  const { userId, totalAmount, number: rawNumber } = req.body;
 
-  // 1. Input Parsing and Validation
-  let number = rawNumber;
-  const parsedNumber = Number(rawNumber);
-  const validColors = ['green', 'red', 'violet'];
+const colorMap = {
+  red: [2, 4, 6, 8],
+  green: [1, 3, 7, 9],
+  violet: [0, 5]
+};
 
-  // Fix syntax error and add type check
-  if (!isNaN(parsedNumber)) {
-    number = parsedNumber;
-  }
+// Get current session
+// router.get('/session', async (req, res) => {
 
-  // Validate user ID format
-  if (!mongoose.Types.ObjectId.isValid(userId)) {
-    return res.status(400).json(
-      new ApiResponse(400, null, "Invalid User ID format")
-    );
-  }
-
-  // Type validation with proper checks
-  const isColor = validColors.includes(number);
-  const isNumber = typeof number === 'number' && Number.isInteger(number) && number >= 0 && number <= 9;
-
-  if (!isColor && !isNumber) {
-    return res.status(400).json(
-      new ApiResponse(400, null, "Invalid selection")
-    );
-  }
-
-  // Validate amount as number and positive value
-  if (typeof totalAmount !== 'number' || totalAmount <= 0) {
-    return res.status(400).json(
-      new ApiResponse(400, null, "Invalid amount")
-    );
-  }
-
-  // 2. Balance Deduction
+  const handleUserSession = asyncHandler(async (req, res) => {    
   try {
-    const deductionResult = await User.updateOne(
-      { _id: userId, balance: { $gte: totalAmount } },
-      { $inc: { balance: -totalAmount } }
-    );
-
-    if (deductionResult.modifiedCount === 0) {
-      return res.status(400).json(
-        new ApiResponse(400, null, "Insufficient balance")
-      );
-    }
+    const session = await GameSession.findOne({ isActive: true });
+    if (!session) return res.status(404).json({ error: 'No active session' });
+    
+    const timeLeft = Math.round((session.endTime - Date.now()) / 1000);
+    res.json({ timeLeft });
   } catch (error) {
-    console.error("Deduction failed:", error);
-    return res.status(500).json(
-      new ApiResponse(500, null, "Transaction failed")
-    );
-  }
-
-  // 3. Game Result Processing
-  try {
-    // Get current game round
-    const currentGame = await GameRound.findOne()
-      .sort({ startTime: -1 })
-      .lean();
-    
-    if (!currentGame) {
-      throw new Error("No active game round found");
-    }
-
-    // Calculate remaining time accurately
-    const endTime = currentGame.startTime.getTime() + (90 * 1000);
-    const remainingTime = Math.max(endTime - Date.now(), 0);
-    
-    // Wait for game result
-    await new Promise(resolve => setTimeout(resolve, remainingTime));
-
-    // Get final game result
-    const finalResult = await GameRound.findById(currentGame._id)
-      .select('resultNumber')
-      .lean();
-
-    if (!finalResult?.resultNumber) {
-      throw new Error("Game result not available");
-    }
-
-    const randomNumber = finalResult.resultNumber;
-
-    // 4. Win Calculation
-    let multiplier = 0;
-    let result = "LOSS";
-    const contractMoney = Number((totalAmount * 0.98).toFixed(2));
-
-    if (isNumber) {
-      if (randomNumber === number) {
-        multiplier = [0, 5].includes(number) ? 4.5 : 9;
-        result = "WIN";
-      }
-    } else {
-      switch(number) {
-        case 'green':
-          if ([1, 3, 7, 9].includes(randomNumber)) multiplier = 2;
-          else if (randomNumber === 5) multiplier = 1.5;
-          break;
-        case 'red':
-          if ([2, 4, 6, 8].includes(randomNumber)) multiplier = 2;
-          else if (randomNumber === 0) multiplier = 1.5;
-          break;
-        case 'violet':
-          if ([0, 5].includes(randomNumber)) multiplier = 1.5;
-          break;
-      }
-      if (multiplier > 0) result = "WIN";
-    }
-
-    // 5. Award Winnings
-    if (result === "WIN") {
-      const winnings = Number((contractMoney * multiplier).toFixed(2));
-      await User.updateOne(
-        { _id: userId },
-        { $inc: { balance: winnings } }
-      );
-    }
-
-    // 6. Save Bet History
-    const betHistory = new BetHistory({
-      userId,
-      gameRound: currentGame._id,
-      selectedType: isNumber ? 'number' : 'color',
-      selection: number,
-      betAmount: totalAmount,
-      contractMoney,
-      resultNumber: randomNumber,
-      multiplier,
-      result,
-      winnings: multiplier > 0 ? Number((contractMoney * multiplier).toFixed(2)) : 0
-    });
-    
-    await betHistory.save();
-
-    return res.status(200).json(
-      new ApiResponse(200, {
-        result: randomNumber,
-        multiplier,
-        status: result,
-        contractMoney,
-        winnings: contractMoney * multiplier
-      }, "Bet processed successfully")
-    );
-
-  } catch (error) {
-    console.error("Result processing failed:", error);
-    return res.status(500).json(
-      new ApiResponse(500, null, error.message || "Result processing failed")
-    );
+    res.status(500).json({ error: 'Server error' });
   }
 });
+
+// Place a bet
+
+// router.post('/bet', async (req, res) => {
+  const handleUserBet = asyncHandler(async (req, res) =>{
+  
+  const session = await mongoose.startSession();
+  try {
+    await session.withTransaction(async () => {
+      const { userId, amount, betType, selection } = req.body;
+
+      // Validate input
+      if (betType === 'color' && !colorMap[selection]) {
+        return res.status(400).json({ error: 'Invalid color' });
+      }
+      if (betType === 'digit' && !/^\d$/.test(selection)) {
+        return res.status(400).json({ error: 'Invalid digit' });
+      }
+
+      // Get current game session
+      let gameSession = await GameSession.findOne({ isActive: true });
+      if (!gameSession) {
+        gameSession = await createNewSession();
+      }
+
+      // Update user balance
+      const user = await User.findById(userId).session(session);
+      if (user.balance < amount) {
+        return res.status(400).json({ error: 'Insufficient balance' });
+      }
+      user.balance -= amount;
+      await user.save();
+
+      // Check bet result
+      let outcome = 'loss';
+      let payout = 0;
+      const won = betType === 'color' 
+        ? colorMap[selection].includes(gameSession.generatedNumber)
+        : parseInt(selection) === gameSession.generatedNumber;
+
+      if (won) {
+        payout = amount * (betType === 'color' ? 2 : 5);
+        user.balance += payout;
+        outcome = 'win';
+        await user.save();
+      }
+
+      // Create bet record
+      const bet = new Bet({
+        user: userId,
+        gameSession: gameSession._id,
+        amount,
+        betType,
+        selection,
+        outcome,
+        payout
+      });
+      await bet.save();
+
+      res.json({
+        outcome,
+        payout,
+        newBalance: user.balance,
+        generatedNumber: gameSession.generatedNumber
+      });
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Server error' });
+  } finally {
+    session.endSession();
+  }
+});
+
+
+// Helper function to create new session
+async function createNewSession() {
+  await GameSession.updateMany({ isActive: true }, { isActive: false });
+  
+  const startTime = new Date();
+  const endTime = new Date(startTime.getTime() + 90000);
+  const generatedNumber = Math.floor(Math.random() * 10);
+  
+  return await GameSession.create({
+    generatedNumber,
+    startTime,
+    endTime,
+    isActive: true
+  });
+}
+
+// Schedule session rotation
+setInterval(async () => {
+  try {
+    await createNewSession();
+  } catch (error) {
+    console.error('Error rotating session:', error);
+  }
+}, 90000);
+
+
+
+// const handleUserBetEndpoint = asyncHandler(async (req, res) => {
+//   const { userId, totalAmount, number: rawNumber } = req.body;
+
+//   // 1. Input Parsing and Validation
+//   let number = rawNumber;
+//   const parsedNumber = Number(rawNumber);
+//   const validColors = ['green', 'red', 'violet'];
+
+//   // Fix syntax error and add type check
+//   if (!isNaN(parsedNumber)) {
+//     number = parsedNumber;
+//   }
+
+//   // Validate user ID format
+//   if (!mongoose.Types.ObjectId.isValid(userId)) {
+//     return res.status(400).json(
+//       new ApiResponse(400, null, "Invalid User ID format")
+//     );
+//   }
+
+//   // Type validation with proper checks
+//   const isColor = validColors.includes(number);
+//   const isNumber = typeof number === 'number' && Number.isInteger(number) && number >= 0 && number <= 9;
+
+//   if (!isColor && !isNumber) {
+//     return res.status(400).json(
+//       new ApiResponse(400, null, "Invalid selection")
+//     );
+//   }
+
+//   // Validate amount as number and positive value
+//   if (typeof totalAmount !== 'number' || totalAmount <= 0) {
+//     return res.status(400).json(
+//       new ApiResponse(400, null, "Invalid amount")
+//     );
+//   }
+
+//   // 2. Balance Deduction
+//   try {
+//     const deductionResult = await User.updateOne(
+//       { _id: userId, balance: { $gte: totalAmount } },
+//       { $inc: { balance: -totalAmount } }
+//     );
+
+//     if (deductionResult.modifiedCount === 0) {
+//       return res.status(400).json(
+//         new ApiResponse(400, null, "Insufficient balance")
+//       );
+//     }
+//   } catch (error) {
+//     console.error("Deduction failed:", error);
+//     return res.status(500).json(
+//       new ApiResponse(500, null, "Transaction failed")
+//     );
+//   }
+
+//   // 3. Game Result Processing
+//   try {
+//     // Get current game round
+//     const currentGame = await GameRound.findOne()
+//       .sort({ startTime: -1 })
+//       .lean();
+    
+//     if (!currentGame) {
+//       throw new Error("No active game round found");
+//     }
+
+//     // Calculate remaining time accurately
+//     const endTime = currentGame.startTime.getTime() + (90 * 1000);
+//     const remainingTime = Math.max(endTime - Date.now(), 0);
+    
+//     // Wait for game result
+//     await new Promise(resolve => setTimeout(resolve, remainingTime));
+
+//     // Get final game result
+//     const finalResult = await GameRound.findById(currentGame._id)
+//       .select('resultNumber')
+//       .lean();
+
+//     if (!finalResult?.resultNumber) {
+//       throw new Error("Game result not available");
+//     }
+
+//     const randomNumber = finalResult.resultNumber;
+
+//     // 4. Win Calculation
+//     let multiplier = 0;
+//     let result = "LOSS";
+//     const contractMoney = Number((totalAmount * 0.98).toFixed(2));
+
+//     if (isNumber) {
+//       if (randomNumber === number) {
+//         multiplier = [0, 5].includes(number) ? 4.5 : 9;
+//         result = "WIN";
+//       }
+//     } else {
+//       switch(number) {
+//         case 'green':
+//           if ([1, 3, 7, 9].includes(randomNumber)) multiplier = 2;
+//           else if (randomNumber === 5) multiplier = 1.5;
+//           break;
+//         case 'red':
+//           if ([2, 4, 6, 8].includes(randomNumber)) multiplier = 2;
+//           else if (randomNumber === 0) multiplier = 1.5;
+//           break;
+//         case 'violet':
+//           if ([0, 5].includes(randomNumber)) multiplier = 1.5;
+//           break;
+//       }
+//       if (multiplier > 0) result = "WIN";
+//     }
+
+//     // 5. Award Winnings
+//     if (result === "WIN") {
+//       const winnings = Number((contractMoney * multiplier).toFixed(2));
+//       await User.updateOne(
+//         { _id: userId },
+//         { $inc: { balance: winnings } }
+//       );
+//     }
+
+//     // 6. Save Bet History
+//     const betHistory = new BetHistory({
+//       userId,
+//       gameRound: currentGame._id,
+//       selectedType: isNumber ? 'number' : 'color',
+//       selection: number,
+//       betAmount: totalAmount,
+//       contractMoney,
+//       resultNumber: randomNumber,
+//       multiplier,
+//       result,
+//       winnings: multiplier > 0 ? Number((contractMoney * multiplier).toFixed(2)) : 0
+//     });
+    
+//     await betHistory.save();
+
+//     return res.status(200).json(
+//       new ApiResponse(200, {
+//         result: randomNumber,
+//         multiplier,
+//         status: result,
+//         contractMoney,
+//         winnings: contractMoney * multiplier
+//       }, "Bet processed successfully")
+//     );
+
+//   } catch (error) {
+//     console.error("Result processing failed:", error);
+//     return res.status(500).json(
+//       new ApiResponse(500, null, error.message || "Result processing failed")
+//     );
+//   }
+// });
 
 
 
@@ -1271,6 +1395,9 @@ export {
   initiateWithdrawal,
   transactionHistory,
   getReferralEarnings,
+  // -------------
+  handleUserSession,
+  handleUserBet,
 
 
 };
