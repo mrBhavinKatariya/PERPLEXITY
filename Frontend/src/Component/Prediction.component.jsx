@@ -1389,6 +1389,7 @@
 // src/App.js
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import './../App.css';
 
 export default function ColorPredictionGame() {
   const [balance, setBalance] = useState(1000);
