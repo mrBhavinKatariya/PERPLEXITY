@@ -480,37 +480,43 @@ const deductUserBalance = async (userId, totalAmount) => {
 // });
 
 const handleUserBetEndpoint = asyncHandler(async (req, res) => {
-  const { userId, totalAmount, number } = req.body;
+  const { userId, totalAmount, number: rawNumber } = req.body;
 
-  console.log("req.bod",req.body);
-  
-  // Initial validation
+  // 1. Input Parsing and Validation
+  let number = rawNumber;
+  const parsedNumber = Number(rawNumber);
+  const validColors = ['green', 'red', 'violet'];
+
+  // Fix syntax error and add type check
+  if (!isNaN(parsedNumber) ){
+    number = parsedNumber;
+  }
+
+  // Validate user ID format
   if (!mongoose.Types.ObjectId.isValid(userId)) {
     return res.status(400).json(
       new ApiResponse(400, null, "Invalid User ID format")
     );
   }
 
-  // Input type validation
-  const validColors = ['green', 'red', 'violet'];
+  // Type validation with proper checks
   const isColor = validColors.includes(number);
-  const isNumber = !isNaN(number) && number >= 0 && number <= 9;
-  
+  const isNumber = typeof number === 'number' && Number.isInteger(number) && number >= 0 && number <= 9;
+
   if (!isColor && !isNumber) {
     return res.status(400).json(
       new ApiResponse(400, null, "Invalid selection")
     );
   }
 
-  // Validate amount
+  // Validate amount as number and positive value
   if (typeof totalAmount !== 'number' || totalAmount <= 0) {
     return res.status(400).json(
       new ApiResponse(400, null, "Invalid amount")
     );
   }
 
-  // Deduction transaction
-  let deductionSession;
+  // 2. Balance Deduction
   try {
     const deductionResult = await User.updateOne(
       { _id: userId, balance: { $gte: totalAmount } },
@@ -529,25 +535,41 @@ const handleUserBetEndpoint = asyncHandler(async (req, res) => {
     );
   }
 
-
-  // Result processing (separate from deduction transaction)
+  // 3. Game Result Processing
   try {
+    // Get current game round
+    const currentGame = await GameRound.findOne()
+      .sort({ startTime: -1 })
+      .lean();
+    
+    if (!currentGame) {
+      throw new Error("No active game round found");
+    }
+
+    // Calculate remaining time accurately
+    const endTime = currentGame.startTime.getTime() + (90 * 1000);
+    const remainingTime = Math.max(endTime - Date.now(), 0);
+    
     // Wait for game result
-    const remainingTime = Math.max(90 - Math.floor((Date.now() - countdownStartTime) / 1000), 0);
-    await new Promise(resolve => setTimeout(resolve, remainingTime * 1000));
+    await new Promise(resolve => setTimeout(resolve, remainingTime));
 
-    // Get result
-    const latestPrediction = await Prediction.findOne().sort({ createdAt: -1 }).lean();
-    const randomNumber = latestPrediction?.number;
+    // Get final game result
+    const finalResult = await GameRound.findById(currentGame._id)
+      .select('resultNumber')
+      .lean();
 
-    // Calculate winnings
+    if (!finalResult?.resultNumber) {
+      throw new Error("Game result not available");
+    }
+
+    const randomNumber = finalResult.resultNumber;
+
+    // 4. Win Calculation
     let multiplier = 0;
     let result = "LOSS";
     const contractMoney = Number((totalAmount * 0.98).toFixed(2));
-    let winnings = 0;
 
-    // Winning calculation logic
-    if (typeof number === 'number') {
+    if (isNumber) {
       if (randomNumber === number) {
         multiplier = [0, 5].includes(number) ? 4.5 : 9;
         result = "WIN";
@@ -569,7 +591,7 @@ const handleUserBetEndpoint = asyncHandler(async (req, res) => {
       if (multiplier > 0) result = "WIN";
     }
 
-    // Process winnings in separate transaction
+    // 5. Award Winnings
     if (result === "WIN") {
       const winnings = Number((contractMoney * multiplier).toFixed(2));
       await User.updateOne(
@@ -578,19 +600,20 @@ const handleUserBetEndpoint = asyncHandler(async (req, res) => {
       );
     }
 
-
-    // Save bet history
+    // 6. Save Bet History
     const betHistory = new BetHistory({
       userId,
-      selectedColor: typeof number === 'number' ? 'number' : 'color',
+      gameRound: currentGame._id,
+      selectedType: isNumber ? 'number' : 'color',
       selection: number,
       betAmount: totalAmount,
       contractMoney,
-      randomNumber,
+      resultNumber: randomNumber,
       multiplier,
       result,
       winnings: multiplier > 0 ? Number((contractMoney * multiplier).toFixed(2)) : 0
     });
+    
     await betHistory.save();
 
     return res.status(200).json(
@@ -599,18 +622,17 @@ const handleUserBetEndpoint = asyncHandler(async (req, res) => {
         multiplier,
         status: result,
         contractMoney,
-        winnings: (contractMoney * multiplier)
+        winnings: contractMoney * multiplier
       }, "Bet processed successfully")
     );
 
   } catch (error) {
     console.error("Result processing failed:", error);
     return res.status(500).json(
-      new ApiResponse(500, null, "Result processing failed")
+      new ApiResponse(500, null, error.message || "Result processing failed")
     );
   }
 });
-
 
 
 const getUserBetHistoryEndpoint = asyncHandler(async (req, res) => {
