@@ -43,6 +43,8 @@ const handleRandomNumberGeneration = async () => {
       if (lastRecord) {
         // If lastRecord.nextNumber is missing, generate a new random number
         currentNumber = lastRecord.nextNumber ?? generateSecureRandomNumber();
+        // currentNumber = lastRecord.nextNumber || generateSecureRandomNumber();
+
         nextNumber = generateSecureRandomNumber();
       } else {
         // If no lastRecord exists, generate both numbers
