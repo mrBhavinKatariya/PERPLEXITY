@@ -13,7 +13,7 @@ import dotenv from "dotenv";
 import bcrypt from 'bcrypt';
 import { sendEmail } from "../utils/SendEmail.utils.js";
 import { log } from "console";
-
+import { ReferralEarning } from "../models/ReferralEarning.models.js";
 
 dotenv.config()
 let isGenerating = false;
