@@ -510,57 +510,57 @@ const colorMap = {
 // Place a bet
 
 // router.post('/bet', async (req, res) => {
-  const handleUserBet = asyncHandler(async (req, res) =>{
-  
+  const handleUserBet = asyncHandler(async (req, res) => {
+
     console.log("req.body",req.body);
     
-  const session = await mongoose.startSession();
-  try {
-    await session.withTransaction(async () => {
+    const session = await mongoose.startSession();
+    session.startTransaction();
+    
+    try {
       const { userId, amount, betType, selection } = req.body;
-
-    console.log("userId",userId);
-    console.log("amount",amount);
-    console.log("betType",betType);
-    console.log("selection",selection);
- 
-
-      // Validate input
-      if (betType === 'color' && !colorMap[selection]) {
-        return res.status(400).json({ error: 'Invalid color' });
-      }
-      if (betType === 'digit' && !/^\d$/.test(selection)) {
+  
+      // Validate inputs
+      if (betType === 'digit' && (!/^\d$/.test(selection) || parseInt(selection) > 9)) {
+        await session.abortTransaction();
         return res.status(400).json({ error: 'Invalid digit' });
       }
-
-      // Get current game session
-      let gameSession = await GameSession.findOne({ isActive: true });
+  
+      // Get game session with retry logic
+      let gameSession = await GameSession.findOne({ isActive: true }).session(session);
       if (!gameSession) {
-        gameSession = await createNewSession();
+        gameSession = await createNewSession(session);
       }
-
-      // Update user balance
-      const user = await User.findById(userId).session(session);
-      if (user.balance < amount) {
+  
+      console.log("gameSession",gameSession);
+      
+      // Update user balance atomically
+      const updatedUser = await User.findByIdAndUpdate(
+        userId,
+        { $inc: { balance: -amount } },
+        { session, new: true }
+      );
+  
+      if (updatedUser.balance < 0) {
+        await session.abortTransaction();
         return res.status(400).json({ error: 'Insufficient balance' });
       }
-      user.balance -= amount;
-      await user.save();
-
-      // Check bet result
-      let outcome = 'loss';
-      let payout = 0;
+  
+      // Calculate outcome
       const won = betType === 'color' 
         ? colorMap[selection].includes(gameSession.generatedNumber)
         : parseInt(selection) === gameSession.generatedNumber;
-
+  
+      // Process payout if won
       if (won) {
-        payout = amount * (betType === 'color' ? 2 : 5);
-        user.balance += payout;
-        outcome = 'win';
-        await user.save();
+        const payout = amount * (betType === 'color' ? 2 : 5);
+        await User.findByIdAndUpdate(
+          userId,
+          { $inc: { balance: payout } },
+          { session }
+        );
       }
-
+  
       // Create bet record
       const bet = new Bet({
         user: userId,
@@ -568,42 +568,50 @@ const colorMap = {
         amount,
         betType,
         selection,
-        outcome,
-        payout
+        outcome: won ? 'win' : 'loss',
+        payout: won ? (amount * (betType === 'color' ? 2 : 5)) : 0
       });
-      await bet.save();
-
+  
+      await bet.save({ session });
+      await session.commitTransaction();
+  
       res.json({
-        outcome,
-        payout,
-        newBalance: user.balance,
+        outcome: won ? 'win' : 'loss',
+        payout: won ? bet.payout : 0,
+        newBalance: updatedUser.balance + (won ? bet.payout : 0),
         generatedNumber: gameSession.generatedNumber
       });
-    });
-  } catch (error) {
-    res.status(500).json({ error: 'Server error' });
-  } finally {
-    session.endSession();
-  }
-});
+  
+    } catch (error) {
+      await session.abortTransaction();
+      console.error('Transaction Error:', error);
+      res.status(500).json({ 
+        error: error.message || 'Internal Server Error',
+        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      });
+    } finally {
+      session.endSession();
+    }
+  });
 
 
 // Helper function to create new session
-async function createNewSession() {
-  await GameSession.updateMany({ isActive: true }, { isActive: false });
-  
-  const startTime = new Date();
-  const endTime = new Date(startTime.getTime() + 90000);
-  const generatedNumber = Math.floor(Math.random() * 10);
-  
-  return await GameSession.create({
-    generatedNumber,
-    startTime,
-    endTime,
-    isActive: true
-  });
-}
-
+const createNewSession = async () => {
+  try {
+    await GameSession.updateMany({ isActive: true }, { isActive: false });
+    
+    const generatedNumber = Math.floor(Math.random() * 10);
+    return await GameSession.create({
+      generatedNumber,
+      startTime: new Date(),
+      endTime: new Date(Date.now() + 90000),
+      isActive: true
+    });
+  } catch (error) {
+    console.error('Session creation error:', error);
+    throw new Error('Failed to create new session');
+  }
+};
 // Schedule session rotation
 setInterval(async () => {
   try {
