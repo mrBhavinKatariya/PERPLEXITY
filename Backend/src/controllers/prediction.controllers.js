@@ -522,6 +522,15 @@ const deductUserBalance = async (userId, totalAmount) => {
 // });
 
 
+function isConcurrencyError(error) {
+  return [
+    'WriteConflict',
+    'Concurrency',
+    'No matching document',
+    'version mismatch'
+  ].some(term => error.message.includes(term));
+}
+
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 100; // milliseconds
 
@@ -646,7 +655,7 @@ if (result === "WIN") {
   winningUser.markModified('balance'); // मोंगूज़ को बताएं कि बैलेंस बदला है
   
   await winningUser.save({ session: winSession });
-  
+
     
     const winUpdate = await User.findOneAndUpdate(
       { 
@@ -732,14 +741,7 @@ if (result === "WIN") {
   );
 });
 
-function isConcurrencyError(error) {
-  return [
-    'WriteConflict',
-    'Concurrency',
-    'No matching document',
-    'version mismatch'
-  ].some(term => error.message.includes(term));
-}
+
 
 
 const getUserBetHistoryEndpoint = asyncHandler(async (req, res) => {
