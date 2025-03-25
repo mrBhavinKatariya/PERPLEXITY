@@ -14,6 +14,8 @@ import bcrypt from 'bcrypt';
 import { sendEmail } from "../utils/SendEmail.utils.js";
 import { log } from "console";
 import { ReferralEarning } from "../models/ReferralEarning.models.js";
+import { GameRound } from "../models/GameRound.models.js";
+
 
 dotenv.config()
 let isGenerating = false;
@@ -479,6 +481,7 @@ const deductUserBalance = async (userId, totalAmount) => {
 //   }
 // });
 
+
 const handleUserBetEndpoint = asyncHandler(async (req, res) => {
   const { userId, totalAmount, number: rawNumber } = req.body;
 
@@ -488,7 +491,7 @@ const handleUserBetEndpoint = asyncHandler(async (req, res) => {
   const validColors = ['green', 'red', 'violet'];
 
   // Fix syntax error and add type check
-  if (!isNaN(parsedNumber) ){
+  if (!isNaN(parsedNumber)) {
     number = parsedNumber;
   }
 
@@ -633,6 +636,7 @@ const handleUserBetEndpoint = asyncHandler(async (req, res) => {
     );
   }
 });
+
 
 
 const getUserBetHistoryEndpoint = asyncHandler(async (req, res) => {
