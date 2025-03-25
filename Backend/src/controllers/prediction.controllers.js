@@ -512,6 +512,8 @@ const colorMap = {
 // router.post('/bet', async (req, res) => {
   const handleUserBet = asyncHandler(async (req, res) =>{
   
+    console.log("req.body",req.body);
+    
   const session = await mongoose.startSession();
   try {
     await session.withTransaction(async () => {
