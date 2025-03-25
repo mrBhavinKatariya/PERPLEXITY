@@ -538,6 +538,7 @@ const handleUserBetEndpoint = asyncHandler(async (req, res) => {
     let deductionResult = null;
 
     try {
+
       // Validate inputs
       if (!mongoose.Types.ObjectId.isValid(userId)) {
         return res.status(400).json(
@@ -632,43 +633,51 @@ const handleUserBetEndpoint = asyncHandler(async (req, res) => {
       }
 
       // Process winnings in atomic transaction
-      if (result === "WIN") {
-        const winSession = await mongoose.startSession();
-        winSession.startTransaction();
-      
-        try {
-          
-          const winnings = Number((contractMoney * multiplier).toFixed(2));
-          
-          const winUpdate = await User.findOneAndUpdate(
-            { _id: userId },
-            { version: deductionResult.version },
-            { 
-              $inc: { 
-                balance: winnings,
-                version: 1 
-              }
-            },
-            { 
-              new: true,
-              session: winSession,
-              lock: true
-            }
-          );
+if (result === "WIN") {
+  const winSession = await mongoose.startSession();
+  try {
 
-          if (!winUpdate) {
-            throw new Error('Concurrency conflict in win update');
-          }
+  winSession.startTransaction();
 
-          await winSession.commitTransaction();
-        } catch (error) {
-          await winSession.abortTransaction();
-          throw error;
-        } finally {
-          winSession.endSession();
+  const winningUser = await User.findById(userId).session(winSession);
+  const winnings = Number((contractMoney * multiplier).toFixed(2));
+
+  winningUser.balance = Number((winningUser.balance + winnings).toFixed(2));
+  winningUser.markModified('balance'); // मोंगूज़ को बताएं कि बैलेंस बदला है
+  
+  await winningUser.save({ session: winSession });
+  
+    
+    const winUpdate = await User.findOneAndUpdate(
+      { 
+        _id: userId,
+        version: deductionResult.version // वर्जन चेक
+      },
+      { 
+        $inc: { 
+          balance: winnings,
+          version: 1 
         }
+      },
+      { 
+        new: true,
+        session: winSession,
+        lock: true
       }
+    );
 
+    if (!winUpdate) {
+      throw new Error('Concurrency conflict in win update');
+    }
+
+    await winSession.commitTransaction();
+  } catch (error) {
+    await winSession.abortTransaction();
+    throw error;
+  } finally {
+    winSession.endSession();
+  }
+}
       // Save bet history
       const betHistory = new BetHistory({
         userId,
@@ -704,8 +713,9 @@ const handleUserBetEndpoint = asyncHandler(async (req, res) => {
       deductionSession?.endSession();
 
       // Retry on concurrency conflicts
-      if (this.isConcurrencyError(error)) {
-        retries++;
+      if (this.isConcurrencyError (error)) {
+        error.message.includes('Concurrency') || 
+        error.code === 112;
         await new Promise(resolve => setTimeout(resolve, RETRY_DELAY * (2 ** retries)));
         continue;
       }
