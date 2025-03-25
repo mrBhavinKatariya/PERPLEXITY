@@ -553,7 +553,7 @@ const RazorPayCreatePaymentOrder = asyncHandler(async (req, res) => {
   console.log("req.body",req.body);
   
   try {
-    const { amount } = req.body;
+    const { amount }  = req.body;
     
     if (!amount) {
       return res
@@ -574,8 +574,21 @@ const RazorPayCreatePaymentOrder = asyncHandler(async (req, res) => {
       return res.status(404).json({ success: false, message: "User not found" });
     }
 
-    // Referral logic
    // RazorPayCreatePaymentOrder function में referral logic के अंदर
+
+    // Create Razorpay order
+   const options = {
+    amount: amount * 100,
+    currency: "INR",
+    receipt: crypto.randomBytes(10).toString("hex"),
+    payment_capture: 1,
+  };
+
+
+  // const razorpayResponse = await razorpay.orders.create(options); 
+  const response = await razorpay.orders.create(options);
+
+
 if (currentUser.referredBy) {
   const referralAmount = amount * 0.1;
   
@@ -586,6 +599,7 @@ if (currentUser.referredBy) {
     { new: true }
   );
 
+
   // ReferralEarning रिकॉर्ड बनाएं
   await ReferralEarning.create({
     referrer: currentUser.referredBy,
@@ -595,15 +609,7 @@ if (currentUser.referredBy) {
   });
 }
 
-    // Create Razorpay order
-    const options = {
-      amount: amount * 100, // Convert rupees to paise
-      currency: "INR",
-      receipt: crypto.randomBytes(10).toString("hex"),
-      payment_capture: 1,
-    };
-
-    const response = await razorpay.orders.create(options);
+   
 
     res.status(200).json({
       success: true,
