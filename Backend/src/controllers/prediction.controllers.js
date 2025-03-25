@@ -580,6 +580,7 @@ const processCompletedSessions = async () => {
   
   try {
     
+    await session.withTransaction(async () => {
     const now = new Date();
     const activeSession = await GameSession.findOne({
       status: 'active',
@@ -649,6 +650,7 @@ const processCompletedSessions = async () => {
     });
     await newSession.save({ session });
     
+  });
   } catch (error) {
     await session.abortTransaction();
     console.error('Error processing session:', error);
