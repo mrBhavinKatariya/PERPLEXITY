@@ -511,6 +511,9 @@ const handleUserSession = asyncHandler(async (req, res) => {
 
 // Place bet
 const handleUserBet = asyncHandler(async (req, res) => {
+
+  console.log("req.body",req.body);
+  
   const session = await mongoose.startSession();
   session.startTransaction();
   
@@ -535,6 +538,8 @@ const handleUserBet = asyncHandler(async (req, res) => {
       await session.abortTransaction();
       return res.status(400).json({ error: 'No active session' });
     }
+
+
 
     // Deduct balance and create bet
     await User.findByIdAndUpdate(
@@ -637,7 +642,12 @@ const processCompletedSessions = async () => {
     console.log(`Processed session ${activeSession._id} with number ${generatedNumber}`);
     
     // Create new session
-    await createNewSession();
+    const newSession = new GameSession({
+      status: 'active',
+      startTime: new Date(),
+      endTime: new Date(Date.now() + 90000)
+    });
+    await newSession.save({ session });
     
   } catch (error) {
     await session.abortTransaction();
