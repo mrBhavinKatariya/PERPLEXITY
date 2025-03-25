@@ -210,44 +210,85 @@ const storeUTRNumberEndpoint = asyncHandler(async (req, res) => {
 });
 
 // API endpoint to update user balance
+// const updateUserBalanceEndpoint = asyncHandler(async (req, res) => {
+//   const { userId, amount } = req.body;
+//   // console.log("Request Bodys:", req.body);
+
+//   // Validate required fields
+//   if (!userId || !amount) {
+//     return res
+//       .status(400)
+//       .json(new ApiResponse(400, null, "User ID and amount are required"));
+//   }
+
+//   try {
+//     // Find the user by ID
+//     const user = await User.findById(userId);
+
+//     if (!user) {
+//       return res.status(404).json(new ApiResponse(404, null, "User not found"));
+//     }
+
+//     // Update the user's balance
+//     user.balance += amount;
+//     await user.save();
+
+//     return res
+//       .status(200)
+//       .json(new ApiResponse(200, user, "User balance updated successfully"));
+//   } catch (error) {
+//     console.error("Error updating user balance:", error);
+//     return res
+//       .status(500)
+//       .json(
+//         new ApiResponse(
+//           500,
+//           null,
+//           "An error occurred while updating the user balance"
+//         )
+//       );
+//   }
+// });
+
 const updateUserBalanceEndpoint = asyncHandler(async (req, res) => {
   const { userId, amount } = req.body;
-  // console.log("Request Bodys:", req.body);
-
-  // Validate required fields
+  
   if (!userId || !amount) {
-    return res
-      .status(400)
-      .json(new ApiResponse(400, null, "User ID and amount are required"));
+    return res.status(400).json(new ApiResponse(400, null, "User ID and amount are required"));
   }
 
-  try {
-    // Find the user by ID
-    const user = await User.findById(userId);
-
-    if (!user) {
-      return res.status(404).json(new ApiResponse(404, null, "User not found"));
-    }
-
-    // Update the user's balance
-    user.balance += amount;
-    await user.save();
-
-    return res
-      .status(200)
-      .json(new ApiResponse(200, user, "User balance updated successfully"));
-  } catch (error) {
-    console.error("Error updating user balance:", error);
-    return res
-      .status(500)
-      .json(
-        new ApiResponse(
-          500,
-          null,
-          "An error occurred while updating the user balance"
-        )
+  let retries = 0;
+  while (retries < MAX_RETRIES) {
+    try {
+      const result = await User.findOneAndUpdate(
+        { _id: userId },
+        { $inc: { balance: amount, version: 1 } },
+        { new: true }
       );
+
+      if (!result) {
+        return res.status(404).json(new ApiResponse(404, null, "User not found"));
+      }
+
+      return res.status(200).json(new ApiResponse(200, user, "User balance updated successfully"));
+    } catch (error) {
+      if (error.message.includes('Concurrency')) {
+        retries++;
+        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY * retries));
+        continue;
+      }
+      return res.status(500).json(new ApiResponse(
+                  500,
+                  null,
+                  "An error occurred while updating the user balance"
+                ));
+    }
   }
+  return res.status(501).json(new ApiResponse(
+              501,
+              null,
+              "An error occurred . Please try again"
+            ));
 });
 
 const getUserBalanceEndpoint = asyncHandler(async (req, res) => {
@@ -327,158 +368,368 @@ const deductUserBalance = async (userId, totalAmount) => {
   }
 };
 
+// const handleUserBetEndpoint = asyncHandler(async (req, res) => {
+//   const { userId, totalAmount, number } = req.body;
+
+//   let retries = 0;
+//   console.log("req.bod",req.body);
+  
+//   // Initial validation
+//   if (!mongoose.Types.ObjectId.isValid(userId)) {
+//     return res.status(400).json(
+//       new ApiResponse(400, null, "Invalid User ID format")
+//     );
+//   }
+
+//   // Input type validation
+//   const validColors = ['green', 'red', 'violet'];
+//   const isColor = validColors.includes(number);
+//   const isNumber = !isNaN(number) && number >= 0 && number <= 9;
+  
+//   if (!isColor && !isNumber) {
+//     return res.status(400).json(
+//       new ApiResponse(400, null, "Invalid selection")
+//     );
+//   }
+
+//   // Validate amount
+//   if (typeof totalAmount !== 'number' || totalAmount <= 0) {
+//     return res.status(400).json(
+//       new ApiResponse(400, null, "Invalid amount")
+//     );
+//   }
+
+//   // Deduction transaction
+//   let deductionSession;
+//   try {
+//     deductionSession = await mongoose.startSession();
+//     deductionSession.startTransaction();
+
+//     // Deduct balance
+//     const user = await User.findById(userId).session(deductionSession);
+//     if (user.balance < totalAmount) {
+//       await deductionSession.abortTransaction();
+//       deductionSession.endSession();
+//       return res.status(400).json(
+//         new ApiResponse(400, null, "Insufficient balance")
+//       );
+//     }
+
+//     user.balance = Number((user.balance - totalAmount).toFixed(2));
+//     await user.save({ session: deductionSession });
+    
+//     await deductionSession.commitTransaction();
+//   } catch (error) {
+//     if (deductionSession?.inTransaction()) {
+//       await deductionSession.abortTransaction();
+//     }
+//     deductionSession?.endSession();
+//     console.error("Deduction failed:", error);
+//     return res.status(500).json(
+//       new ApiResponse(500, null, "Transaction failed")
+//     );
+//   } finally {
+//     deductionSession?.endSession();
+//   }
+
+//   // Result processing (separate from deduction transaction)
+//   try {
+//     // Wait for game result
+//     const remainingTime = Math.max(90 - Math.floor((Date.now() - countdownStartTime) / 1000), 0);
+//     await new Promise(resolve => setTimeout(resolve, remainingTime * 1000));
+
+//     // Get result
+//     const latestPrediction = await Prediction.findOne().sort({ createdAt: -1 }).lean();
+//     const randomNumber = latestPrediction?.number;
+
+//     // Calculate winnings
+//     let multiplier = 0;
+//     let result = "LOSS";
+//     const contractMoney = Number((totalAmount * 0.98).toFixed(2));
+//     let winnings = 0;
+
+//     // Winning calculation logic
+//     if (typeof number === 'number') {
+//       if (randomNumber === number) {
+//         multiplier = [0, 5].includes(number) ? 4.5 : 9;
+//         result = "WIN";
+//       }
+//     } else {
+//       switch(number) {
+//         case 'green':
+//           if ([1, 3, 7, 9].includes(randomNumber)) multiplier = 2;
+//           else if (randomNumber === 5) multiplier = 1.5;
+//           break;
+//         case 'red':
+//           if ([2, 4, 6, 8].includes(randomNumber)) multiplier = 2;
+//           else if (randomNumber === 0) multiplier = 1.5;
+//           break;
+//         case 'violet':
+//           if ([0, 5].includes(randomNumber)) multiplier = 1.5;
+//           break;
+//       }
+//       if (multiplier > 0) result = "WIN";
+//     }
+
+//     // Process winnings in separate transaction
+//     if (result === "WIN") {
+//       const winSession = await mongoose.startSession();
+//       try {
+//         winSession.startTransaction();
+//         const winningUser = await User.findById(userId).session(winSession);
+//         const winnings = Number((contractMoney * multiplier).toFixed(2));
+//         winningUser.balance = Number((winningUser.balance + winnings).toFixed(2));
+//         await winningUser.save({ session: winSession });
+//         await winSession.commitTransaction();
+//       } catch (error) {
+//         await winSession.abortTransaction();
+//         throw error;
+//       } finally {
+//         winSession.endSession();
+//       }
+//     }
+
+//     // Save bet history
+//     const betHistory = new BetHistory({
+//       userId,
+//       selectedColor: typeof number === 'number' ? 'number' : 'color',
+//       selection: number,
+//       betAmount: totalAmount,
+//       contractMoney,
+//       randomNumber,
+//       multiplier,
+//       result,
+//       winnings: multiplier > 0 ? Number((contractMoney * multiplier).toFixed(2)) : 0
+//     });
+//     await betHistory.save();
+
+//     return res.status(200).json(
+//       new ApiResponse(200, {
+//         result: randomNumber,
+//         multiplier,
+//         status: result,
+//         contractMoney,
+//         winnings: (contractMoney * multiplier)
+//       }, "Bet processed successfully")
+//     );
+
+//   } catch (error) {
+//     console.error("Result processing failed:", error);
+//     return res.status(500).json(
+//       new ApiResponse(500, null, "Result processing failed")
+//     );
+//   }
+// });
+
+
+const MAX_RETRIES = 3;
+const RETRY_DELAY = 100; // milliseconds
+
+// Add version field to User schema (in your User model)
+// Add this to your User model definition:
+// version: { type: Number, default: 0 }
+
 const handleUserBetEndpoint = asyncHandler(async (req, res) => {
   const { userId, totalAmount, number } = req.body;
+  let retries = 0;
 
-  console.log("req.bod",req.body);
-  
-  // Initial validation
-  if (!mongoose.Types.ObjectId.isValid(userId)) {
-    return res.status(400).json(
-      new ApiResponse(400, null, "Invalid User ID format")
-    );
-  }
+  while (retries < MAX_RETRIES) {
+    let deductionSession = null;
+    let deductionResult = null;
 
-  // Input type validation
-  const validColors = ['green', 'red', 'violet'];
-  const isColor = validColors.includes(number);
-  const isNumber = !isNaN(number) && number >= 0 && number <= 9;
-  
-  if (!isColor && !isNumber) {
-    return res.status(400).json(
-      new ApiResponse(400, null, "Invalid selection")
-    );
-  }
+    try {
+      // Validate inputs
+      if (!mongoose.Types.ObjectId.isValid(userId)) {
+        return res.status(400).json(
+          new ApiResponse(400, null, "Invalid User ID format")
+        );
+      }
 
-  // Validate amount
-  if (typeof totalAmount !== 'number' || totalAmount <= 0) {
-    return res.status(400).json(
-      new ApiResponse(400, null, "Invalid amount")
-    );
-  }
+      const validColors = ['green', 'red', 'violet'];
+      const isColor = validColors.includes(number);
+      const isNumber = !isNaN(number) && number >= 0 && number <= 9;
+      
+      if (!isColor && !isNumber) {
+        return res.status(400).json(
+          new ApiResponse(400, null, "Invalid selection")
+        );
+      }
 
-  // Deduction transaction
-  let deductionSession;
-  try {
-    deductionSession = await mongoose.startSession();
-    deductionSession.startTransaction();
+      if (typeof totalAmount !== 'number' || totalAmount <= 0) {
+        return res.status(400).json(
+          new ApiResponse(400, null, "Invalid amount")
+        );
+      }
 
-    // Deduct balance
-    const user = await User.findById(userId).session(deductionSession);
-    if (user.balance < totalAmount) {
-      await deductionSession.abortTransaction();
+      // Start deduction transaction with retry capability
+      deductionSession = await mongoose.startSession();
+      deductionSession.startTransaction();
+
+      // Atomic balance deduction with version checking
+      const deductionResult = await User.findOneAndUpdate(
+        { 
+          _id: userId,
+          balance: { $gte: totalAmount },
+          version: req.userVersion  // If available from auth middleware
+        },
+        { 
+          $inc: { 
+            balance: -totalAmount,
+            version: 1 
+          }
+        },
+        { 
+          new: true,
+          session: deductionSession,
+          lock: true
+        }
+      );
+
+      if (!deductionResult) {
+        await deductionSession.abortTransaction();
+        return res.status(400).json(
+          new ApiResponse(400, null, "Insufficient balance or concurrency conflict")
+        );
+      }
+
+      await deductionSession.commitTransaction();
       deductionSession.endSession();
-      return res.status(400).json(
-        new ApiResponse(400, null, "Insufficient balance")
+
+      // Process game result
+      const remainingTime = Math.max(90 - Math.floor((Date.now() - countdownStartTime) / 1000), 0);
+      await new Promise(resolve => setTimeout(resolve, remainingTime * 1000));
+
+      // Get latest prediction
+      const latestPrediction = await Prediction.findOne().sort({ createdAt: -1 }).lean();
+      const randomNumber = latestPrediction?.number;
+
+      // Calculate winnings
+      let multiplier = 0;
+      let result = "LOSS";
+      const contractMoney = Number((totalAmount * 0.98).toFixed(2));
+      let winnings = 0;
+
+      if (typeof number === 'number') {
+        if (randomNumber === number) {
+          multiplier = [0, 5].includes(number) ? 4.5 : 9;
+          result = "WIN";
+        }
+      } else {
+        switch(number) {
+          case 'green':
+            if ([1, 3, 7, 9].includes(randomNumber)) multiplier = 2;
+            else if (randomNumber === 5) multiplier = 1.5;
+            break;
+          case 'red':
+            if ([2, 4, 6, 8].includes(randomNumber)) multiplier = 2;
+            else if (randomNumber === 0) multiplier = 1.5;
+            break;
+          case 'violet':
+            if ([0, 5].includes(randomNumber)) multiplier = 1.5;
+            break;
+        }
+        if (multiplier > 0) result = "WIN";
+      }
+
+      // Process winnings in atomic transaction
+      if (result === "WIN") {
+        const winSession = await mongoose.startSession();
+        winSession.startTransaction();
+      
+        try {
+          
+          const winnings = Number((contractMoney * multiplier).toFixed(2));
+          
+          const winUpdate = await User.findOneAndUpdate(
+            { _id: userId },
+            { version: deductionResult.version },
+            { 
+              $inc: { 
+                balance: winnings,
+                version: 1 
+              }
+            },
+            { 
+              new: true,
+              session: winSession,
+              lock: true
+            }
+          );
+
+          if (!winUpdate) {
+            throw new Error('Concurrency conflict in win update');
+          }
+
+          await winSession.commitTransaction();
+        } catch (error) {
+          await winSession.abortTransaction();
+          throw error;
+        } finally {
+          winSession.endSession();
+        }
+      }
+
+      // Save bet history
+      const betHistory = new BetHistory({
+        userId,
+        selectedColor: typeof number === 'number' ? 'number' : 'color',
+        selection: number,
+        betAmount: totalAmount,
+        contractMoney,
+        randomNumber,
+        multiplier,
+        result,
+        winnings: result === "WIN" ? Number((contractMoney * multiplier).toFixed(2)) : 0,
+        versionSnapshot: deductionResult.version
+      });
+      await betHistory.save();
+
+      return res.status(200).json(
+        new ApiResponse(200, {
+          result: randomNumber,
+          multiplier,
+          status: result,
+          contractMoney,
+          winnings: result === "WIN" ? Number((contractMoney * multiplier).toFixed(2)) : 0
+        }, "Bet processed successfully")
+      );
+
+    } catch (error) {
+      console.error(`Attempt ${retries + 1} failed:`, error);
+
+      // Cleanup failed transactions
+      if (deductionSession?.inTransaction()) {
+        await deductionSession.abortTransaction();
+      }
+      deductionSession?.endSession();
+
+      // Retry on concurrency conflicts
+      if (this.isConcurrencyError(error)) {
+        retries++;
+        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY * (2 ** retries)));
+        continue;
+      }
+
+      // Handle other errors
+      return res.status(500).json(
+        new ApiResponse(500, null, error.message || "Transaction failed")
       );
     }
-
-    user.balance = Number((user.balance - totalAmount).toFixed(2));
-    await user.save({ session: deductionSession });
-    
-    await deductionSession.commitTransaction();
-  } catch (error) {
-    if (deductionSession?.inTransaction()) {
-      await deductionSession.abortTransaction();
-    }
-    deductionSession?.endSession();
-    console.error("Deduction failed:", error);
-    return res.status(500).json(
-      new ApiResponse(500, null, "Transaction failed")
-    );
-  } finally {
-    deductionSession?.endSession();
   }
 
-  // Result processing (separate from deduction transaction)
-  try {
-    // Wait for game result
-    const remainingTime = Math.max(90 - Math.floor((Date.now() - countdownStartTime) / 1000), 0);
-    await new Promise(resolve => setTimeout(resolve, remainingTime * 1000));
-
-    // Get result
-    const latestPrediction = await Prediction.findOne().sort({ createdAt: -1 }).lean();
-    const randomNumber = latestPrediction?.number;
-
-    // Calculate winnings
-    let multiplier = 0;
-    let result = "LOSS";
-    const contractMoney = Number((totalAmount * 0.98).toFixed(2));
-    let winnings = 0;
-
-    // Winning calculation logic
-    if (typeof number === 'number') {
-      if (randomNumber === number) {
-        multiplier = [0, 5].includes(number) ? 4.5 : 9;
-        result = "WIN";
-      }
-    } else {
-      switch(number) {
-        case 'green':
-          if ([1, 3, 7, 9].includes(randomNumber)) multiplier = 2;
-          else if (randomNumber === 5) multiplier = 1.5;
-          break;
-        case 'red':
-          if ([2, 4, 6, 8].includes(randomNumber)) multiplier = 2;
-          else if (randomNumber === 0) multiplier = 1.5;
-          break;
-        case 'violet':
-          if ([0, 5].includes(randomNumber)) multiplier = 1.5;
-          break;
-      }
-      if (multiplier > 0) result = "WIN";
-    }
-
-    // Process winnings in separate transaction
-    if (result === "WIN") {
-      const winSession = await mongoose.startSession();
-      try {
-        winSession.startTransaction();
-        const winningUser = await User.findById(userId).session(winSession);
-        const winnings = Number((contractMoney * multiplier).toFixed(2));
-        winningUser.balance = Number((winningUser.balance + winnings).toFixed(2));
-        await winningUser.save({ session: winSession });
-        await winSession.commitTransaction();
-      } catch (error) {
-        await winSession.abortTransaction();
-        throw error;
-      } finally {
-        winSession.endSession();
-      }
-    }
-
-    // Save bet history
-    const betHistory = new BetHistory({
-      userId,
-      selectedColor: typeof number === 'number' ? 'number' : 'color',
-      selection: number,
-      betAmount: totalAmount,
-      contractMoney,
-      randomNumber,
-      multiplier,
-      result,
-      winnings: multiplier > 0 ? Number((contractMoney * multiplier).toFixed(2)) : 0
-    });
-    await betHistory.save();
-
-    return res.status(200).json(
-      new ApiResponse(200, {
-        result: randomNumber,
-        multiplier,
-        status: result,
-        contractMoney,
-        winnings: (contractMoney * multiplier)
-      }, "Bet processed successfully")
-    );
-
-  } catch (error) {
-    console.error("Result processing failed:", error);
-    return res.status(500).json(
-      new ApiResponse(500, null, "Result processing failed")
-    );
-  }
+  return res.status(500).json(
+    new ApiResponse(500, null, "Maximum retries exceeded")
+  );
 });
 
+function isConcurrencyError(error) {
+  return [
+    'WriteConflict',
+    'Concurrency',
+    'No matching document',
+    'version mismatch'
+  ].some(term => error.message.includes(term));
+}
 
 
 const getUserBetHistoryEndpoint = asyncHandler(async (req, res) => {

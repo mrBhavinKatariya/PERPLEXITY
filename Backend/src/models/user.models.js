@@ -91,6 +91,10 @@ const userSchema = new Schema(
     passwordResetToken: {
       type: String,
     },
+    version: { 
+      type: Number, 
+      default: 0 
+    },
 
     passwordResetExpires: {
       type: Date,
@@ -112,6 +116,7 @@ userSchema.pre("save", async function (next) {
   next();
 });
 
+userSchema.index({ _id: 1, version: 1 });
 
 userSchema.pre('save', async function(next) {
     if (!this.referralCode) {
