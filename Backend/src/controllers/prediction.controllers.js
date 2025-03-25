@@ -519,6 +519,12 @@ const colorMap = {
     await session.withTransaction(async () => {
       const { userId, amount, betType, selection } = req.body;
 
+    console.log("userId",userId);
+    console.log("amount",amount);
+    console.log("betType",betType);
+    console.log("selection",selection);
+ 
+
       // Validate input
       if (betType === 'color' && !colorMap[selection]) {
         return res.status(400).json({ error: 'Invalid color' });
