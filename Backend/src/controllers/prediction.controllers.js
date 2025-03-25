@@ -210,85 +210,44 @@ const storeUTRNumberEndpoint = asyncHandler(async (req, res) => {
 });
 
 // API endpoint to update user balance
-// const updateUserBalanceEndpoint = asyncHandler(async (req, res) => {
-//   const { userId, amount } = req.body;
-//   // console.log("Request Bodys:", req.body);
-
-//   // Validate required fields
-//   if (!userId || !amount) {
-//     return res
-//       .status(400)
-//       .json(new ApiResponse(400, null, "User ID and amount are required"));
-//   }
-
-//   try {
-//     // Find the user by ID
-//     const user = await User.findById(userId);
-
-//     if (!user) {
-//       return res.status(404).json(new ApiResponse(404, null, "User not found"));
-//     }
-
-//     // Update the user's balance
-//     user.balance += amount;
-//     await user.save();
-
-//     return res
-//       .status(200)
-//       .json(new ApiResponse(200, user, "User balance updated successfully"));
-//   } catch (error) {
-//     console.error("Error updating user balance:", error);
-//     return res
-//       .status(500)
-//       .json(
-//         new ApiResponse(
-//           500,
-//           null,
-//           "An error occurred while updating the user balance"
-//         )
-//       );
-//   }
-// });
-
 const updateUserBalanceEndpoint = asyncHandler(async (req, res) => {
   const { userId, amount } = req.body;
-  
+  // console.log("Request Bodys:", req.body);
+
+  // Validate required fields
   if (!userId || !amount) {
-    return res.status(400).json(new ApiResponse(400, null, "User ID and amount are required"));
+    return res
+      .status(400)
+      .json(new ApiResponse(400, null, "User ID and amount are required"));
   }
 
-  let retries = 0;
-  while (retries < MAX_RETRIES) {
-    try {
-      const result = await User.findOneAndUpdate(
-        { _id: userId },
-        { $inc: { balance: amount, version: 1 } },
-        { new: true }
-      );
+  try {
+    // Find the user by ID
+    const user = await User.findById(userId);
 
-      if (!result) {
-        return res.status(404).json(new ApiResponse(404, null, "User not found"));
-      }
-
-      return res.status(200).json(new ApiResponse(200, user, "User balance updated successfully"));
-    } catch (error) {
-      if (error.message.includes('Concurrency')) {
-        retries++;
-        await new Promise(resolve => setTimeout(resolve, RETRY_DELAY * retries));
-        continue;
-      }
-      return res.status(500).json(new ApiResponse(
-                  500,
-                  null,
-                  "An error occurred while updating the user balance"
-                ));
+    if (!user) {
+      return res.status(404).json(new ApiResponse(404, null, "User not found"));
     }
+
+    // Update the user's balance
+    user.balance += amount;
+    await user.save();
+
+    return res
+      .status(200)
+      .json(new ApiResponse(200, user, "User balance updated successfully"));
+  } catch (error) {
+    console.error("Error updating user balance:", error);
+    return res
+      .status(500)
+      .json(
+        new ApiResponse(
+          500,
+          null,
+          "An error occurred while updating the user balance"
+        )
+      );
   }
-  return res.status(501).json(new ApiResponse(
-              501,
-              null,
-              "An error occurred . Please try again"
-            ));
 });
 
 const getUserBalanceEndpoint = asyncHandler(async (req, res) => {
@@ -371,7 +330,6 @@ const deductUserBalance = async (userId, totalAmount) => {
 const handleUserBetEndpoint = asyncHandler(async (req, res) => {
   const { userId, totalAmount, number } = req.body;
 
-  let retries = 0;
   console.log("req.bod",req.body);
   
   // Initial validation
@@ -520,6 +478,8 @@ const handleUserBetEndpoint = asyncHandler(async (req, res) => {
     );
   }
 });
+
+
 
 const getUserBetHistoryEndpoint = asyncHandler(async (req, res) => {
   const { userId } = req.params;
