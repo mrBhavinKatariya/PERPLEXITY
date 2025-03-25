@@ -82,9 +82,9 @@ const TermsOfUse = () => {
                 <div className="flex gap-3">
                   <FiMapPin className="text-amber-600 text-xl mt-1 flex-shrink-0" />
                   <address className="not-italic">
-                    301, 3rd Floor Ganesh Bhuvan Apartment,<br />
-                    Near Ganesh colony, Opp Arihant Jewellers,<br />
-                    Main Road Varachha, Surat, Gujarat - 395006
+                  92, Radhika Park soc,<br />
+                  Near Polaris Mall,<br />
+                  Puna gam, Surat - 395010, Gujarat - 395010
                   </address>
                 </div>
               </div>

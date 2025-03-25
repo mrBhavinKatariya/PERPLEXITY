@@ -78,9 +78,9 @@ const ContactPage = () => {
                   <div>
                     <h3 className="text-2xl font-cinzel font-bold text-gray-800">Visit Us</h3>
                     <p className="text-gray-600">
-                      301, 3rd Floor Ganesh Bhuvan Apartment,<br />
-                      Near Ganesh Colony, Opp Aninari Jewelers,<br />
-                      Main Road Varacinta, Surat - 395006,<br />
+                      92, Radhika Park soc,<br />
+                      Near Polaris Mall,<br />
+                      Puna gam, Surat - 395010,<br />
                       Gujarat, India
                     </p>
                   </div>

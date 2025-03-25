@@ -205,10 +205,10 @@ const RefundPolicyPage = () => {
               </h2>
             </div>
             <address className="text-gray-600 not-italic leading-relaxed">
-              301, 3rd Floor Ganesh Bhuvan Apartment<br />
-              Near Ganesh Colony, Opp Arihant Jewelers<br />
-              Main Road Varachha, Surat<br />
-              Gujarat, India - 395006
+            92, Radhika Park soc,<br />
+                      Near Polaris Mall,<br />
+                      Puna gam, Surat - 395010,<br />
+                      Gujarat, India
             </address>
           </motion.div>
 
