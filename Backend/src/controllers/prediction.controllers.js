@@ -648,14 +648,12 @@ if (result === "WIN") {
 
   winSession.startTransaction();
 
-  const winningUser = await User.findById(userId).session(winSession);
+  const currentUser = await User.findById(userId).session(winSession);
+  if (!currentUser) {
+    throw new Error('User not found');
+  }
+
   const winnings = Number((contractMoney * multiplier).toFixed(2));
-
-  winningUser.balance = Number((winningUser.balance + winnings).toFixed(2));
-  winningUser.markModified('balance'); // मोंगूज़ को बताएं कि बैलेंस बदला है
-  
-  await winningUser.save({ session: winSession });
-
     
     const winUpdate = await User.findOneAndUpdate(
       { 
@@ -722,10 +720,9 @@ if (result === "WIN") {
       deductionSession?.endSession();
 
       // Retry on concurrency conflicts
-      if (this.isConcurrencyError (error)) {
-        error.message.includes('Concurrency') || 
-        error.code === 112;
+      if (isConcurrencyError(error)) {
         await new Promise(resolve => setTimeout(resolve, RETRY_DELAY * (2 ** retries)));
+        retries++;
         continue;
       }
 
