@@ -503,7 +503,7 @@ const colorMap = {
     const timeLeft = Math.round((session.endTime - Date.now()) / 1000);
     res.json({ timeLeft });
   } catch (error) {
-    res.status(500).json({ error: 'Server error' });
+    res.status(500).json({ error: 'Serverrrr error' });
   }
 });
 
