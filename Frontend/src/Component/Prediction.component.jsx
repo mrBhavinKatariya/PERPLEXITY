@@ -1431,7 +1431,7 @@ export default function ColorPredictionGame() {
 
     try {
       const response = await axios.post(`${API_URL}/api/v1/users/bet`, {
-        userId: "USER123", // अस्थायी यूजर आईडी
+        userId: "67d81099106de98686827d45", // अस्थायी यूजर आईडी
         amount: parseFloat(amount),
         betType: selectedColor ? 'color' : 'digit',
         selection: selectedColor || selectedDigit
