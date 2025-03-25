@@ -105,20 +105,17 @@ const RechargePage = ({ user, onClose }) => {
 
   const handleRazorpayPayment = async () => {
     try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        throw new Error("No token found");
-      }
-  
+      // Create common auth config
       const authConfig = {
         headers: {
           Authorization: `Bearer ${token}`
         }
       };
   
+      // Create order with reusable config
       const response = await axios.post(
         `${API_URL}/api/v1/users/create-razorpay-order`,
-        { amount: amount },
+        { amount: amount * 100 },
         authConfig
       );
   
@@ -132,20 +129,21 @@ const RechargePage = ({ user, onClose }) => {
         prefill: {
           name: name,
           email: email,
-          contact: phoneNo, // ✅ सही फील्ड नाम
+          phoneNo: phoneNo,
         },
         handler: async (response) => {
           try {
+            // Verification request with same auth config
             const verificationResponse = await axios.post(
               `${API_URL}/api/v1/users/verify-razorpay-payment`,
               {
                 razorpayPaymentId: response.razorpay_payment_id,
                 razorpayOrderId: response.razorpay_order_id,
                 razorpaySignature: response.razorpay_signature,
-                amount: response.data.amount, // ✅ सही मूल्य
+                amount: amount,
                 userId: userId,
               },
-              authConfig
+              authConfig // Reuse config here
             );
   
             if (verificationResponse.data.success) {

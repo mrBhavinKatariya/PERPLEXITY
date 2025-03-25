@@ -23,7 +23,7 @@ router.route('/get-balance/:userId').get(verifyJWT,getUserBalanceEndpoint);
 router.route('/deduct-balance').post(deductUserBalance); // user re jyare bet mari te  amount confirm button
 router.route('/invest').post(handleUserBetEndpoint); // kya button par ketla paisa malse user ne
 router.route("/bet-history/:userId").get(getUserBetHistoryEndpoint)
-router.route("/create-razorpay-order").post(RazorPayCreatePaymentOrder);
+router.route("/create-razorpay-order").post(verifyJWT,RazorPayCreatePaymentOrder);
 router.route("/verify-razorpay-payment").post(RazorpayPaymentAndUpdateBalance);
 router.route("/change-password").post(verifyJWTS, changeCurrentPassword)
 router.route("/fund-account").post(createFundAccount);

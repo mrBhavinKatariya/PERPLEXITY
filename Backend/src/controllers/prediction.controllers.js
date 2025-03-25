@@ -15,7 +15,6 @@ import { sendEmail } from "../utils/SendEmail.utils.js";
 import { log } from "console";
 
 
-
 dotenv.config()
 let isGenerating = false;
 let countdownStartTime = Date.now();
@@ -566,7 +565,7 @@ const RazorPayCreatePaymentOrder = asyncHandler(async (req, res) => {
 
     // Check authenticated user
     if (!user) {
-      return res.status(401).json({ success: false, message: "User not authenticated" });
+      return res.status(401).json({ success: false, message: "User not found" });
     }
 
     // Get current user details
