@@ -574,6 +574,7 @@ const processCompletedSessions = async () => {
   session.startTransaction();
   
   try {
+    
     const now = new Date();
     const activeSession = await GameSession.findOne({
       status: 'active',
