@@ -562,7 +562,7 @@ const colorMap = {
       }
   
       // Create bet record
-      const bet = new Bet({
+      const bet = new BetHistory({
         user: userId,
         gameSession: gameSession._id,
         amount,
