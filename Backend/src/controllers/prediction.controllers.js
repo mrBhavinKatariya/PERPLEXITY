@@ -7,20 +7,22 @@ import { User } from "../models/user.models.js";
 import { BetHistory } from "../models/History.models.js";
 import { Transaction } from "../models/Transaction.models.js";
 import mongoose from "mongoose";
-import Razorpay from "razorpay"; 
+import Razorpay from "razorpay";
 import crypto from "crypto";
 import dotenv from "dotenv";
-import bcrypt from 'bcrypt';
+import bcrypt from "bcrypt";
 import { sendEmail } from "../utils/SendEmail.utils.js";
 import { log } from "console";
 import { ReferralEarning } from "../models/ReferralEarning.models.js";
 
-dotenv.config()
+dotenv.config();
 let isGenerating = false;
 let countdownStartTime = Date.now();
 
 const generateRefreshToken = async (userId) => {
-    return jwt.sign({ _id: userId }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: "30d" });
+  return jwt.sign({ _id: userId }, process.env.REFRESH_TOKEN_SECRET, {
+    expiresIn: "30d",
+  });
 };
 
 // Function to generate a secure random number between 0 and 9
@@ -32,7 +34,11 @@ const handleRandomNumberGeneration = async () => {
   if (!isGenerating) {
     isGenerating = true;
     try {
-      const lastRecord = await Prediction.findOne().sort({ createdAt: -1 });
+      const cutoffTime = new Date(Date.now() - 300000);
+      const lastRecord = await Prediction.findOne({
+        createdAt: { $gte: cutoffTime }
+      }).sort({ createdAt: -1 });
+      // const lastRecord = await Prediction.findOne().sort({ createdAt: -1 });
 
       let currentNumber;
       let nextNumber;
@@ -53,8 +59,8 @@ const handleRandomNumberGeneration = async () => {
       const period = lastRecord ? lastRecord.period + 1 : 1;
 
       // Validate currentNumber and result
-      if (typeof currentNumber !== 'number' || isNaN(currentNumber)) {
-        throw new Error('Invalid currentNumber');
+      if (typeof currentNumber !== "number" || isNaN(currentNumber)) {
+        throw new Error("Invalid currentNumber");
       }
 
       const newPrediction = new Prediction({
@@ -63,10 +69,11 @@ const handleRandomNumberGeneration = async () => {
         price: Math.floor(Math.random() * 965440),
         period: period,
         result: currentNumber, // Ensure result is assigned
+        countdownStartTime: Date.now()
       });
 
       await newPrediction.save();
-
+      countdownStartTime = Date.now(); 
       console.log("Current Number:", currentNumber);
       console.log("Next Predicted Number:", nextNumber);
 
@@ -79,13 +86,13 @@ const handleRandomNumberGeneration = async () => {
   }
 };
 
-
 setInterval(() => {
   handleRandomNumberGeneration();
   countdownStartTime = Date.now(); // 🛠️ FIX: Reset countdown timer every 90s
 }, 90000);
 
 // API endpoint to get the countdown time
+
 const getCountdownTimeEndpoint = asyncHandler(async (req, res) => {
   const elapsedTime = Math.floor((Date.now() - countdownStartTime) / 1000);
   const countdownTime = Math.max(90 - elapsedTime, 0);
@@ -119,8 +126,6 @@ const deleteOldRandomNumbers = async () => {
     console.error("Deletion error:", error);
   }
 };
-
-
 
 // API endpoint to get the latest 40 random numbers
 const getRandomNumberEndpoint = asyncHandler(async (req, res) => {
@@ -332,7 +337,7 @@ const deductUserBalance = async (userId, totalAmount) => {
 //   const { userId, totalAmount, number } = req.body;
 
 //   console.log("req.bod",req.body);
-  
+
 //   // Initial validation
 //   if (!mongoose.Types.ObjectId.isValid(userId)) {
 //     return res.status(400).json(
@@ -344,7 +349,7 @@ const deductUserBalance = async (userId, totalAmount) => {
 //   const validColors = ['green', 'red', 'violet'];
 //   const isColor = validColors.includes(number);
 //   const isNumber = !isNaN(number) && number >= 0 && number <= 9;
-  
+
 //   if (!isColor && !isNumber) {
 //     return res.status(400).json(
 //       new ApiResponse(400, null, "Invalid selection")
@@ -376,7 +381,7 @@ const deductUserBalance = async (userId, totalAmount) => {
 
 //     user.balance = Number((user.balance - totalAmount).toFixed(2));
 //     await user.save({ session: deductionSession });
-    
+
 //     await deductionSession.commitTransaction();
 //   } catch (error) {
 //     if (deductionSession?.inTransaction()) {
@@ -494,7 +499,7 @@ const deductUserBalance = async (userId, totalAmount) => {
 //   const validColors = ['green', 'red', 'violet'];
 //   const isColor = validColors.includes(number);
 //   const isNumber = !isNaN(number) && number >= 0 && number <= 9;
-  
+
 //   if (!isColor && !isNumber) {
 //     return res.status(400).json(
 //       new ApiResponse(400, null, "Invalid selection")
@@ -526,7 +531,7 @@ const deductUserBalance = async (userId, totalAmount) => {
 
 //     user.balance = Number((user.balance - totalAmount).toFixed(2));
 //     await user.save({ session: deductionSession });
-    
+
 //     await deductionSession.commitTransaction();
 //   } catch (error) {
 //     if (deductionSession?.inTransaction()) {
@@ -632,27 +637,26 @@ const handleUserBetEndpoint = asyncHandler(async (req, res) => {
 
   // Initial validation
   if (!mongoose.Types.ObjectId.isValid(userId)) {
-    return res.status(400).json(
-      new ApiResponse(400, null, "Invalid User ID format")
-    );
+    return res
+      .status(400)
+      .json(new ApiResponse(400, null, "Invalid User ID format"));
   }
 
   // Input validation improved
-  const validColors = ['green', 'red', 'violet'];
+  const validColors = ["green", "red", "violet"];
   const isColor = validColors.includes(number);
-  const isNumber = !isNaN(number) && parseInt(number) >= 0 && parseInt(number) <= 9;
-  
+  const isNumber =
+    !isNaN(number) && parseInt(number) >= 0 && parseInt(number) <= 9;
+
   if (!isColor && !isNumber) {
-    return res.status(400).json(
-      new ApiResponse(400, null, "Invalid selection")
-    );
+    return res
+      .status(400)
+      .json(new ApiResponse(400, null, "Invalid selection"));
   }
 
   // Validate amount
-  if (typeof totalAmount !== 'number' || totalAmount <= 0) {
-    return res.status(400).json(
-      new ApiResponse(400, null, "Invalid amount")
-    );
+  if (typeof totalAmount !== "number" || totalAmount <= 0) {
+    return res.status(400).json(new ApiResponse(400, null, "Invalid amount"));
   }
 
   // Deduction transaction
@@ -664,28 +668,26 @@ const handleUserBetEndpoint = asyncHandler(async (req, res) => {
     const user = await User.findById(userId).session(deductionSession);
     if (!user) {
       await deductionSession.abortTransaction();
-      return res.status(404).json(
-        new ApiResponse(404, null, "User not found")
-      );
+      return res.status(404).json(new ApiResponse(404, null, "User not found"));
     }
 
     if (user.balance < totalAmount) {
       await deductionSession.abortTransaction();
-      return res.status(400).json(
-        new ApiResponse(400, null, "Insufficient balance")
-      );
+      return res
+        .status(400)
+        .json(new ApiResponse(400, null, "Insufficient balance"));
     }
 
     user.balance = Number((user.balance - totalAmount).toFixed(2));
     await user.save({ session: deductionSession });
-    
+
     await deductionSession.commitTransaction();
   } catch (error) {
     await deductionSession?.abortTransaction();
     console.error("Deduction error:", error);
-    return res.status(500).json(
-      new ApiResponse(500, null, "Transaction failed")
-    );
+    return res
+      .status(500)
+      .json(new ApiResponse(500, null, "Transaction failed"));
   } finally {
     deductionSession?.endSession();
   }
@@ -693,23 +695,44 @@ const handleUserBetEndpoint = asyncHandler(async (req, res) => {
   // Result processing
   try {
     // Get current countdown state properly
-    const countdownDuration = 90; // seconds
-    const currentTime = Date.now();
-    const countdownEndTime = countdownStartTime + (countdownDuration * 1000);
-    const remainingTime = Math.max(countdownEndTime - currentTime, 0);
-    
-    await new Promise(resolve => setTimeout(resolve, remainingTime));
+    const countdownEnd = countdownStartTime + 90000;
+    const remainingWait = Math.max(countdownEnd - Date.now(), 0);
+    await new Promise(resolve => setTimeout(resolve, remainingWait + 2000)); 
+
+    // const countdownDuration = 90; // seconds
+    // const currentTime = Date.now();
+    // const countdownEndTime = countdownStartTime + countdownDuration * 1000;
+    // const remainingTime = Math.max(countdownEndTime - currentTime, 0);
+
+    // await new Promise((resolve) => setTimeout(resolve, remainingTime));
 
     // Fetch prediction with proper error handling
-    const latestPrediction = await Prediction.findOne({
-      createdAt: { $gte: countdownStartTime }
-    }).sort({ createdAt: -1 });
+    // const latestPrediction = await Prediction.findOne({
+    //   createdAt: { $gte: countdownStartTime },
+    // }).sort({ createdAt: -1 });
 
-    if (!latestPrediction) {
-      throw new Error("No prediction found for this countdown period");
+    // if (!latestPrediction) {
+    //   throw new Error("No prediction found for this countdown period");
+    // }
+    let latestPrediction;
+    let retries = 0;
+    while(retries < 5) {
+      latestPrediction = await Prediction.findOne({
+        countdownStartTime: { $lte: countdownStartTime }
+      }).sort({ createdAt: -1 });
+      
+      if(latestPrediction?.number !== undefined) break;
+      
+      await new Promise(resolve => setTimeout(resolve, 500 * retries));
+      retries++;
+    }
+    if(!latestPrediction) {
+      throw new Error("Game result not generated yet");
     }
 
     const randomNumber = latestPrediction.number;
+
+    // const randomNumber = latestPrediction.number;
 
     // Calculation logic with type safety
     let multiplier = 0;
@@ -717,19 +740,19 @@ const handleUserBetEndpoint = asyncHandler(async (req, res) => {
     const contractMoney = Number((totalAmount * 0.98).toFixed(2));
 
     const parsedNumber = isColor ? number : parseInt(number);
-    
-    if (typeof parsedNumber === 'number') {
+
+    if (typeof parsedNumber === "number") {
       if (randomNumber === parsedNumber) {
         multiplier = 5;
         result = "WIN";
       }
     } else {
       const colorMap = {
-        red: [2,4,6,8],
-        green: [1,3,7,9],
-        violet: [0,5]
+        red: [2, 4, 6, 8],
+        green: [1, 3, 7, 9],
+        violet: [0, 5],
       };
-      
+
       if (colorMap[parsedNumber]?.includes(randomNumber)) {
         multiplier = 2;
         result = "WIN";
@@ -743,7 +766,9 @@ const handleUserBetEndpoint = asyncHandler(async (req, res) => {
       try {
         const winningUser = await User.findById(userId).session(winSession);
         const winnings = Number((contractMoney * multiplier).toFixed(2));
-        winningUser.balance = Number((winningUser.balance + winnings).toFixed(2));
+        winningUser.balance = Number(
+          (winningUser.balance + winnings).toFixed(2)
+        );
         await winningUser.save({ session: winSession });
         await winSession.commitTransaction();
       } catch (error) {
@@ -757,38 +782,45 @@ const handleUserBetEndpoint = asyncHandler(async (req, res) => {
     // Save bet history with proper validation
     const betHistory = new BetHistory({
       userId,
-      selectedType: isColor ? 'color' : 'number',
+      selectedType: isColor ? "color" : "number",
       selection: number,
       betAmount: totalAmount,
       contractMoney,
       randomNumber,
       multiplier,
       result,
-      winnings: multiplier > 0 ? Number((contractMoney * multiplier).toFixed(2)) : 0
+      winnings:
+        multiplier > 0 ? Number((contractMoney * multiplier).toFixed(2)) : 0,
+        period: latestPrediction.period ,
     });
 
     await betHistory.save();
 
     return res.status(200).json(
-      new ApiResponse(200, {
-        result: randomNumber,
-        multiplier,
-        status: result,
-        contractMoney,
-        winnings: contractMoney * multiplier
-      }, "Bet processed successfully")
+      new ApiResponse(
+        200,
+        {
+          result: randomNumber,
+          multiplier,
+          status: result,
+          contractMoney,
+          winnings: contractMoney * multiplier,
+        },
+        "Bet processed successfully"
+      )
     );
-
   } catch (error) {
     console.error("Result processing error:", {
       error: error.message,
       userId,
       number,
-      stack: error.stack
+      stack: error.stack,
     });
-    return res.status(500).json(
-      new ApiResponse(500, null, "Result processing failed: " + error.message)
-    );
+    return res
+      .status(500)
+      .json(
+        new ApiResponse(500, null, "Result processing failed: " + error.message)
+      );
   }
 });
 
@@ -797,28 +829,38 @@ const getUserBetHistoryEndpoint = asyncHandler(async (req, res) => {
 
   // Validate User ID
   if (!mongoose.Types.ObjectId.isValid(userId)) {
-    return res.status(400).json(
-      new ApiResponse(400, null, "Invalid User ID format")
-    );
+    return res
+      .status(400)
+      .json(new ApiResponse(400, null, "Invalid User ID format"));
   }
 
   try {
-    const betHistory = await BetHistory.find({ userId }).sort({ createdAt: -1 });
+    const betHistory = await BetHistory.find({ userId }).sort({
+      createdAt: -1,
+    });
 
     if (!betHistory.length) {
-      return res.status(404).json(
-        new ApiResponse(404, null, "No bet history found for this user")
-      );
+      return res
+        .status(404)
+        .json(new ApiResponse(404, null, "No bet history found for this user"));
     }
 
-    return res.status(200).json(
-      new ApiResponse(200, betHistory, "Bet history fetched successfully")
-    );
+    return res
+      .status(200)
+      .json(
+        new ApiResponse(200, betHistory, "Bet history fetched successfully")
+      );
   } catch (error) {
     console.error("Error fetching bet history:", error);
-    return res.status(500).json(
-      new ApiResponse(500, null, "An error occurred while fetching the bet history")
-    );
+    return res
+      .status(500)
+      .json(
+        new ApiResponse(
+          500,
+          null,
+          "An error occurred while fetching the bet history"
+        )
+      );
   }
 });
 
@@ -827,7 +869,6 @@ const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
-
 
 // Create Razorpay Order
 // const RazorPayCreatePaymentOrder = asyncHandler(async (req, res) => {
@@ -862,67 +903,67 @@ const razorpay = new Razorpay({
 // });
 
 const RazorPayCreatePaymentOrder = asyncHandler(async (req, res) => {
+  console.log("req.body", req.body);
 
-  console.log("req.body",req.body);
-  
   try {
-    const { amount }  = req.body;
-    
+    const { amount } = req.body;
+
     if (!amount) {
       return res
         .status(400)
         .json({ success: false, message: "Amount is required" });
     }
 
-     const user = await User.findById(req.user._id).select("-password -refreshToken");
+    const user = await User.findById(req.user._id).select(
+      "-password -refreshToken"
+    );
 
     // Check authenticated user
     if (!user) {
-      return res.status(401).json({ success: false, message: "User not found" });
+      return res
+        .status(401)
+        .json({ success: false, message: "User not found" });
     }
 
     // Get current user details
     const currentUser = await User.findById(req.user._id);
     if (!currentUser) {
-      return res.status(404).json({ success: false, message: "User not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
     }
 
-   // RazorPayCreatePaymentOrder function में referral logic के अंदर
+    // RazorPayCreatePaymentOrder function में referral logic के अंदर
 
     // Create Razorpay order
-   const options = {
-    amount: amount * 100,
-    currency: "INR",
-    receipt: crypto.randomBytes(10).toString("hex"),
-    payment_capture: 1,
-  };
+    const options = {
+      amount: amount * 100,
+      currency: "INR",
+      receipt: crypto.randomBytes(10).toString("hex"),
+      payment_capture: 1,
+    };
 
+    // const razorpayResponse = await razorpay.orders.create(options);
+    const response = await razorpay.orders.create(options);
 
-  // const razorpayResponse = await razorpay.orders.create(options); 
-  const response = await razorpay.orders.create(options);
+    if (currentUser.referredBy) {
+      const referralAmount = amount * 0.1;
 
+      // Referrer का बैलेंस अपडेट करें
+      await User.findByIdAndUpdate(
+        currentUser.referredBy,
+        { $inc: { walletBalance: referralAmount } },
+        { new: true }
+      );
 
-if (currentUser.referredBy) {
-  const referralAmount = amount * 0.1;
-  
-  // Referrer का बैलेंस अपडेट करें
-  await User.findByIdAndUpdate(
-    currentUser.referredBy,
-    { $inc: { walletBalance: referralAmount } },
-    { new: true }
-  );
-
-
-  // ReferralEarning रिकॉर्ड बनाएं
-  await ReferralEarning.create({
-    referrer: currentUser.referredBy,
-    referredUser: currentUser._id,
-    amount: referralAmount,
-    orderId: response.id // Razorpay ऑर्डर ID
-  });
-}
-
-   
+      // ReferralEarning रिकॉर्ड बनाएं
+      await ReferralEarning.create({
+        referrer: currentUser.referredBy,
+        referredUser: currentUser._id,
+        amount: referralAmount,
+        orderId: response.id, // Razorpay ऑर्डर ID
+      });
+    }
 
     res.status(200).json({
       success: true,
@@ -936,39 +977,50 @@ if (currentUser.referredBy) {
   }
 });
 
-
 // Get Referral Earnings
 const getReferralEarnings = asyncHandler(async (req, res) => {
   try {
     // Authenticated user को पहचानें
     const user = await User.findById(req.user._id);
     if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
     }
 
     // Referral कमाई का डेटा fetch करें
     const earnings = await ReferralEarning.find({ referrer: user._id })
-      .populate('referredUser', 'name email')
+      .populate("referredUser", "name email")
       .sort({ createdAt: -1 });
 
     // टोटल कमाई कैलकुलेट करें
-    const totalEarnings = earnings.reduce((sum, earning) => sum + earning.amount, 0);
+    const totalEarnings = earnings.reduce(
+      (sum, earning) => sum + earning.amount,
+      0
+    );
 
     res.status(200).json({
       success: true,
       totalEarnings,
-      earnings
+      earnings,
     });
-    
   } catch (error) {
     console.error("Error fetching referral earnings:", error);
-    res.status(500).json({ success: false, message: "Failed to fetch earnings" });
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to fetch earnings" });
   }
 });
 // Verify Payment and Update Balance
 const RazorpayPaymentAndUpdateBalance = asyncHandler(async (req, res) => {
   try {
-    const { razorpayPaymentId, razorpayOrderId, razorpaySignature, amount, userId } = req.body;
+    const {
+      razorpayPaymentId,
+      razorpayOrderId,
+      razorpaySignature,
+      amount,
+      userId,
+    } = req.body;
 
     // Create expected signature
     const expectedSignature = crypto
@@ -986,11 +1038,13 @@ const RazorpayPaymentAndUpdateBalance = asyncHandler(async (req, res) => {
     // If signature is valid, update user balance
     const user = await User.findById(userId);
     if (!user) {
-      return res.status(404).json({ success: false, message: "User not found" });
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
     }
 
     // Convert amount from paise to rupees
-    const amountInRupees = amount / 1 ;
+    const amountInRupees = amount / 1;
 
     // Update user balance
     user.balance += amountInRupees;
@@ -1076,36 +1130,36 @@ const initiateWithdrawal = asyncHandler(async (req, res) => {
       message: "Withdrawal initiated",
       payoutId: payout.id,
     });
-
   } catch (error) {
     console.error("Withdrawal error:", error);
-    
+
     // Revert balance deduction on error
     if (user) {
       user.balance += amount;
       await user.save();
     }
-    
+
     res.status(500).json({ success: false, message: "Withdrawal failed" });
   }
 });
 
-
 // Razorpay Webhook Handler
 const handlePayoutWebhook = asyncHandler(async (req, res) => {
   const body = req.body;
-  console.log("req.body",req.body);
-  
-  const signature = req.headers['x-razorpay-signature'];
+  console.log("req.body", req.body);
+
+  const signature = req.headers["x-razorpay-signature"];
 
   // Verify webhook signature
   const expectedSignature = crypto
-    .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+    .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
     .update(JSON.stringify(body))
-    .digest('hex');
+    .digest("hex");
 
   if (signature !== expectedSignature) {
-    return res.status(400).json({ status: 'error', message: 'Invalid signature' });
+    return res
+      .status(400)
+      .json({ status: "error", message: "Invalid signature" });
   }
 
   const event = body.event;
@@ -1115,17 +1169,19 @@ const handlePayoutWebhook = asyncHandler(async (req, res) => {
     // Find associated transaction
     const transaction = await Transaction.findOne({ transactionId: payoutId });
     if (!transaction) {
-      return res.status(404).json({ status: 'error', message: 'Transaction not found' });
+      return res
+        .status(404)
+        .json({ status: "error", message: "Transaction not found" });
     }
 
     // Handle payout success
-    if (event === 'payout.processed') {
-      transaction.status = 'completed';
+    if (event === "payout.processed") {
+      transaction.status = "completed";
       await transaction.save();
     }
     // Handle payout failure
-    else if (event === 'payout.failed') {
-      transaction.status = 'failed';
+    else if (event === "payout.failed") {
+      transaction.status = "failed";
       await transaction.save();
 
       // Refund user balance
@@ -1136,10 +1192,10 @@ const handlePayoutWebhook = asyncHandler(async (req, res) => {
       }
     }
 
-    res.status(200).json({ status: 'success' });
+    res.status(200).json({ status: "success" });
   } catch (error) {
     console.error("Webhook error:", error);
-    res.status(500).json({ status: 'error', message: 'Internal server error' });
+    res.status(500).json({ status: "error", message: "Internal server error" });
   }
 });
 
@@ -1196,7 +1252,9 @@ const createFundAccount = asyncHandler(async (req, res) => {
     });
   } catch (error) {
     console.error("Fund account error:", error);
-    res.status(500).json({ success: false, message: "Failed to add bank account" });
+    res
+      .status(500)
+      .json({ success: false, message: "Failed to add bank account" });
   }
 });
 
@@ -1225,7 +1283,6 @@ const createFundAccount = asyncHandler(async (req, res) => {
 //         ifsc: ifscCode,
 //       },
 //     });
-    
 
 //     console.log("Fund Account Created:", fundAccount);
 
@@ -1250,21 +1307,18 @@ const createFundAccount = asyncHandler(async (req, res) => {
 //   }
 // });
 
-
-
 // Add this new controller to get actual transactions
-
 
 // const transactionHistory = asyncHandler(async (req, res) => {
 //   try {
 //     // Proper parameter destructuring
 //     const { userid } = req.params;
-    
+
 //     console.log("userId",userid);
-    
+
 //     // Authorization check - fixed property name
 //     if (req.user._id.toString() !== userid) {
-//       return res.status(403).json({ 
+//       return res.status(403).json({
 //         success: false,
 //         message: 'Unauthorized access'
 //       });
@@ -1280,7 +1334,6 @@ const createFundAccount = asyncHandler(async (req, res) => {
 //     }
 
 //     console.log("user",user);
-    
 
 //     // Get transaction count with proper query
 //     const totalTransactions = await Transaction.countDocuments({
@@ -1289,7 +1342,6 @@ const createFundAccount = asyncHandler(async (req, res) => {
 //     });
 
 //     console.log("transa",totalTransactions);
-    
 
 //     res.status(200).json({
 //       success: true,
@@ -1299,11 +1351,11 @@ const createFundAccount = asyncHandler(async (req, res) => {
 
 //   } catch (error) {
 //     console.error('Transaction count error:', error);
-    
+
 //     // Improved error handling with mongoose check
 //     const isMongooseError = error instanceof mongoose.Error;
-//     const statusCode = isMongooseError && error.name === 'CastError' 
-//       ? 400 
+//     const statusCode = isMongooseError && error.name === 'CastError'
+//       ? 400
 //       : 500;
 
 //     const errorMessage = isMongooseError
@@ -1313,14 +1365,12 @@ const createFundAccount = asyncHandler(async (req, res) => {
 //     res.status(statusCode).json({
 //       success: false,
 //       message: errorMessage,
-//       error: process.env.NODE_ENV === 'development' 
+//       error: process.env.NODE_ENV === 'development'
 //         ? { message: error.message, stack: error.stack }
 //         : undefined
 //     });
 //   }
 // });
-
-
 
 const transactionHistory = asyncHandler(async (req, res) => {
   try {
@@ -1329,9 +1379,9 @@ const transactionHistory = asyncHandler(async (req, res) => {
 
     // Authorization check
     if (req.user._id.toString() !== userid) {
-      return res.status(403).json({ 
+      return res.status(403).json({
         success: false,
-        message: 'Unauthorized access'
+        message: "Unauthorized access",
       });
     }
 
@@ -1343,14 +1393,14 @@ const transactionHistory = asyncHandler(async (req, res) => {
       .lean();
 
     // Format response and remove transaction ID
-    const formattedTransactions = transactions.map(transaction => {
+    const formattedTransactions = transactions.map((transaction) => {
       const date = new Date(transaction.createdAt);
       return {
         // Select only required fields
         amount: transaction.amount,
         type: transaction.type,
         description: transaction.description,
-        date: `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`
+        date: `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}/${date.getFullYear()}`,
       };
     });
 
@@ -1361,49 +1411,42 @@ const transactionHistory = asyncHandler(async (req, res) => {
       success: true,
       transactions: formattedTransactions,
       totalPages: Math.ceil(totalCount / limit),
-      currentPage: page
+      currentPage: page,
     });
-
   } catch (error) {
-    console.error('Transaction list error:', error);
+    console.error("Transaction list error:", error);
     res.status(500).json({
       success: false,
-      message: 'Server error'
+      message: "Server error",
     });
   }
 });
 
-const changeCurrentPassword = asyncHandler(async(req, res) => {
-  const {oldPassword, newPassword} = req.body
+const changeCurrentPassword = asyncHandler(async (req, res) => {
+  const { oldPassword, newPassword } = req.body;
 
-  console.log("oldpass",oldPassword);
-  console.log("newpas",newPassword);
+  console.log("oldpass", oldPassword);
+  console.log("newpas", newPassword);
 
-  
   // console.log("req.body",req.body);
-  
 
-  const user = await User.findById(req.user?._id)
+  const user = await User.findById(req.user?._id);
 
   console.log("user", user);
-  
-  const isPasswordCorrect = await user.isPasswordCorrect(oldPassword)
+
+  const isPasswordCorrect = await user.isPasswordCorrect(oldPassword);
 
   if (!isPasswordCorrect) {
-      throw new ApiErrors(400, "Invalid old password")
+    throw new ApiErrors(400, "Invalid old password");
   }
 
-  user.password = newPassword
-  await user.save({validateBeforeSave: false})
+  user.password = newPassword;
+  await user.save({ validateBeforeSave: false });
 
   return res
-  .status(200)
-  .json(new ApiResponse(200, {}, "Password changed successfully"))
-})
-
-
-
-
+    .status(200)
+    .json(new ApiResponse(200, {}, "Password changed successfully"));
+});
 
 export {
   getCountdownTimeEndpoint,
@@ -1424,6 +1467,4 @@ export {
   initiateWithdrawal,
   transactionHistory,
   getReferralEarnings,
-
-
 };
