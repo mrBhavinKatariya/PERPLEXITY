@@ -332,78 +332,106 @@ const deductUserBalance = async (userId, totalAmount) => {
 const handleUserBetEndpoint = asyncHandler(async (req, res) => {
   const { userId, totalAmount, number } = req.body;
 
-  // Input validation remains the same
+  console.log("req.bod",req.body);
+  
+  // Initial validation
   if (!mongoose.Types.ObjectId.isValid(userId)) {
-    return res.status(400).json(new ApiResponse(400, null, "Invalid User ID"));
+    return res.status(400).json(
+      new ApiResponse(400, null, "Invalid User ID format")
+    );
   }
 
+  // Input type validation
   const validColors = ['green', 'red', 'violet'];
   const isColor = validColors.includes(number);
   const isNumber = !isNaN(number) && number >= 0 && number <= 9;
   
   if (!isColor && !isNumber) {
-    return res.status(400).json(new ApiResponse(400, null, "Invalid selection"));
+    return res.status(400).json(
+      new ApiResponse(400, null, "Invalid selection")
+    );
   }
 
+  // Validate amount
   if (typeof totalAmount !== 'number' || totalAmount <= 0) {
-    return res.status(400).json(new ApiResponse(400, null, "Invalid amount"));
+    return res.status(400).json(
+      new ApiResponse(400, null, "Invalid amount")
+    );
   }
 
-  // Deduction transaction remains unchanged
+  // Deduction transaction
   let deductionSession;
   try {
     deductionSession = await mongoose.startSession();
     deductionSession.startTransaction();
 
+    // Deduct balance
     const user = await User.findById(userId).session(deductionSession);
     if (user.balance < totalAmount) {
       await deductionSession.abortTransaction();
-      return res.status(400).json(new ApiResponse(400, null, "Insufficient balance"));
+      deductionSession.endSession();
+      return res.status(400).json(
+        new ApiResponse(400, null, "Insufficient balance")
+      );
     }
 
     user.balance = Number((user.balance - totalAmount).toFixed(2));
     await user.save({ session: deductionSession });
+    
     await deductionSession.commitTransaction();
   } catch (error) {
-    // Error handling remains same
+    if (deductionSession?.inTransaction()) {
+      await deductionSession.abortTransaction();
+    }
+    deductionSession?.endSession();
+    console.error("Deduction failed:", error);
+    return res.status(500).json(
+      new ApiResponse(500, null, "Transaction failed")
+    );
   } finally {
     deductionSession?.endSession();
   }
 
-  // Result processing
+  // Result processing (separate from deduction transaction)
   try {
+    // Wait for game result
     const remainingTime = Math.max(90 - Math.floor((Date.now() - countdownStartTime) / 1000), 0);
     await new Promise(resolve => setTimeout(resolve, remainingTime * 1000));
 
+    // Get result
     const latestPrediction = await Prediction.findOne().sort({ createdAt: -1 }).lean();
     const randomNumber = latestPrediction?.number;
 
+    // Calculate winnings
     let multiplier = 0;
     let result = "LOSS";
     const contractMoney = Number((totalAmount * 0.98).toFixed(2));
+    let winnings = 0;
 
-    // Updated winning logic
+    // Winning calculation logic
     if (typeof number === 'number') {
       if (randomNumber === number) {
-        multiplier = 5; // 5X for correct number
+        multiplier = [0, 5].includes(number) ? 4.5 : 9;
         result = "WIN";
       }
     } else {
       switch(number) {
         case 'green':
           if ([1, 3, 7, 9].includes(randomNumber)) multiplier = 2;
+          else if (randomNumber === 5) multiplier = 1.5;
           break;
         case 'red':
           if ([2, 4, 6, 8].includes(randomNumber)) multiplier = 2;
+          else if (randomNumber === 0) multiplier = 1.5;
           break;
         case 'violet':
-          if ([0, 5].includes(randomNumber)) multiplier = 2; // 2X for violet
+          if ([0, 5].includes(randomNumber)) multiplier = 1.5;
           break;
       }
       if (multiplier > 0) result = "WIN";
     }
 
-    // Winning transaction remains same
+    // Process winnings in separate transaction
     if (result === "WIN") {
       const winSession = await mongoose.startSession();
       try {
@@ -441,15 +469,18 @@ const handleUserBetEndpoint = asyncHandler(async (req, res) => {
         multiplier,
         status: result,
         contractMoney,
-        winnings: contractMoney * multiplier
+        winnings: (contractMoney * multiplier)
       }, "Bet processed successfully")
     );
 
   } catch (error) {
-    console.error("Processing failed:", error);
-    return res.status(500).json(new ApiResponse(500, null, "Processing failed"));
+    console.error("Result processing failed:", error);
+    return res.status(500).json(
+      new ApiResponse(500, null, "Result processing failed")
+    );
   }
 });
+
 
 
 
