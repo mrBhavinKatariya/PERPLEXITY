@@ -34,50 +34,55 @@ const handleRandomNumberGeneration = async () => {
   if (!isGenerating) {
     isGenerating = true;
     try {
-      const cutoffTime = new Date(Date.now() - 300000);
-      const lastRecord = await Prediction.findOne({
-        createdAt: { $gte: cutoffTime }
-      }).sort({ createdAt: -1 });
-      // const lastRecord = await Prediction.findOne().sort({ createdAt: -1 });
+      const lastRecord = await Prediction.findOne().sort({ createdAt: -1 });
+      const currentNumber = lastRecord?.nextNumber ?? generateSecureRandomNumber();
+      const nextNumber = generateSecureRandomNumber();
+      const period = lastRecord ? lastRecord.period + 1 : 1;
 
-      let currentNumber;
-      let nextNumber;
+      const newPrediction = new Prediction({
+        number: currentNumber,
+        nextNumber: nextNumber,
+        period: period,
+        countdownStartTime: Date.now() // ✅ Set new timestamp
+      });
 
+      await newPrediction.save();
+      countdownStartTime = Date.now(); 
       // Debugging: Log the last record
       // console.log("Last Record:", lastRecord);
 
-      if (lastRecord) {
-        // If lastRecord.nextNumber is missing, generate a new random number
-        currentNumber = lastRecord.nextNumber ?? generateSecureRandomNumber();
-        nextNumber = generateSecureRandomNumber();
-      } else {
-        // If no lastRecord exists, generate both numbers
-        currentNumber = generateSecureRandomNumber();
-        nextNumber = generateSecureRandomNumber();
-      }
+      // if (lastRecord) {
+      //   // If lastRecord.nextNumber is missing, generate a new random number
+      //   currentNumber = lastRecord.nextNumber ?? generateSecureRandomNumber();
+      //   nextNumber = generateSecureRandomNumber();
+      // } else {
+      //   // If no lastRecord exists, generate both numbers
+      //   currentNumber = generateSecureRandomNumber();
+      //   nextNumber = generateSecureRandomNumber();
+      // }
 
-      const period = lastRecord ? lastRecord.period + 1 : 1;
+      // const period = lastRecord ? lastRecord.period + 1 : 1;
 
       // Validate currentNumber and result
       if (typeof currentNumber !== "number" || isNaN(currentNumber)) {
         throw new Error("Invalid currentNumber");
       }
 
-      const newPrediction = new Prediction({
-        number: currentNumber,
-        nextNumber: nextNumber,
-        price: Math.floor(Math.random() * 965440),
-        period: period,
-        result: currentNumber, // Ensure result is assigned
-        countdownStartTime: Date.now()
-      });
+      // const newPrediction = new Prediction({
+      //   number: currentNumber,
+      //   nextNumber: nextNumber,
+      //   price: Math.floor(Math.random() * 965440),
+      //   period: period,
+      //   result: currentNumber, // Ensure result is assigned
+      //   countdownStartTime: Date.now()
+      // });
 
-      await newPrediction.save();
-      countdownStartTime = Date.now(); 
-      console.log("Current Number:", currentNumber);
-      console.log("Next Predicted Number:", nextNumber);
+      // await newPrediction.save();
+      // countdownStartTime = Date.now(); 
+      // console.log("Current Number:", currentNumber);
+      // console.log("Next Predicted Number:", nextNumber);
 
-      return currentNumber;
+      // return currentNumber;
     } catch (error) {
       console.error("Error in generation:", error);
     } finally {
@@ -86,9 +91,8 @@ const handleRandomNumberGeneration = async () => {
   }
 };
 
-setInterval(() => {
-  handleRandomNumberGeneration();
-  countdownStartTime = Date.now(); // 🛠️ FIX: Reset countdown timer every 90s
+setInterval(async() => {
+  await handleRandomNumberGeneration();
 }, 90000);
 
 // API endpoint to get the countdown time
@@ -692,12 +696,14 @@ const handleUserBetEndpoint = asyncHandler(async (req, res) => {
     deductionSession?.endSession();
   }
 
+  const betCountdownStart = countdownStartTime; // Save the current countdown start time
+
   // Result processing
   try {
     // Get current countdown state properly
-    const countdownEnd = countdownStartTime + 90000;
+    const countdownEnd = betCountdownStart + 90000; 
     const remainingWait = Math.max(countdownEnd - Date.now(), 0);
-    await new Promise(resolve => setTimeout(resolve, remainingWait + 2000)); 
+    await new Promise(resolve => setTimeout(resolve, remainingWait + 2000));
 
     // const countdownDuration = 90; // seconds
     // const currentTime = Date.now();
@@ -717,8 +723,9 @@ const handleUserBetEndpoint = asyncHandler(async (req, res) => {
     let latestPrediction;
     let retries = 0;
     while(retries < 5) {
+      // ✅ Match exact countdown start time
       latestPrediction = await Prediction.findOne({
-        countdownStartTime: { $lte: countdownStartTime }
+        countdownStartTime: betCountdownStart 
       }).sort({ createdAt: -1 });
       
       if(latestPrediction?.number !== undefined) break;
