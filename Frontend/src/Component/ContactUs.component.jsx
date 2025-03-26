@@ -78,7 +78,7 @@ const ContactPage = () => {
                   <div>
                     <h3 className="text-2xl font-cinzel font-bold text-gray-800">Visit Us</h3>
                     <p className="text-gray-600">
-                      92, Radhika Park soc,<br />
+                      92,first floor Radhika Park soc,<br />
                       Near Polaris Mall,<br />
                       Puna gam, Surat - 395010,<br />
                       Gujarat, India
