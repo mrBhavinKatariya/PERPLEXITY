@@ -1,4 +1,4 @@
-// models/Transaction.models.js
+
 import mongoose from "mongoose";
 
 const transactionSchema = new mongoose.Schema(
@@ -21,11 +21,7 @@ const transactionSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    status: {
-      type: String,
-      enum: ["pending", "completed", "failed"],
-      default: "pending",
-    },
+   
     transactionId: {
       type: String,
       required: true,

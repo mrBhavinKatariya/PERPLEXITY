@@ -14,7 +14,6 @@ import bcrypt from 'bcrypt';
 import { sendEmail } from "../utils/SendEmail.utils.js";
 import { log } from "console";
 import { ReferralEarning } from "../models/ReferralEarning.models.js";
-// import { GameRound } from "../models/GameSession.models.js";
 
 
 dotenv.config()
@@ -38,10 +37,6 @@ const handleRandomNumberGeneration = async () => {
 
       let currentNumber;
       let nextNumber;
-
-      // Debugging: Log the last record
-      // console.log("Last Record:", lastRecord);
-
       if (lastRecord) {
         // If lastRecord.nextNumber is missing, generate a new random number
         currentNumber = lastRecord.nextNumber ?? generateSecureRandomNumber();
@@ -1243,7 +1238,5 @@ export {
   initiateWithdrawal,
   transactionHistory,
   getReferralEarnings,
-
-
 
 };
