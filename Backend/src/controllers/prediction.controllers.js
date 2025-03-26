@@ -429,6 +429,7 @@ const handleUserBetEndpoint = asyncHandler(async (req, res) => {
       }
       if (multiplier > 0) result = "WIN";
     }
+    
 
     // Process winnings in separate transaction
     if (result === "WIN") {
