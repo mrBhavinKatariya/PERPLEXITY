@@ -482,6 +482,11 @@ const handleUserBetEndpoint = asyncHandler(async (req, res) => {
 });
 
 
+
+
+// ----------------------------test------------
+
+
 import { GameSession } from "../models/GameSession.models.js";
 // import { BetHistory } from "../models/History.models.js";
 
@@ -675,6 +680,7 @@ setInterval(async () => {
 }, 90000);
 
 
+//--------------------finish test-------------------
 
 // const handleUserBetEndpoint = asyncHandler(async (req, res) => {
 //   const { userId, totalAmount, number: rawNumber } = req.body;
