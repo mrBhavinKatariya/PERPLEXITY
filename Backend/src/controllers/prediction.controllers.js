@@ -331,7 +331,7 @@ const deductUserBalance = async (userId, totalAmount) => {
 const handleUserBetEndpoint = asyncHandler(async (req, res) => {
   const { userId, totalAmount, number } = req.body;
 
-  console.log("req.bod",req.body);
+  console.log("req bod",req.body);
   
   // Initial validation
   if (!mongoose.Types.ObjectId.isValid(userId)) {
@@ -613,7 +613,6 @@ if (currentUser.referredBy) {
 }
 
    
-
     res.status(200).json({
       success: true,
       orderId: response.id,
