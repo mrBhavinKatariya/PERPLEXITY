@@ -6,6 +6,7 @@ import { FaTrophy, FaSyncAlt } from "react-icons/fa";
 
 export default function ColorPredictionGame() {
   const [timeLeft, setTimeLeft] = useState(120);
+  const [endTime, setEndTime] = useState(null);
   const [selectedNumbers, setSelectedNumbers] = useState([]);
   const [records, setRecords] = useState([]);
   const [currentPeriod, setCurrentPeriod] = useState(1);
@@ -290,49 +291,50 @@ const handlePrevHistory = () => {
 
   // Fetch countdown time from the API
   useEffect(() => {
-    let timerId;
-    const updateTimer = async () => {
-      try {
-        const response = await axios.get(
-          `${API_URL}/api/v1/users/countdownTime`
-        );
-        const newTime = response.data.data.countdownTime;
-        setServerTime(newTime);
-        setTimeLeft(newTime);
-      } catch (error) {
-        console.error("Error updating timer:", error);
-      }
+
+   const fetchCountdownTime = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/api/v1/users/countdownTime`);
+      const serverCountdown = response.data.data.countdownTime; // Assuming API returns seconds
+      const newEndTime = Date.now() + serverCountdown * 1000;
+      
+      // Update both state and localStorage
+      localStorage.setItem('timerEndTime', newEndTime.toString());
+      setEndTime(newEndTime);
+      setTimeLeft(serverCountdown);
+    } catch (error) {
+      console.error('Error fetching countdown time:', error);
+    }
     };
 
     // Initial fetch
-    updateTimer();
+    fetchCountdownTime();
 
     // Set up interval for updates
-    timerId = setInterval(updateTimer, 1000);
+    const syncInterval = setInterval(fetchCountdownTime, 120000);
 
-    return () => {
-      clearInterval(timerId);
-    };
+    return () => clearInterval(syncInterval);
   }, []);
 
   // Timer logic
   useEffect(() => {
-    let timerId;
-
-    const startTimer = () => {
-      timerId = setInterval(() => {
-        setTimeLeft((prev) => {
-          if (prev <= 0) {
-            clearInterval(timerId);
-            return 120; // Reset timer to 120 seconds
-          }
-          return prev - 1;
-        });
-      }, 1000);
+    const initializeTimer = async () => {
+      const storedEndTime = localStorage.getItem('timerEndTime');
+      const currentTime = Date.now();
+  
+      if (storedEndTime) {
+        const remaining = parseInt(storedEndTime) - currentTime;
+        if (remaining > 0) {
+          setEndTime(parseInt(storedEndTime));
+          setTimeLeft(Math.floor(remaining / 1000));
+          return;
+        }
+      }
+      // If no valid local time, start new timer
+      startNewTimer();
     };
-
-    startTimer();
-    return () => clearInterval(timerId);
+  
+    initializeTimer();
   }, []);
 
   // Reset timer after 1 minute when it reaches 0
@@ -347,20 +349,14 @@ const handlePrevHistory = () => {
   //   }
   // }, [timeLeft]);;
 
-  useEffect(() => {
-    if (timeLeft === 0) {
-      setDisabledButtons({
-        joinGreen: false,
-        joinRed: false,
-        joinViolet: false,
-        digits: [],
-      });
-      localStorage.removeItem('disabledButtons'); // Optional: Clear localStorage entry
-      setTimeout(() => {
-        setTimeLeft(120);
-      }, 120000);
-    }
-  }, [timeLeft]);
+  const startNewTimer = () => {
+    const newEndTime = Date.now() + 120000;
+    localStorage.setItem('timerEndTime', newEndTime.toString());
+    setEndTime(newEndTime);
+    setTimeLeft(120);
+  };
+  
+
 
   // Rules Popup JSX
   const renderRulesPopup = () => (
@@ -516,7 +512,42 @@ const handlePrevHistory = () => {
     };
   }, [timeLeft, fetchLastTenRandomNumbers, selectedNumbers, fetchUserHistory]);
 
- 
+   // Timer countdown effect (keep existing)
+   useEffect(() => {
+    if (!endTime) return;
+  
+    const interval = setInterval( async() => {
+      const remaining = endTime - Date.now();
+      if (remaining <= 0) {
+        startNewTimer();
+        setTimeLeft(0);
+        localStorage.removeItem('timerEndTime');
+        clearInterval(interval);
+        // Trigger end-of-timer actions
+        await fetchRandomNumber();
+        deleteOldRandomNumbers();
+      } else {
+        setTimeLeft(Math.floor(remaining / 1000));
+      }
+    }, 1000);
+  
+    return () => clearInterval(interval);
+  }, [endTime]);
+
+  useEffect(() => {
+    if (timeLeft === 0) {
+      setDisabledButtons({
+        joinGreen: false,
+        joinRed: false,
+        joinViolet: false,
+        digits: [],
+      });
+      localStorage.removeItem('disabledButtons'); // Optional: Clear localStorage entry
+      setTimeout(() => {
+        setTimeLeft(120);
+      }, 120000);
+    }
+  }, [timeLeft]);
 
   // Handle number click
   const handleNumberClick = (num) => {

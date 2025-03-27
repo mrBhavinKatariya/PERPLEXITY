@@ -32,6 +32,7 @@ import PrivacyPolicyPage from "./Component/PrivacyPolicy.component";
 import RefundPolicyPage from "./Component/RefundPolicy.component";
 import TermsOfUse from "./Component/terms.component";
 import ShippingPolicy from "./Component/Shipping.component";
+import CountdownTimer from "./Component/timer.compo";
 // import VideoDetails from "./Component/Showvideo.component";
 // import VideoDetails from "./Component/Showvideo";
 // import Channel from "./Component/channel.component";
@@ -71,6 +72,9 @@ const router = createBrowserRouter(
       <Route path="/refund-policy" element = {<RefundPolicyPage/>} />
       <Route path="/terms" element = {<TermsOfUse/>} />
       <Route path="/shipping-policy" element = {<ShippingPolicy/>} />
+
+{/* ----------------------------------- */}
+      <Route path="/timer" element = {<CountdownTimer/>} />
 
 
 
