@@ -5,7 +5,7 @@ import RechargePage from "./Recharge.component";
 import { FaTrophy, FaSyncAlt } from "react-icons/fa";
 
 export default function ColorPredictionGame() {
-  const [timeLeft, setTimeLeft] = useState(90);
+  const [timeLeft, setTimeLeft] = useState(120);
   const [selectedNumbers, setSelectedNumbers] = useState([]);
   const [records, setRecords] = useState([]);
   const [currentPeriod, setCurrentPeriod] = useState(1);
@@ -25,12 +25,22 @@ export default function ColorPredictionGame() {
     email: "",
   });
   // Add this state
-  const [serverTime, setServerTime] = useState(90);
+  const [serverTime, setServerTime] = useState(120);
   const [userHistory, setUserHistory] = useState([]);
   const [historyPage, setHistoryPage] = useState(1);
   const [showRulesPopup, setShowRulesPopup] = useState(false);
   const [showLoginPopup, setShowLoginPopup] = useState(false);
   const [authError, setAuthError] = useState("");
+
+  const [disabledButtons, setDisabledButtons] = useState(() => {
+    const saved = localStorage.getItem('disabledButtons');
+    return saved ? JSON.parse(saved) : {
+      joinGreen: false,
+      joinRed: false,
+      joinViolet: false,
+      digits: [],
+    };
+  });
 
   const API_URL =
     import.meta.env.REACT_APP_API_URL || "https://perplexity-bd2d.onrender.com";
@@ -215,7 +225,9 @@ const handlePrevHistory = () => {
     }
   }, [userId, historyPage, fetchUserHistory]);
 
-
+  useEffect(() => {
+    localStorage.setItem('disabledButtons', JSON.stringify(disabledButtons));
+  }, [disabledButtons]);
  
   const handleConfirmBet = async () => {
     // Remove isLoading check to allow multiple submissions
@@ -312,7 +324,7 @@ const handlePrevHistory = () => {
         setTimeLeft((prev) => {
           if (prev <= 0) {
             clearInterval(timerId);
-            return 90; // Reset timer to 90 seconds
+            return 120; // Reset timer to 120 seconds
           }
           return prev - 1;
         });
@@ -324,11 +336,29 @@ const handlePrevHistory = () => {
   }, []);
 
   // Reset timer after 1 minute when it reaches 0
+  // useEffect(() => {
+  //   if (timeLeft === 0) {
+  //     setDisabledButtons({
+  //       joinGreen: false,
+  //       joinRed: false,
+  //       joinViolet: false,
+  //       digits: [],
+  //     });
+  //   }
+  // }, [timeLeft]);;
+
   useEffect(() => {
     if (timeLeft === 0) {
+      setDisabledButtons({
+        joinGreen: false,
+        joinRed: false,
+        joinViolet: false,
+        digits: [],
+      });
+      localStorage.removeItem('disabledButtons'); // Optional: Clear localStorage entry
       setTimeout(() => {
-        setTimeLeft(90); // Reset timer to 90 seconds after 1 minute
-      }, 90000); // 90 second delay
+        setTimeLeft(120);
+      }, 120000);
     }
   }, [timeLeft]);
 
@@ -473,8 +503,8 @@ const handlePrevHistory = () => {
     const handleCountdownEnd = () => {
       fetchRandomNumber();
       deleteOldRandomNumbers();
-      setTimeLeft(90); // Reset the countdown to 90 seconds
-      intervalId = setInterval(fetchRandomNumber, 90000);
+      setTimeLeft(120); // Reset the countdown to 120 seconds
+      intervalId = setInterval(fetchRandomNumber, 120000);
     };
 
     if (timeLeft === 0) {
@@ -486,20 +516,39 @@ const handlePrevHistory = () => {
     };
   }, [timeLeft, fetchLastTenRandomNumbers, selectedNumbers, fetchUserHistory]);
 
-  // // Format time in MM:SS format
-  // const formatTime = (seconds) => {
-  //   const mins = Math.floor(seconds / 60);
-  //   const secs = seconds % 60;
-  //   return `${mins.toString().padStart(2, "0")} : ${secs
-  //     .toString()
-  //     .padStart(2, "0")}`;
-  // };
+ 
 
   // Handle number click
   const handleNumberClick = (num) => {
     if (timeLeft > 20) {
       setSelectedNumber(num);
       setShowPopup(true);
+  
+      // Disable buttons based on selection
+      if (num === 'green') {
+        setDisabledButtons(prev => ({
+          ...prev,
+          joinGreen: true,
+          digits: Array.from(new Set([...prev.digits, 1, 3, 7, 9]))
+        }));
+      } else if (num === 'red') {
+        setDisabledButtons(prev => ({
+          ...prev,
+          joinRed: true,
+          digits: Array.from(new Set([...prev.digits, 2, 4, 6, 8]))
+        }));
+      } else if (num === 'violet') {
+        setDisabledButtons(prev => ({
+          ...prev,
+          joinViolet: true,
+          digits: Array.from(new Set([...prev.digits, 0, 5]))
+        }));
+      } else if (typeof num === 'number') {
+        setDisabledButtons(prev => ({
+          ...prev,
+          digits: Array.from(new Set([...prev.digits, num]))
+        }));
+      }
     }
   };
 
@@ -614,11 +663,11 @@ const handlePrevHistory = () => {
             color: "white",
             padding: "8px",
             borderRadius: "4px",
-            opacity: timeLeft <= 20 ? 0.6 : 1,
-            cursor: timeLeft <= 20 ? "not-allowed" : "pointer",
+            opacity: (disabledButtons.joinViolet || timeLeft <= 20) ? 0.6 : 1,
+            cursor: (disabledButtons.joinViolet || timeLeft <= 20) ? "not-allowed" : "pointer",
           }}
           onClick={() => handleNumberClick("violet")}
-          disabled={timeLeft <= 20}
+          disabled={disabledButtons.joinViolet || timeLeft <= 20}
         >
           Join Violet
         </button>
@@ -630,11 +679,11 @@ const handlePrevHistory = () => {
             color: "white",
             padding: "8px",
             borderRadius: "4px",
-            opacity: timeLeft <= 20 ? 0.6 : 1,
-            cursor: timeLeft <= 20 ? "not-allowed" : "pointer",
+            opacity: (disabledButtons.joinGreen || timeLeft <= 20) ? 0.6 : 1,
+    cursor: (disabledButtons.joinGreen || timeLeft <= 20) ? "not-allowed" : "pointer",
           }}
           onClick={() => handleNumberClick("green")}
-          disabled={timeLeft <= 20}
+          disabled={disabledButtons.joinGreen || timeLeft <= 20}
         >
           Join Green
         </button>
@@ -645,11 +694,11 @@ const handlePrevHistory = () => {
             color: "white",
             padding: "8px",
             borderRadius: "4px",
-            opacity: timeLeft <= 20 ? 0.6 : 1,
-            cursor: timeLeft <= 20 ? "not-allowed" : "pointer",
+            opacity: (disabledButtons.joinRed || timeLeft <= 20) ? 0.6 : 1,
+            cursor: (disabledButtons.joinRed || timeLeft <= 20) ? "not-allowed" : "pointer",
           }}
           onClick={() => handleNumberClick("red")}
-          disabled={timeLeft <= 20}
+          disabled={disabledButtons.joinRed || timeLeft <= 20}
         >
           Join Red
         </button>
@@ -660,6 +709,7 @@ const handlePrevHistory = () => {
           {[0, 1, 2, 3, 4].map((num) => (
             <button
               key={num}
+              disabled={disabledButtons.digits.includes(num) || timeLeft <= 20}
               style={{
                 ...styles.numberButton,
                 background: [0, 5].includes(num)
@@ -668,38 +718,38 @@ const handlePrevHistory = () => {
                 border: [0, 5].includes(num)
                   ? "2px solid rgb(255, 0, 0)"
                   : "none",
-                opacity: timeLeft <= 20 ? 0.6 : 1,
-                cursor: timeLeft <= 20 ? "not-allowed" : "pointer",
+                 opacity: (disabledButtons.digits.includes(num) || timeLeft <= 20) ? 0.6 : 1,
+      cursor: (disabledButtons.digits.includes(num) || timeLeft <= 20) ? "not-allowed" : "pointer",
               }}
               onClick={() => handleNumberClick(num)}
-              disabled={timeLeft <= 20}
+             
             >
               {num}
             </button>
           ))}
         </div>
         <div style={styles.numberRow}>
-          {[5, 6, 7, 8, 9].map((num) => (
-            <button
-              key={num}
-              style={{
-                ...styles.numberButton,
-                background: [0, 5].includes(num)
-                  ? "linear-gradient(135deg, rgb(128, 0, 128) 50%, rgb(76, 175, 80) 50%)"
-                  : getBackgroundColor(num),
-                border: [0, 5].includes(num)
-                  ? "2px solid rgb(76, 175, 80)"
-                  : "none",
-                opacity: timeLeft <= 20 ? 0.6 : 1,
-                cursor: timeLeft <= 20 ? "not-allowed" : "pointer",
-              }}
-              onClick={() => handleNumberClick(num)}
-              disabled={timeLeft <= 20}
-            >
-              {num}
-            </button>
-          ))}
-        </div>
+  {[5, 6, 7, 8, 9].map((num) => (
+    <button
+      key={num}
+      disabled={disabledButtons.digits.includes(num) || timeLeft <= 20}
+      style={{
+        ...styles.numberButton,
+        background: [0, 5].includes(num)
+          ? "linear-gradient(135deg, rgb(128, 0, 128) 50%, rgb(76, 175, 80) 50%)"
+          : getBackgroundColor(num),
+        border: [0, 5].includes(num)
+          ? "2px solid rgb(76, 175, 80)"
+          : "none",
+        opacity: (disabledButtons.digits.includes(num) || timeLeft <= 20) ? 0.6 : 1,
+        cursor: (disabledButtons.digits.includes(num) || timeLeft <= 20) ? "not-allowed" : "pointer",
+      }}
+      onClick={() => handleNumberClick(num)}
+    >
+      {num}
+    </button>
+  ))}
+</div>
       </div>
 
       {/* Popup for selecting numbers */}
@@ -782,7 +832,7 @@ const handlePrevHistory = () => {
         <div className="mt-[10px]" style={styles.recordsHeader}>
           <span> Period</span>
           <span>Price</span>
-          <span>Number</span>
+          {/* <span>Number</span> */}
           <span>Result</span>
         </div>
 
@@ -792,7 +842,7 @@ const handlePrevHistory = () => {
               {record.period}
             </span>
             <span>{record.price}</span>
-            <span>{renderNumberCircle(record.number)}</span>
+            {/* <span>{renderNumberCircle(record.number)}</span> */}
             <span>{renderNumberCircle(record.result)}</span>
           </div>
         ))}
@@ -1164,20 +1214,23 @@ const styles = {
     borderRadius: "8px",
     boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
   },
-  recordsHeader: {
-    display: "flex",
-    justifyContent: "space-between",
-    marginBottom: "12px",
-    fontWeight: "bold",
-    color: "#333",
-  },
-  recordRow: {
-    display: "flex",
-    justifyContent: "space-between",
-    marginBottom: "8px",
-    color: "#666",
-    alignItems: "center",
-  },
+ // Update the recordsHeader and recordRow styles in the 'styles' object
+recordsHeader: {
+  display: "grid",
+  gridTemplateColumns: "1fr 1fr 1fr", // Three equal columns
+  marginBottom: "12px",
+  fontWeight: "bold",
+  color: "#333",
+  textAlign: "center", // Center align header text
+},
+recordRow: {
+  display: "grid",
+  gridTemplateColumns: "1fr 1fr 1fr", // Three equal columns
+  marginBottom: "8px",
+  color: "#666",
+  alignItems: "center",
+  textAlign: "center", // Center align cell content
+},
   navContainer: {
     position: "fixed",
     bottom: "0",
@@ -1383,130 +1436,3 @@ const historyStyles = {
     marginTop: "10px",
   },
 };
-
-
-
-// // src/App.js
-// import React, { useState, useEffect } from 'react';
-// import axios from 'axios';
-// import './../App.css';
-
-// export default function ColorPredictionGame() {
-//   const [balance, setBalance] = useState(1000);
-//   const [timeLeft, setTimeLeft] = useState(90);
-//   const [selectedColor, setSelectedColor] = useState('');
-//   const [selectedDigit, setSelectedDigit] = useState('');
-//   const [amount, setAmount] = useState('');
-//   const [result, setResult] = useState(null);
-
-
-//   const API_URL =
-//       import.meta.env.REACT_APP_API_URL || "https://perplexity-bd2d.onrender.com";
-
-//   const colors = {
-//     red: [2, 4, 6, 8],
-//     green: [1, 3, 7, 9],
-//     violet: [0, 5]
-//   };
-
-//   // टाइमर अपडेट
-//   useEffect(() => {
-//     const timerInterval = setInterval(() => {
-//       axios.get(`${API_URL}/api/v1/users/session`)
-//       // `${API_URL}/api/v1/users/bet-history/${userId}`,
-//       // `${API_URL}/api/v1/users/invest`,
-//         .then(res => setTimeLeft(res.data.timeLeft))
-//         .catch(() => setTimeLeft(prev => prev > 0 ? prev - 1 : 90));
-//     }, 1000);
-
-//     return () => clearInterval(timerInterval);
-//   }, []);
-
-//   // दांव लगाने का फंक्शन
-//   const handleBet = async () => {
-//     if (!selectedColor && !selectedDigit) {
-//       alert('कृपया रंग या अंक चुनें');
-//       return;
-//     }
-
-//     try {
-//       const response = await axios.post(`${API_URL}/api/v1/users/bet`, {
-//         userId: "67d81099106de98686827d45", // अस्थायी यूजर आईडी
-//         amount: parseFloat(amount),
-//         betType: selectedColor ? 'color' : 'digit',
-//         selection: selectedColor || selectedDigit
-//       });
-
-//       setBalance(response.data.newBalance);
-//       setResult(response.data);
-//     } catch (error) {
-//       alert(error.response?.data?.error || 'त्रुटि हुई');
-//     }
-//   };
-
-//   return (
-//     <div className="game-container">
-//       <div className="timer">
-//         अगला राउंड: {timeLeft} सेकंड
-//       </div>
-
-//       <div className="balance">
-//         बैलेंस: ₹{balance}
-//       </div>
-
-//       <div className="bet-section">
-//         <div className="color-options">
-//           <h3>रंग चुनें</h3>
-//           {Object.keys(colors).map(color => (
-//             <div 
-//               key={color}
-//               className={`color-box ${color} ${selectedColor === color ? 'selected' : ''}`}
-//               onClick={() => {
-//                 setSelectedColor(color);
-//                 setSelectedDigit('');
-//               }}
-//             >
-//               {color === 'red' && 'लाल'}
-//               {color === 'green' && 'हरा'}
-//               {color === 'violet' && 'बैंगनी'}
-//             </div>
-//           ))}
-//         </div>
-
-//         <div className="digit-input">
-//           <h3>अंक चुनें (0-9)</h3>
-//           <input
-//             type="number"
-//             min="0"
-//             max="9"
-//             value={selectedDigit}
-//             onChange={(e) => {
-//               setSelectedDigit(e.target.value);
-//               setSelectedColor('');
-//             }}
-//           />
-//         </div>
-//       </div>
-
-//       <div className="amount-section">
-//         <input
-//           type="number"
-//           placeholder="दांव की रकम"
-//           value={amount}
-//           onChange={(e) => setAmount(e.target.value)}
-//         />
-//         <button onClick={handleBet}>दांव लगाएं</button>
-//       </div>
-
-//       {result && (
-//         <div className={`result ${result.outcome}`}>
-//           <h3>{result.outcome === 'win' ? 'जीत गए! 🎉' : 'हार गए 😞'}</h3>
-//           <p>नंबर: {result.generatedNumber}</p>
-//           <p>भुगतान: ₹{result.payout}</p>
-//           <p>नया बैलेंस: ₹{result.newBalance}</p>
-//         </div>
-//       )}
-//     </div>
-//   );
-// }
-
