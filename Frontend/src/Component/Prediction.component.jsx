@@ -5,7 +5,7 @@ import RechargePage from "./Recharge.component";
 import { FaTrophy, FaSyncAlt } from "react-icons/fa";
 
 export default function ColorPredictionGame() {
-  const [timeLeft, setTimeLeft] = useState(90);
+  const [timeLeft, setTimeLeft] = useState(120);
   const [selectedNumbers, setSelectedNumbers] = useState([]);
   const [records, setRecords] = useState([]);
   const [currentPeriod, setCurrentPeriod] = useState(1);
@@ -290,15 +290,27 @@ const handlePrevHistory = () => {
 
   // Fetch countdown time from the API
   useEffect(() => {
-    let timerId;
+    let isMounted = true;
+    const controller = new AbortController();
+
     const updateTimer = async () => {
       try {
         const response = await axios.get(
-          `${API_URL}/api/v1/users/countdownTime`
+          `${API_URL}/api/v1/users/countdownTime`,{
+            signal: controller.signal
+          }
         );
-        const newTime = response.data.data.countdownTime;
-        setServerTime(newTime);
-        setTimeLeft(newTime);
+        if (!response.ok) throw new Error('Network response was not ok');
+      const data = await response.json();
+
+      if (isMounted) {
+        setTimeLeft(data.data.countdownTime);
+        setServerTime(data.data.countdownTime);
+      }
+
+        // const newTime = response.data.data.countdownTime;
+        // setServerTime(newTime);
+        // setTimeLeft(newTime);
       } catch (error) {
         console.error("Error updating timer:", error);
       }
@@ -308,14 +320,16 @@ const handlePrevHistory = () => {
     updateTimer();
 
     // Set up interval for updates
-    timerId = setInterval(updateTimer, 1000);
+    const interval = setInterval(updateTimer, 1000);
 
     return () => {
-      clearInterval(timerId);
+      isMounted = false;
+    controller.abort();
+  return () => clearInterval(interval);
     };
   }, []);
 
-  // Timer logic
+  // Timer logic 
   useEffect(() => {
     let timerId;
 
@@ -324,7 +338,7 @@ const handlePrevHistory = () => {
         setTimeLeft((prev) => {
           if (prev <= 0) {
             clearInterval(timerId);
-            return 90; // Reset timer to 90 seconds
+            return 120; // Reset timer to 90 seconds
           }
           return prev - 1;
         });
@@ -357,8 +371,8 @@ const handlePrevHistory = () => {
       });
       localStorage.removeItem('disabledButtons'); // Optional: Clear localStorage entry
       setTimeout(() => {
-        setTimeLeft(90);
-      }, 90000);
+        setTimeLeft(120);
+      }, 120000);
     }
   }, [timeLeft]);
 
@@ -503,8 +517,8 @@ const handlePrevHistory = () => {
     const handleCountdownEnd = () => {
       fetchRandomNumber();
       deleteOldRandomNumbers();
-      setTimeLeft(90); // Reset the countdown to 90 seconds
-      intervalId = setInterval(fetchRandomNumber, 90000);
+      setTimeLeft(120); // Reset the countdown to 90 seconds
+      intervalId = setInterval(fetchRandomNumber, 120000);
     };
 
     if (timeLeft === 0) {
