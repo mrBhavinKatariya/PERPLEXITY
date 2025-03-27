@@ -5,7 +5,7 @@ import RechargePage from "./Recharge.component";
 import { FaTrophy, FaSyncAlt } from "react-icons/fa";
 
 export default function ColorPredictionGame() {
-  const [timeLeft, setTimeLeft] = useState(90);
+  const [timeLeft, setTimeLeft] = useState(120);
   const [selectedNumbers, setSelectedNumbers] = useState([]);
   const [records, setRecords] = useState([]);
   const [currentPeriod, setCurrentPeriod] = useState(1);
@@ -25,7 +25,7 @@ export default function ColorPredictionGame() {
     email: "",
   });
   // Add this state
-  const [serverTime, setServerTime] = useState(90);
+  const [serverTime, setServerTime] = useState(120);
   const [userHistory, setUserHistory] = useState([]);
   const [historyPage, setHistoryPage] = useState(1);
   const [showRulesPopup, setShowRulesPopup] = useState(false);
@@ -324,7 +324,7 @@ const handlePrevHistory = () => {
         setTimeLeft((prev) => {
           if (prev <= 0) {
             clearInterval(timerId);
-            return 90; // Reset timer to 90 seconds
+            return 120; // Reset timer to 90 seconds
           }
           return prev - 1;
         });
@@ -357,8 +357,8 @@ const handlePrevHistory = () => {
       });
       localStorage.removeItem('disabledButtons'); // Optional: Clear localStorage entry
       setTimeout(() => {
-        setTimeLeft(90);
-      }, 90000);
+        setTimeLeft(120);
+      }, 120000);
     }
   }, [timeLeft]);
 
@@ -503,8 +503,8 @@ const handlePrevHistory = () => {
     const handleCountdownEnd = () => {
       fetchRandomNumber();
       deleteOldRandomNumbers();
-      setTimeLeft(90); // Reset the countdown to 90 seconds
-      intervalId = setInterval(fetchRandomNumber, 90000);
+      setTimeLeft(120); // Reset the countdown to 90 seconds
+      intervalId = setInterval(fetchRandomNumber, 120000);
     };
 
     if (timeLeft === 0) {
