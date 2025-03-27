@@ -386,7 +386,7 @@ const handleUserBetEndpoint = asyncHandler(async (req, res) => {
     // Updated winning logic
     if (typeof number === 'number') {
       if (randomNumber === number) {
-        multiplier = 5; // 5X for correct number
+        multiplier = 6; // 6X for correct number
         result = "WIN";
       }
     } else {
