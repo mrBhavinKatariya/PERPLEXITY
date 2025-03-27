@@ -327,6 +327,9 @@ const deductUserBalance = async (userId, totalAmount) => {
 const handleUserBetEndpoint = asyncHandler(async (req, res) => {
   const { userId, totalAmount, number } = req.body;
 
+  console.log("Request Body:", req.body);
+  
+
   // Input validation remains the same
   if (!mongoose.Types.ObjectId.isValid(userId)) {
     return res.status(400).json(new ApiResponse(400, null, "Invalid User ID"));
