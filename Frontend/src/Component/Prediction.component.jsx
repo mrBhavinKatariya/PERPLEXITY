@@ -308,7 +308,7 @@ const handlePrevHistory = () => {
     updateTimer();
 
     // Set up interval for updates
-    timerId = setInterval(updateTimer, 5000);
+    timerId = setInterval(updateTimer, 100000);
 
     return () => {
       clearInterval(timerId);
@@ -328,7 +328,7 @@ const handlePrevHistory = () => {
           }
           return prev - 1;
         });
-      }, 5000);
+      }, 100000);
     };
 
     startTimer();
