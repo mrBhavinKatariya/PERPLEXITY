@@ -85,7 +85,7 @@ let countdownCache = {
 
 setInterval(() => {
   countdownCache.time = Math.max(120 - Math.floor((Date.now() - countdownStartTime) / 1000), 0);
-}, 5000);
+}, 100000);
 
 setInterval(() => {
   handleRandomNumberGeneration();
