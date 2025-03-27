@@ -78,6 +78,14 @@ const handleRandomNumberGeneration = async () => {
   }
 };
 
+let countdownCache = {
+  time: 120,
+  lastUpdated: Date.now()
+};
+
+setInterval(() => {
+  countdownCache.time = Math.max(120 - Math.floor((Date.now() - countdownStartTime) / 1000), 0);
+}, 1000);
 
 setInterval(() => {
   handleRandomNumberGeneration();
@@ -86,18 +94,13 @@ setInterval(() => {
 
 // API endpoint to get the countdown time
 const getCountdownTimeEndpoint = asyncHandler(async (req, res) => {
-  const elapsedTime = Math.floor((Date.now() - countdownStartTime) / 1000);
-  const countdownTime = Math.max(120  - elapsedTime, 0);
-
-  return res
-    .status(200)
-    .json(
-      new ApiResponse(
-        200,
-        { countdownTime },
-        "Countdown time fetched successfully"
-      )
-    );
+  return res.status(200).json(
+    new ApiResponse(
+      200,
+      { countdownTime: countdownCache.time },
+      "Countdown time fetched successfully"
+    )
+  );
 });
 
 const deleteOldRandomNumbers = async () => {

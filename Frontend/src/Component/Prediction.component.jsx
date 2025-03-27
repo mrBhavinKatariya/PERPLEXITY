@@ -290,15 +290,27 @@ const handlePrevHistory = () => {
 
   // Fetch countdown time from the API
   useEffect(() => {
-    let timerId;
+    let isMounted = true;
+    const controller = new AbortController();
+
     const updateTimer = async () => {
       try {
         const response = await axios.get(
-          `${API_URL}/api/v1/users/countdownTime`
+          `${API_URL}/api/v1/users/countdownTime`,{
+            signal: controller.signal
+          }
         );
-        const newTime = response.data.data.countdownTime;
-        setServerTime(newTime);
-        setTimeLeft(newTime);
+        if (!response.ok) throw new Error('Network response was not ok');
+      const data = await response.json();
+
+      if (isMounted) {
+        setTimeLeft(data.data.countdownTime);
+        setServerTime(data.data.countdownTime);
+      }
+
+        // const newTime = response.data.data.countdownTime;
+        // setServerTime(newTime);
+        // setTimeLeft(newTime);
       } catch (error) {
         console.error("Error updating timer:", error);
       }
@@ -311,7 +323,9 @@ const handlePrevHistory = () => {
     timerId = setInterval(updateTimer, 1000);
 
     return () => {
-      timerId = setInterval(updateTimer, 1000);
+      isMounted = false;
+    controller.abort();
+    clearInterval(timerId);
   return () => clearInterval(timerId);
     };
   }, []);
