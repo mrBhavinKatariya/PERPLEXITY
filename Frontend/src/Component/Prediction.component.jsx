@@ -906,7 +906,7 @@ const handlePrevHistory = () => {
     <span>P/L</span>
   </div>
 
-  {userHistory.slice((historyPage - 1) * 10, historyPage * 10)
+   {/* {userHistory.slice((historyPage - 1) * 10, historyPage * 10)
   .map((history, index) => {
     const betAmount = parseFloat(history.betAmount) || 0;
     const winnings = parseFloat(history.winnings) || 0
@@ -916,10 +916,10 @@ const handlePrevHistory = () => {
 
     return (
       <div key={index} style={historyStyles.row}>
-        {/* Display bet amount */}
+       
         <span style={{ color: "#000" }}>₹{betAmount.toFixed(2)}</span>
 
-        {/* Display selection (number or color) */}
+        
         <span>
           {history.selectedColor === 'number' ? (
             renderNumberCircle(history.randomNumber) // Display the random number
@@ -939,7 +939,48 @@ const handlePrevHistory = () => {
           )}
         </span>
 
-        {/* Display profit/loss */}
+       
+        <span style={{ color: profit >= 0 ? "green" : "red" }}> 
+          ₹{profit.toFixed(2)}
+        </span>
+      </div>
+    );
+  })}  */}
+
+{userHistory.slice((historyPage - 1) * 10, historyPage * 10)
+  .map((history, index) => {
+    const betAmount = parseFloat(history.betAmount) || 0;
+    const winnings = parseFloat(history.winnings) || 0;
+    const profit = history.result === "WIN" ? winnings : -betAmount;
+
+    return (
+      <div key={index} style={historyStyles.row}>
+        <span style={{ color: "#000" }}>₹{betAmount.toFixed(2)}</span>
+
+        <span>
+          {history.selectedColor === 'number' ? (
+            renderNumberCircle(history.randomNumber)
+          ) : (
+            <span
+              style={{
+                color: "#000",
+                backgroundColor: getBackgroundColor(history.randomNumber),
+                display: "inline-flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: "26px",
+                height: "26px",
+                fontWeight: "700",
+                borderRadius: "50%",
+                textAlign: "center",
+                lineHeight: "24px",
+              }}
+            >
+              C
+            </span>
+          )}
+        </span>
+
         <span style={{ color: profit >= 0 ? "green" : "red" }}>
           ₹{profit.toFixed(2)}
         </span>
