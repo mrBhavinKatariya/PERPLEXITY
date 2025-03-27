@@ -324,7 +324,7 @@ const handlePrevHistory = () => {
         setTimeLeft((prev) => {
           if (prev <= 0) {
             clearInterval(timerId);
-            return 120; // Reset timer to 90 seconds
+            return 120; // Reset timer to 120 seconds
           }
           return prev - 1;
         });
