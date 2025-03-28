@@ -79,45 +79,70 @@ const generateSecureRandomNumber = () => {
 // };
 
 // Prediction generation को मजबूत करें
+
+
+
 const handleRandomNumberGeneration = async () => {
   if (isGenerating) return;
   isGenerating = true;
   
   try {
-    const last = await Prediction.findOne().sort({ createdAt: -1 });
-    const newPeriod = last ? last.period + 1 : 1;
-    
-    // नया नंबर जनरेट करें
-    const currentNumber = last?.nextNumber ?? generateSecureRandomNumber();
-    const nextNumber = generateSecureRandomNumber();
+    const session = await mongoose.startSession();
+    await session.withTransaction(async () => {
+      // Get latest prediction with lock
+      const last = await Prediction.findOne()
+        .sort({ period: -1 })
+        .session(session)
+        .select('period nextNumber')
+        .lean();
 
+      // Calculate new period number
+      const newPeriod = last ? last.period + 1 : 1;
 
-    // नया रिकॉर्ड सेव करें
-    await Prediction.create({
-      number: currentNumber,
-      nextNumber,
-      period: newPeriod,
-      price: Math.floor(Math.random()*965440),
-      result: currentNumber
+      // Generate numbers with fallback
+      const currentNumber = last?.nextNumber ?? generateSecureRandomNumber();
+      const nextNumber = generateSecureRandomNumber();
+
+      // Create new prediction record
+      await Prediction.create([{
+        number: currentNumber,
+        nextNumber,
+        period: newPeriod,
+        price: Math.floor(Math.random() * 965440),
+        result: currentNumber,
+        createdAt: new Date()
+      }], { session });
+
+      // Update countdown synchronously
+      countdownStartTime = Date.now();
+      
+      console.log(`Generated Period ${newPeriod}:`);
+      console.log(`Current: ${currentNumber}, Next: ${nextNumber}`);
     });
-
-    countdownStartTime = Date.now(); // टाइमर रीसेट
-    // console.log(`Generated period ${newPeriod}: ${currentNumber}`);
-    console.log("current Number: ",currentNumber);
-    console.log("Next Number: ",nextNumber);
     
+    await session.endSession();
+  } catch (error) {
+    console.error("Generation Error:", error);
+    // Implement retry logic or alert here
   } finally {
     isGenerating = false;
   }
 };
 
-// सटीक टाइमर के लिए setTimeout का उपयोग करें
+// Precise interval using recursive timeout
 const scheduleGeneration = () => {
-  setTimeout(() => {
-    handleRandomNumberGeneration().finally(scheduleGeneration);
-  }, 120000 - (Date.now() - countdownStartTime) % 120000);
+  const now = Date.now();
+  const nextInterval = 120000 - (now - countdownStartTime) % 120000;
+  
+  setTimeout(async () => {
+    await handleRandomNumberGeneration();
+    scheduleGeneration();
+  }, nextInterval);
 };
-scheduleGeneration(); 
+
+// Start the cycle
+scheduleGeneration();
+
 
 let countdownCache = {
   time: 120,
