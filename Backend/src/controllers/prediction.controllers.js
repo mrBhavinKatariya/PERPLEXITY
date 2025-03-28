@@ -91,8 +91,7 @@ const handleRandomNumberGeneration = async () => {
     const currentNumber = last?.nextNumber ?? generateSecureRandomNumber();
     const nextNumber = generateSecureRandomNumber();
 
-    console.log("current Number",currentNumber);
-    console.log("Next Number",nextNumber);
+    
     
 
     // नया रिकॉर्ड सेव करें
@@ -105,7 +104,9 @@ const handleRandomNumberGeneration = async () => {
     });
 
     countdownStartTime = Date.now(); // टाइमर रीसेट
-    console.log(`Generated period ${newPeriod}: ${currentNumber}`);
+    // console.log(`Generated period ${newPeriod}: ${currentNumber}`);
+    console.log("current Number",currentNumber);
+    console.log("Next Number",nextNumber);
     
   } finally {
     isGenerating = false;
