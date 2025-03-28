@@ -29,54 +29,92 @@ const generateSecureRandomNumber = () => {
   return crypto.randomInt(0, 10); // Generates a number between 0 and 9
 };
 
+// const handleRandomNumberGeneration = async () => {
+//   if (!isGenerating) {
+//     isGenerating = true;
+//     try {
+//       const lastRecord = await Prediction.findOne().sort({ createdAt: -1 });
+
+//       let currentNumber;
+//       let nextNumber;
+//       if (lastRecord) {
+//         // If lastRecord.nextNumber is missing, generate a new random number
+//         currentNumber = lastRecord.nextNumber ?? generateSecureRandomNumber();
+//         // currentNumber = lastRecord.nextNumber || generateSecureRandomNumber();
+
+//         nextNumber = generateSecureRandomNumber();
+//       } else {
+//         // If no lastRecord exists, generate both numbers
+//         currentNumber = generateSecureRandomNumber();
+//         nextNumber = generateSecureRandomNumber();
+//       }
+
+//       const period = lastRecord ? lastRecord.period + 1 : 1;
+
+//       // Validate currentNumber and result
+//       if (typeof currentNumber !== 'number' || isNaN(currentNumber)) {
+//         throw new Error('Invalid currentNumber');
+//       }
+
+//       const newPrediction = new Prediction({
+//         number: currentNumber,
+//         nextNumber: nextNumber,
+//         price: Math.floor(Math.random() * 965440),
+//         period: period,
+//         result: currentNumber, // Ensure result is assigned
+//       });
+
+//       await newPrediction.save();
+
+//       console.log("Current Number:", currentNumber);
+//       console.log("Next Predicted Number:", nextNumber);
+
+//       return currentNumber;
+//     } catch (error) {
+//       console.error("Error in generation:", error);
+//     } finally {
+//       isGenerating = false;
+//     }
+//   }
+// };
+
+// Prediction generation को मजबूत करें
 const handleRandomNumberGeneration = async () => {
-  if (!isGenerating) {
-    isGenerating = true;
-    try {
-      const lastRecord = await Prediction.findOne().sort({ createdAt: -1 });
+  if (isGenerating) return;
+  isGenerating = true;
+  
+  try {
+    const last = await Prediction.findOne().sort({ createdAt: -1 });
+    const newPeriod = last ? last.period + 1 : 1;
+    
+    // नया नंबर जनरेट करें
+    const currentNumber = last?.nextNumber ?? generateSecureRandomNumber();
+    const nextNumber = generateSecureRandomNumber();
 
-      let currentNumber;
-      let nextNumber;
-      if (lastRecord) {
-        // If lastRecord.nextNumber is missing, generate a new random number
-        currentNumber = lastRecord.nextNumber ?? generateSecureRandomNumber();
-        // currentNumber = lastRecord.nextNumber || generateSecureRandomNumber();
+    // नया रिकॉर्ड सेव करें
+    await Prediction.create({
+      number: currentNumber,
+      nextNumber,
+      period: newPeriod,
+      price: Math.floor(Math.random()*965440),
+      result: currentNumber
+    });
 
-        nextNumber = generateSecureRandomNumber();
-      } else {
-        // If no lastRecord exists, generate both numbers
-        currentNumber = generateSecureRandomNumber();
-        nextNumber = generateSecureRandomNumber();
-      }
-
-      const period = lastRecord ? lastRecord.period + 1 : 1;
-
-      // Validate currentNumber and result
-      if (typeof currentNumber !== 'number' || isNaN(currentNumber)) {
-        throw new Error('Invalid currentNumber');
-      }
-
-      const newPrediction = new Prediction({
-        number: currentNumber,
-        nextNumber: nextNumber,
-        price: Math.floor(Math.random() * 965440),
-        period: period,
-        result: currentNumber, // Ensure result is assigned
-      });
-
-      await newPrediction.save();
-
-      console.log("Current Number:", currentNumber);
-      console.log("Next Predicted Number:", nextNumber);
-
-      return currentNumber;
-    } catch (error) {
-      console.error("Error in generation:", error);
-    } finally {
-      isGenerating = false;
-    }
+    countdownStartTime = Date.now(); // टाइमर रीसेट
+    console.log(`Generated period ${newPeriod}: ${currentNumber}`);
+    
+  } finally {
+    isGenerating = false;
   }
 };
+
+// सटीक टाइमर के लिए setTimeout का उपयोग करें
+const scheduleGeneration = () => {
+  setTimeout(() => {
+    handleRandomNumberGeneration().finally(scheduleGeneration);
+  }, 120000 - (Date.now() - countdownStartTime) % 120000);
+};
+scheduleGeneration(); 
 
 let countdownCache = {
   time: 120,
@@ -94,10 +132,12 @@ setInterval(() => {
 
 // API endpoint to get the countdown time
 const getCountdownTimeEndpoint = asyncHandler(async (req, res) => {
+  const elapsed = Math.floor((Date.now() - countdownStartTime)/1000);
+  const remaining = 120 - (elapsed % 120);
   return res.status(200).json(
     new ApiResponse(
       200,
-      { countdownTime: countdownCache.time },
+      { countdownTime: remaining},
       "Countdown time fetched successfully"
     )
   );
@@ -373,36 +413,71 @@ const handleUserBetEndpoint = asyncHandler(async (req, res) => {
 
   // Result processing
   try {
-    const remainingTime = Math.max(120  - Math.floor((Date.now() - countdownStartTime) / 1000), 0);
-    await new Promise(resolve => setTimeout(resolve, remainingTime * 1000));
+    const currentPrediction = await Prediction.findOne().sort({ createdAt: -1 }).lean();
+    if (!currentPrediction) {
+      throw new Error("No active prediction found");
+    }
 
-    const latestPrediction = await Prediction.findOne().sort({ createdAt: -1 }).lean();
-    const randomNumber = latestPrediction?.number;
+    const targetPeriod = currentPrediction.period + 1;
+    const expectedResult = currentPrediction.nextNumber;
 
-    let multiplier = 0;
-    let result = "LOSS";
-    const contractMoney = Number((totalAmount * 0.98).toFixed(2));
+    const remainingTime = Math.max(120 - Math.floor((Date.now() - countdownStartTime) / 1000), 0);
+  await new Promise(resolve => setTimeout(resolve, remainingTime * 1000));
+
+  const resultPrediction = await Prediction.findOne({ period: targetPeriod }).lean();
+  if (!resultPrediction) {
+    throw new Error("Next period result not generated");
+  }
+
+  const randomNumber = resultPrediction.number;
+
+  let multiplier = 0;
+  let result = "LOSS";
+  const contractMoney = Number((totalAmount * 0.98).toFixed(2));
 
     // Updated winning logic
-    if (typeof number === 'number') {
-      if (randomNumber === number) {
-        multiplier = 6; // 6X for correct number
-        result = "WIN";
-      }
-    } else {
-      switch(number) {
-        case 'green':
-          if ([1, 3, 7, 9].includes(randomNumber)) multiplier = 2;
-          break;
-        case 'red':
-          if ([2, 4, 6, 8].includes(randomNumber)) multiplier = 2;
-          break;
-        case 'violet':
-          if ([0, 5].includes(randomNumber)) multiplier = 2; // 2X for violet
-          break;
-      }
-      if (multiplier > 0) result = "WIN";
-    }
+    // if (typeof number === 'number') {
+    //   if (randomNumber === number) {
+    //     multiplier = 6; // 6X for correct number
+    //     result = "WIN";
+    //   }
+    // } else {
+    //   switch(number) {
+    //     case 'green':
+    //       if ([1, 3, 7, 9].includes(randomNumber)) multiplier = 2;
+    //       break;
+    //     case 'red':
+    //       if ([2, 4, 6, 8].includes(randomNumber)) multiplier = 2;
+    //       break;
+    //     case 'violet':
+    //       if ([0, 5].includes(randomNumber)) multiplier = 2; // 2X for violet
+    //       break;
+    //   }
+    //   if (multiplier > 0) result = "WIN";
+    // }
+
+    // Winning logic में निम्नलिखित बदलाव
+if (typeof number === 'number') {
+  if (randomNumber === number) {
+    multiplier = (number === 0 || number === 5) ? 4.5 : 9; // विशेष केस
+    result = "WIN";
+  }
+} else {
+  switch(number) {
+    case 'green':
+      if ([1,3,7,9].includes(randomNumber)) multiplier = 2;
+      else if (randomNumber === 5) multiplier = 1.5;
+      break;
+    case 'red':
+      if ([2,4,6,8].includes(randomNumber)) multiplier = 2;
+      else if (randomNumber === 0) multiplier = 1.5;
+      break;
+    case 'violet':
+      if ([0,5].includes(randomNumber)) multiplier = 1.5;
+      break;
+  }
+  if (multiplier > 0) result = "WIN";
+}
 
     // Winning transaction remains same
     if (result === "WIN") {
