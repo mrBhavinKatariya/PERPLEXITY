@@ -105,10 +105,11 @@ const handleRandomNumberGeneration = async () => {
 
     countdownStartTime = Date.now(); // टाइमर रीसेट
     // console.log(`Generated period ${newPeriod}: ${currentNumber}`);
-    console.log("current Number",currentNumber);
-    console.log("Next Number",nextNumber);
+    
     
   } finally {
+    console.log("current Number: ",currentNumber);
+    console.log("Next Number: ",nextNumber);
     isGenerating = false;
   }
 };
