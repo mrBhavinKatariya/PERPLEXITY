@@ -487,7 +487,7 @@ const handleUserBetEndpoint = asyncHandler(async (req, res) => {
     // Winning logic में निम्नलिखित बदलाव
 if (typeof number === 'number') {
   if (randomNumber === number) {
-    multiplier =  9; // विशेष केस
+    multiplier =  6; 
     result = "WIN";
   }
 } else {
