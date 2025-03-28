@@ -494,14 +494,13 @@ if (typeof number === 'number') {
   switch(number) {
     case 'green':
       if ([1,3,7,9].includes(randomNumber)) multiplier = 2;
-      else if (randomNumber === 5) multiplier = 1.5;
       break;
     case 'red':
       if ([2,4,6,8].includes(randomNumber)) multiplier = 2;
-      else if (randomNumber === 0) multiplier = 1.5;
+    
       break;
     case 'violet':
-      if ([0,5].includes(randomNumber)) multiplier = 1.5;
+      if ([0,5].includes(randomNumber)) multiplier = 2;
       break;
   }
   if (multiplier > 0) result = "WIN";
