@@ -91,6 +91,10 @@ const handleRandomNumberGeneration = async () => {
     const currentNumber = last?.nextNumber ?? generateSecureRandomNumber();
     const nextNumber = generateSecureRandomNumber();
 
+    console.log("current Number",currentNumber);
+    console.log("Next Number",nextNumber);
+    
+
     // नया रिकॉर्ड सेव करें
     await Prediction.create({
       number: currentNumber,
