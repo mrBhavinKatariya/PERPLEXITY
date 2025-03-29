@@ -12,7 +12,7 @@ export default function ColorPredictionGame() {
   const [currentPeriod, setCurrentPeriod] = useState(1);
   const [showPopup, setShowPopup] = useState(false);
   const [selectedNumber, setSelectedNumber] = useState(null);
-  const [contractMoney, setContractMoney] = useState(10);
+  const [contractMoney, setContractMoney] = useState(20);
   const [quantity, setQuantity] = useState(1);
   const [page, setPage] = useState(1);
   const [showRecharge, setShowRecharge] = useState(false);
