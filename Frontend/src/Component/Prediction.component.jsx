@@ -793,7 +793,7 @@ const handlePrevHistory = () => {
               <h4>Contract Money</h4>
 
               <div style={styles.moneyOptions}>
-                {[10, 100, 1000, 10000].map((amount) => (
+                {[20, 100, 1000, 10000].map((amount) => (
                   <button
                     key={amount}
                     style={

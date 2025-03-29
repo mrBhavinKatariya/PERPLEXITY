@@ -8,9 +8,34 @@
   </head>
   <body>
     <div id="root"></div>
+
+    <!--  ============================== Script to disable right-click and key combinations for developer tools ==============================  -->
+  <!-- <script>
+    // Disable right-click context menu
+    document.addEventListener('contextmenu', function (e) {
+      e.preventDefault(); // Prevent default context menu from appearing
+    });
+
+    
+    // Disable keyboard shortcuts for developer tools
+    document.addEventListener('keydown', function (e) {
+      if (
+        (e.ctrlKey && e.shiftKey && e.key === 'I') || // Ctrl+Shift+I
+        (e.ctrlKey && e.shiftKey && e.key === 'J') || // Ctrl+Shift+J
+        (e.ctrlKey && e.key === 'U') || // Ctrl+U
+        (e.key === 'F12') // F12
+      ) {
+        e.preventDefault(); // Prevent default action for these key combinations
+      }
+    });
+  </script> -->
+
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
+
+
+
 
 
 <!-- 

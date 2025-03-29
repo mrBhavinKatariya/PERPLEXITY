@@ -49,6 +49,7 @@ const registerUser = asyncHandler(async (req, res) => {
         email,
         username: username.toLowerCase(),
         referredBy,
+        balance,
     });
 
     
