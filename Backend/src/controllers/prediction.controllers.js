@@ -1400,5 +1400,7 @@ export {
   initiateWithdrawal,
   transactionHistory,
   getReferralEarnings,
+  setColorOverride,
+  clearColorOverride,
 
 };
