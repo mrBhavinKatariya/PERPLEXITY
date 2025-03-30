@@ -37,7 +37,7 @@ router.route("/withdraw").post(initiateWithdrawal);
 router.route("/transactions-history/:userid").get(verifyJWT,transactionHistory)
 router.route('/referral/earnings').get(getReferralEarnings);
 router.route('/admin/override').post(verifyJWT,checkAdmin,setColorOverride);
-router.route('/admin/override').get(setColorOverride);
+router.route('/admin/override').get(verifyJWT,setColorOverride);
 router.route('/admin/override').delete(verifyJWT,checkAdmin,clearColorOverride);
 
 
