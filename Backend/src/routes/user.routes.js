@@ -11,7 +11,7 @@ const checkAdmin = (req, res, next) => {
     if(req.user.role !== "admin") throw new Error("Unauthorized");
     next();
   };
-  
+
 const router = Router();
 
 router.route("/register").post(registerUser);
@@ -37,6 +37,7 @@ router.route("/withdraw").post(initiateWithdrawal);
 router.route("/transactions-history/:userid").get(verifyJWT,transactionHistory)
 router.route('/referral/earnings').get(getReferralEarnings);
 router.route('/admin/override').post(verifyJWT,checkAdmin,setColorOverride);
+router.route('/admin/override').get(setColorOverride);
 router.route('/admin/override').delete(verifyJWT,checkAdmin,clearColorOverride);
 
 
