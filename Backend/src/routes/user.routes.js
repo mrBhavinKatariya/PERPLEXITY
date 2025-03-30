@@ -6,6 +6,12 @@ import { getCurrentUser } from "../controllers/user.controllers.js";
 import { deductUserBalance, deleteOldRandomNumbers, getCountdownTimeEndpoint, getLastTenRandomNumbersEndpoint, getRandomNumberEndpoint, getUserBalanceEndpoint, getUserBetHistoryEndpoint, handleUserBetEndpoint, RazorPayCreatePaymentOrder, RazorpayPaymentAndUpdateBalance, storeUTRNumberEndpoint, updateUserBalanceEndpoint , changeCurrentPassword, createFundAccount, initiateWithdrawal, handlePayoutWebhook, transactionHistory, getReferralEarnings, setColorOverride, clearColorOverride} from "../controllers/prediction.controllers.js";
 // import { generateRandomNumber, generateRandomNumberEndpoint, getCountdownTimeEndpoint, handleRandomNumberGeneration } from "../controllers/prediction.controllers.js";
 
+
+const checkAdmin = (req, res, next) => {
+    if(req.user.role !== "admin") throw new Error("Unauthorized");
+    next();
+  };
+  
 const router = Router();
 
 router.route("/register").post(registerUser);
@@ -35,10 +41,7 @@ router.route('/admin/override').delete(verifyJWT,checkAdmin,clearColorOverride);
 
 
 
-const checkAdmin = (req, res, next) => {
-    if(req.user.role !== "admin") throw new Error("Unauthorized");
-    next();
-  };
+
 
 
 
