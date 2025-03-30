@@ -14,7 +14,7 @@ import bcrypt from 'bcrypt';
 import { sendEmail } from "../utils/SendEmail.utils.js";
 import { log } from "console";
 import { ReferralEarning } from "../models/ReferralEarning.models.js";
-
+import { AdminOverride } from "../models/AdminOverrideColor.js";
 
 dotenv.config()
 let isGenerating = false;
@@ -81,6 +81,33 @@ const generateSecureRandomNumber = () => {
 // Prediction generation को मजबूत करें
 
 
+const setColorOverride = asyncHandler(async (req, res) => {
+  const { color, minutes=1 } = req.body; // minutes: ओवरराइड कितने समय तक
+
+  // Validate admin role here (आपका ऑथेंटिकेशन सिस्टम के अनुसार)
+  
+  await AdminOverride.deleteMany({}); // पुराने ओवरराइड हटाएं
+  
+  const expiry = new Date(Date.now() + minutes * 60000);
+  
+  const override = new AdminOverride({
+    isActive: true,
+    forcedColor: color,
+    expiry
+  });
+  
+  await override.save();
+
+  res.status(200).json({
+    success: true,
+    message: `Next color forced to ${color} for ${minutes} minute(s)`
+  });
+});
+
+const clearColorOverride = asyncHandler(async (req, res) => {
+  await AdminOverride.deleteMany({});
+  res.status(200).json({ success: true, message: "Override cleared" });
+});
 
 const handleRandomNumberGeneration = async () => {
   if (isGenerating) return;
@@ -89,6 +116,12 @@ const handleRandomNumberGeneration = async () => {
   try {
     const session = await mongoose.startSession();
     await session.withTransaction(async () => {
+     // एडमिन ओवरराइड चेक करें
+      const activeOverride = await AdminOverride.findOne({ 
+        isActive: true, 
+        expiry: { $gt: new Date() } 
+      }).session(session).lean();
+
       // Get latest prediction with lock
       const last = await Prediction.findOne()
         .sort({ period: -1 })
@@ -121,13 +154,20 @@ const handleRandomNumberGeneration = async () => {
       colorBets.forEach(bet => {
         totals[bet._id] = bet.total;
       });
+      
+      let selectedColor;
 
       // Find the color(s) with the minimum total
-      const minTotal = Math.min(...Object.values(totals));
-      const minColors = Object.keys(totals).filter(color => totals[color] === minTotal);
-
-      // Randomly select a color if there's a tie
-      const selectedColor = minColors[Math.floor(Math.random() * minColors.length)];
+      if (activeOverride) {
+        // एडमिन का फोर्स किया हुआ कलर
+        selectedColor = activeOverride.forcedColor;
+        console.log(`Admin override: ${selectedColor}`);
+      } else {
+        // नॉर्मल लॉजिक (कम बेट वाला कलर)
+        const minTotal = Math.min(...Object.values(totals));
+        const minColors = Object.keys(totals).filter(color => totals[color] === minTotal);
+        selectedColor = minColors[Math.floor(Math.random() * minColors.length)];
+      }
 
       // Define color ranges
       const colorRanges = {
