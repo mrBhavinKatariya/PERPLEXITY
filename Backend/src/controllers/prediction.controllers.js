@@ -99,8 +99,48 @@ const handleRandomNumberGeneration = async () => {
       // Calculate new period number
       const newPeriod = last ? last.period + 1 : 1;
 
-      // Generate numbers with fallback
-      const currentNumber = last?.nextNumber ?? generateSecureRandomNumber();
+      // Aggregate color bets for this period
+      const colorBets = await BetHistory.aggregate([
+        {
+          $match: {
+            period: newPeriod,
+            selectedColor: 'color',
+            selection: { $in: ['red', 'green', 'violet'] }
+          }
+        },
+        {
+          $group: {
+            _id: '$selection',
+            total: { $sum: '$betAmount' }
+          }
+        }
+      ]).session(session);
+
+      // Initialize totals
+      const totals = { red: 0, green: 0, violet: 0 };
+      colorBets.forEach(bet => {
+        totals[bet._id] = bet.total;
+      });
+
+      // Find the color(s) with the minimum total
+      const minTotal = Math.min(...Object.values(totals));
+      const minColors = Object.keys(totals).filter(color => totals[color] === minTotal);
+
+      // Randomly select a color if there's a tie
+      const selectedColor = minColors[Math.floor(Math.random() * minColors.length)];
+
+      // Define color ranges
+      const colorRanges = {
+        red: [2, 4, 6, 8],
+        green: [1, 3, 7, 9],
+        violet: [0, 5]
+      };
+
+      // Generate currentNumber from selected color's range
+      const possibleNumbers = colorRanges[selectedColor];
+      const currentNumber = possibleNumbers[Math.floor(Math.random() * possibleNumbers.length)];
+
+      // Generate nextNumber randomly
       const nextNumber = generateSecureRandomNumber();
 
       // Create new prediction record
@@ -123,12 +163,12 @@ const handleRandomNumberGeneration = async () => {
     await session.endSession();
   } catch (error) {
     console.error("Generation Error:", error);
-    // Implement retry logic or alert here
   } finally {
     isGenerating = false;
   }
 };
 
+// Precise interval using recursive timeout
 // Precise interval using recursive timeout
 const scheduleGeneration = () => {
   const now = Date.now();
@@ -398,10 +438,7 @@ const deductUserBalance = async (userId, totalAmount) => {
 const handleUserBetEndpoint = asyncHandler(async (req, res) => {
   const { userId, totalAmount, number } = req.body;
 
-  console.log("Request Body:", req.body);
-  
-
-  // Input validation remains the same
+  // Input validation
   if (!mongoose.Types.ObjectId.isValid(userId)) {
     return res.status(400).json(new ApiResponse(400, null, "Invalid User ID"));
   }
@@ -418,7 +455,6 @@ const handleUserBetEndpoint = asyncHandler(async (req, res) => {
     return res.status(400).json(new ApiResponse(400, null, "Invalid amount"));
   }
 
-  // Deduction transaction remains unchanged
   let deductionSession;
   try {
     deductionSession = await mongoose.startSession();
@@ -434,12 +470,13 @@ const handleUserBetEndpoint = asyncHandler(async (req, res) => {
     await user.save({ session: deductionSession });
     await deductionSession.commitTransaction();
   } catch (error) {
-    // Error handling remains same
+    await deductionSession?.abortTransaction();
+    console.error("Deduction failed:", error);
+    return res.status(500).json(new ApiResponse(500, null, "Transaction failed"));
   } finally {
     deductionSession?.endSession();
   }
 
-  // Result processing
   try {
     const currentPrediction = await Prediction.findOne().sort({ createdAt: -1 }).lean();
     if (!currentPrediction) {
@@ -447,66 +484,42 @@ const handleUserBetEndpoint = asyncHandler(async (req, res) => {
     }
 
     const targetPeriod = currentPrediction.period + 1;
-    const expectedResult = currentPrediction.nextNumber;
 
     const remainingTime = Math.max(120 - Math.floor((Date.now() - countdownStartTime) / 1000), 0);
-  await new Promise(resolve => setTimeout(resolve, remainingTime * 1000));
+    await new Promise(resolve => setTimeout(resolve, remainingTime * 1000));
 
-  const resultPrediction = await Prediction.findOne({ period: targetPeriod }).lean();
-  if (!resultPrediction) {
-    throw new Error("Next period result not generated");
-  }
+    const resultPrediction = await Prediction.findOne({ period: targetPeriod }).lean();
+    if (!resultPrediction) {
+      throw new Error("Next period result not generated");
+    }
 
-  const randomNumber = resultPrediction.number;
+    const randomNumber = resultPrediction.number;
 
-  let multiplier = 0;
-  let result = "LOSS";
-  const contractMoney = Number((totalAmount * 0.98).toFixed(2));
+    let multiplier = 0;
+    let result = "LOSS";
+    const contractMoney = Number((totalAmount * 0.98).toFixed(2));
 
-    // Updated winning logic
-    // if (typeof number === 'number') {
-    //   if (randomNumber === number) {
-    //     multiplier = 6; // 6X for correct number
-    //     result = "WIN";
-    //   }
-    // } else {
-    //   switch(number) {
-    //     case 'green':
-    //       if ([1, 3, 7, 9].includes(randomNumber)) multiplier = 2;
-    //       break;
-    //     case 'red':
-    //       if ([2, 4, 6, 8].includes(randomNumber)) multiplier = 2;
-    //       break;
-    //     case 'violet':
-    //       if ([0, 5].includes(randomNumber)) multiplier = 2; // 2X for violet
-    //       break;
-    //   }
-    //   if (multiplier > 0) result = "WIN";
-    // }
+    // Winning logic
+    if (typeof number === 'number') {
+      if (randomNumber === number) {
+        multiplier = 6;
+        result = "WIN";
+      }
+    } else {
+      switch(number) {
+        case 'green':
+          if ([1, 3, 7, 9].includes(randomNumber)) multiplier = 2;
+          break;
+        case 'red':
+          if ([2, 4, 6, 8].includes(randomNumber)) multiplier = 2;
+          break;
+        case 'violet':
+          if ([0, 5].includes(randomNumber)) multiplier = 2;
+          break;
+      }
+      if (multiplier > 0) result = "WIN";
+    }
 
-    // Winning logic में निम्नलिखित बदलाव
-if (typeof number === 'number') {
-  if (randomNumber === number) {
-    multiplier =  6; 
-    result = "WIN";
-  }
-} else {
-  switch(number) {
-    case 'green':
-      if ([1,3,7,9].includes(randomNumber)) multiplier = 2;
-      break;
-    case 'red':
-      if ([2,4,6,8].includes(randomNumber)) multiplier = 2;
-    
-      break;
-    case 'violet':
-      if ([0,5].includes(randomNumber)) multiplier = 2;
-      break;
-  }
-  if (multiplier > 0) result = "WIN";
-}
-
-    // Winning transaction remains same
     if (result === "WIN") {
       const winSession = await mongoose.startSession();
       try {
@@ -524,7 +537,7 @@ if (typeof number === 'number') {
       }
     }
 
-    // Save bet history
+    // Save bet history with targetPeriod
     const betHistory = new BetHistory({
       userId,
       selectedColor: typeof number === 'number' ? 'number' : 'color',
@@ -534,6 +547,7 @@ if (typeof number === 'number') {
       randomNumber,
       multiplier,
       result,
+      period: targetPeriod,
       winnings: multiplier > 0 ? Number((contractMoney * multiplier).toFixed(2)) : 0
     });
     await betHistory.save();
