@@ -84,6 +84,11 @@ const generateSecureRandomNumber = () => {
 const setColorOverride = asyncHandler(async (req, res) => {
   const { color, minutes=1 } = req.body; // minutes: ओवरराइड कितने समय तक
 
+
+  console.log("color",color);
+  console.log("req.body",req.body);
+
+  
   // Validate admin role here (आपका ऑथेंटिकेशन सिस्टम के अनुसार)
   
   await AdminOverride.deleteMany({}); // पुराने ओवरराइड हटाएं
