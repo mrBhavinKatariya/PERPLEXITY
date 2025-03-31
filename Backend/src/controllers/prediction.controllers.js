@@ -872,6 +872,9 @@ const createContact = async (user) => {
 
 // Create Fund Account
 const createFundAccount = async (req, res) => {
+
+  console.log("rebody",req.body);
+  
   try {
     const { userId, name, accountNumber, ifscCode, email, phone } = req.body;
 
