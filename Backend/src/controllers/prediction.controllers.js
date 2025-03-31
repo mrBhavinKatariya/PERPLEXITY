@@ -1100,8 +1100,8 @@ const changeCurrentPassword = asyncHandler(async(req, res) => {
 
 const createWithdrawal = asyncHandler(async (req, res) => {
   const { amount, account_number, ifsc, name } = req.body;
-  console.log("req.body",req.body);
-  
+  console.log("req. body",req.body);
+
   const userId = req.user._id;
 
   
