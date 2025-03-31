@@ -96,7 +96,7 @@ const Withdrawal = () => {
   const handleAddAccount = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post(`${API_URL}/api/v1/users/fund-account`, {
+      const response = await axios.post(`${API_URL}/api/v1/users/witd`, {
         userId: current_user_ids,
         ...newAccount
       });

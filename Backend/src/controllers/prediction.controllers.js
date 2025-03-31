@@ -1102,6 +1102,8 @@ const createWithdrawal = asyncHandler(async (req, res) => {
   const { amount, account_number, ifsc, name } = req.body;
   const userId = req.user._id;
 
+  console.log("req.body",req.body);
+  
   // Validate input
   if (!account_number || !ifsc || !name) {
     return res.status(400).json({ message: 'Bank details are required' });
