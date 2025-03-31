@@ -24,7 +24,7 @@ router.route("/register").post(registerUser);
 router.route("/login").post(loginUser); // Removed verifyJWT middleware
 // router.route("/logout").post(verifyJWT, logOutUser);
 router.post("/admin/register", registerAdmin);
-router.post("/admin/login", loginAdmin);
+router.post("/admin/login",verifyAdmin,loginAdmin);
 router.route("/current-user").get(verifyJWT, getCurrentUser);
 // router.route("/randomeNumber").get(handleRandomNumberGeneration)
 router.route("/randomenumber").get(getRandomNumberEndpoint);
