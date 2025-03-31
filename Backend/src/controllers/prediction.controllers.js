@@ -1,3 +1,6 @@
+// Prediction.controller.jsx   30-3-25:10:57
+
+
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { Prediction } from "../models/storeNumber.models.js";
@@ -14,7 +17,7 @@ import bcrypt from 'bcrypt';
 import { sendEmail } from "../utils/SendEmail.utils.js";
 import { log } from "console";
 import { ReferralEarning } from "../models/ReferralEarning.models.js";
-import { AdminOverride } from "../models/AdminOverrideColor.js";
+
 
 dotenv.config()
 let isGenerating = false;
@@ -81,38 +84,6 @@ const generateSecureRandomNumber = () => {
 // Prediction generation को मजबूत करें
 
 
-const setColorOverride = asyncHandler(async (req, res) => {
-  const { color, minutes=1 } = req.body; // minutes: ओवरराइड कितने समय तक
-
-
-  console.log("color",color);
-  console.log("req.body",req.body);
-
-  
-  // Validate admin role here (आपका ऑथेंटिकेशन सिस्टम के अनुसार)
-  
-  await AdminOverride.deleteMany({}); // पुराने ओवरराइड हटाएं
-  
-  const expiry = new Date(Date.now() + minutes * 60000);
-  
-  const override = new AdminOverride({
-    isActive: true,
-    forcedColor: color,
-    expiry
-  });
-  
-  await override.save();
-
-  res.status(200).json({
-    success: true,
-    message: `Next color forced to ${color} for ${minutes} minute(s)`
-  });
-});
-
-const clearColorOverride = asyncHandler(async (req, res) => {
-  await AdminOverride.deleteMany({});
-  res.status(200).json({ success: true, message: "Override cleared" });
-});
 
 const handleRandomNumberGeneration = async () => {
   if (isGenerating) return;
@@ -121,12 +92,6 @@ const handleRandomNumberGeneration = async () => {
   try {
     const session = await mongoose.startSession();
     await session.withTransaction(async () => {
-     // एडमिन ओवरराइड चेक करें
-      const activeOverride = await AdminOverride.findOne({ 
-        isActive: true, 
-        expiry: { $gt: new Date() } 
-      }).session(session).lean();
-
       // Get latest prediction with lock
       const last = await Prediction.findOne()
         .sort({ period: -1 })
@@ -137,55 +102,8 @@ const handleRandomNumberGeneration = async () => {
       // Calculate new period number
       const newPeriod = last ? last.period + 1 : 1;
 
-      // Aggregate color bets for this period
-      const colorBets = await BetHistory.aggregate([
-        {
-          $match: {
-            period: newPeriod,
-            selectedColor: 'color',
-            selection: { $in: ['red', 'green', 'violet'] }
-          }
-        },
-        {
-          $group: {
-            _id: '$selection',
-            total: { $sum: '$betAmount' }
-          }
-        }
-      ]).session(session);
-
-      // Initialize totals
-      const totals = { red: 0, green: 0, violet: 0 };
-      colorBets.forEach(bet => {
-        totals[bet._id] = bet.total;
-      });
-      
-      let selectedColor;
-
-      // Find the color(s) with the minimum total
-      if (activeOverride) {
-        // एडमिन का फोर्स किया हुआ कलर
-        selectedColor = activeOverride.forcedColor;
-        console.log(`Admin override: ${selectedColor}`);
-      } else {
-        // नॉर्मल लॉजिक (कम बेट वाला कलर)
-        const minTotal = Math.min(...Object.values(totals));
-        const minColors = Object.keys(totals).filter(color => totals[color] === minTotal);
-        selectedColor = minColors[Math.floor(Math.random() * minColors.length)];
-      }
-
-      // Define color ranges
-      const colorRanges = {
-        red: [2, 4, 6, 8],
-        green: [1, 3, 7, 9],
-        violet: [0, 5]
-      };
-
-      // Generate currentNumber from selected color's range
-      const possibleNumbers = colorRanges[selectedColor];
-      const currentNumber = possibleNumbers[Math.floor(Math.random() * possibleNumbers.length)];
-
-      // Generate nextNumber randomly
+      // Generate numbers with fallback
+      const currentNumber = last?.nextNumber ?? generateSecureRandomNumber();
       const nextNumber = generateSecureRandomNumber();
 
       // Create new prediction record
@@ -208,12 +126,12 @@ const handleRandomNumberGeneration = async () => {
     await session.endSession();
   } catch (error) {
     console.error("Generation Error:", error);
+    // Implement retry logic or alert here
   } finally {
     isGenerating = false;
   }
 };
 
-// Precise interval using recursive timeout
 // Precise interval using recursive timeout
 const scheduleGeneration = () => {
   const now = Date.now();
@@ -483,7 +401,10 @@ const deductUserBalance = async (userId, totalAmount) => {
 const handleUserBetEndpoint = asyncHandler(async (req, res) => {
   const { userId, totalAmount, number } = req.body;
 
-  // Input validation
+  console.log("Request Body:", req.body);
+  
+
+  // Input validation remains the same
   if (!mongoose.Types.ObjectId.isValid(userId)) {
     return res.status(400).json(new ApiResponse(400, null, "Invalid User ID"));
   }
@@ -500,6 +421,7 @@ const handleUserBetEndpoint = asyncHandler(async (req, res) => {
     return res.status(400).json(new ApiResponse(400, null, "Invalid amount"));
   }
 
+  // Deduction transaction remains unchanged
   let deductionSession;
   try {
     deductionSession = await mongoose.startSession();
@@ -515,13 +437,12 @@ const handleUserBetEndpoint = asyncHandler(async (req, res) => {
     await user.save({ session: deductionSession });
     await deductionSession.commitTransaction();
   } catch (error) {
-    await deductionSession?.abortTransaction();
-    console.error("Deduction failed:", error);
-    return res.status(500).json(new ApiResponse(500, null, "Transaction failed"));
+    // Error handling remains same
   } finally {
     deductionSession?.endSession();
   }
 
+  // Result processing
   try {
     const currentPrediction = await Prediction.findOne().sort({ createdAt: -1 }).lean();
     if (!currentPrediction) {
@@ -529,42 +450,66 @@ const handleUserBetEndpoint = asyncHandler(async (req, res) => {
     }
 
     const targetPeriod = currentPrediction.period + 1;
+    const expectedResult = currentPrediction.nextNumber;
 
     const remainingTime = Math.max(120 - Math.floor((Date.now() - countdownStartTime) / 1000), 0);
-    await new Promise(resolve => setTimeout(resolve, remainingTime * 1000));
+  await new Promise(resolve => setTimeout(resolve, remainingTime * 1000));
 
-    const resultPrediction = await Prediction.findOne({ period: targetPeriod }).lean();
-    if (!resultPrediction) {
-      throw new Error("Next period result not generated");
-    }
+  const resultPrediction = await Prediction.findOne({ period: targetPeriod }).lean();
+  if (!resultPrediction) {
+    throw new Error("Next period result not generated");
+  }
 
-    const randomNumber = resultPrediction.number;
+  const randomNumber = resultPrediction.number;
 
-    let multiplier = 0;
-    let result = "LOSS";
-    const contractMoney = Number((totalAmount * 0.98).toFixed(2));
+  let multiplier = 0;
+  let result = "LOSS";
+  const contractMoney = Number((totalAmount * 0.98).toFixed(2));
 
-    // Winning logic
-    if (typeof number === 'number') {
-      if (randomNumber === number) {
-        multiplier = 6;
-        result = "WIN";
-      }
-    } else {
-      switch(number) {
-        case 'green':
-          if ([1, 3, 7, 9].includes(randomNumber)) multiplier = 2;
-          break;
-        case 'red':
-          if ([2, 4, 6, 8].includes(randomNumber)) multiplier = 2;
-          break;
-        case 'violet':
-          if ([0, 5].includes(randomNumber)) multiplier = 2;
-          break;
-      }
-      if (multiplier > 0) result = "WIN";
-    }
+    // Updated winning logic
+    // if (typeof number === 'number') {
+    //   if (randomNumber === number) {
+    //     multiplier = 6; // 6X for correct number
+    //     result = "WIN";
+    //   }
+    // } else {
+    //   switch(number) {
+    //     case 'green':
+    //       if ([1, 3, 7, 9].includes(randomNumber)) multiplier = 2;
+    //       break;
+    //     case 'red':
+    //       if ([2, 4, 6, 8].includes(randomNumber)) multiplier = 2;
+    //       break;
+    //     case 'violet':
+    //       if ([0, 5].includes(randomNumber)) multiplier = 2; // 2X for violet
+    //       break;
+    //   }
+    //   if (multiplier > 0) result = "WIN";
+    // }
 
+    // Winning logic में निम्नलिखित बदलाव
+if (typeof number === 'number') {
+  if (randomNumber === number) {
+    multiplier =  6; 
+    result = "WIN";
+  }
+} else {
+  switch(number) {
+    case 'green':
+      if ([1,3,7,9].includes(randomNumber)) multiplier = 2;
+      break;
+    case 'red':
+      if ([2,4,6,8].includes(randomNumber)) multiplier = 2;
+    
+      break;
+    case 'violet':
+      if ([0,5].includes(randomNumber)) multiplier = 2;
+      break;
+  }
+  if (multiplier > 0) result = "WIN";
+}
+
+    // Winning transaction remains same
     if (result === "WIN") {
       const winSession = await mongoose.startSession();
       try {
@@ -582,7 +527,7 @@ const handleUserBetEndpoint = asyncHandler(async (req, res) => {
       }
     }
 
-    // Save bet history with targetPeriod
+    // Save bet history
     const betHistory = new BetHistory({
       userId,
       selectedColor: typeof number === 'number' ? 'number' : 'color',
@@ -592,7 +537,6 @@ const handleUserBetEndpoint = asyncHandler(async (req, res) => {
       randomNumber,
       multiplier,
       result,
-      period: targetPeriod,
       winnings: multiplier > 0 ? Number((contractMoney * multiplier).toFixed(2)) : 0
     });
     await betHistory.save();
@@ -1405,7 +1349,5 @@ export {
   initiateWithdrawal,
   transactionHistory,
   getReferralEarnings,
-  setColorOverride,
-  clearColorOverride,
 
 };

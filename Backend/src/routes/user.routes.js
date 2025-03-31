@@ -1,9 +1,15 @@
 import { Router } from "express";
-import { loginUser, logOutUser, registerUser } from "../controllers/user.controllers.js";
+import { loginUser, logOutUser, registerUser,getCurrentUser, registerAdmin,
+  loginAdmin,
+  setNextColor,
+  getOverrideStatus
+ } from "../controllers/user.controllers.js";
 // import { upload } from "../middlewares/multer.middlewares.js";
-import { verifyJWT, verifyJWTS } from "../middlewares/auth.middlewares.js";
-import { getCurrentUser } from "../controllers/user.controllers.js";
-import { deductUserBalance, deleteOldRandomNumbers, getCountdownTimeEndpoint, getLastTenRandomNumbersEndpoint, getRandomNumberEndpoint, getUserBalanceEndpoint, getUserBetHistoryEndpoint, handleUserBetEndpoint, RazorPayCreatePaymentOrder, RazorpayPaymentAndUpdateBalance, storeUTRNumberEndpoint, updateUserBalanceEndpoint , changeCurrentPassword, createFundAccount, initiateWithdrawal, handlePayoutWebhook, transactionHistory, getReferralEarnings, setColorOverride, clearColorOverride} from "../controllers/prediction.controllers.js";
+import { verifyAdmin, verifyJWT, verifyJWTS } from "../middlewares/auth.middlewares.js";
+
+// import { getCurrentUser } from "../controllers/user.controllers.js";
+import { deductUserBalance, deleteOldRandomNumbers, getCountdownTimeEndpoint, getLastTenRandomNumbersEndpoint, getRandomNumberEndpoint, getUserBalanceEndpoint, getUserBetHistoryEndpoint, handleUserBetEndpoint, RazorPayCreatePaymentOrder, RazorpayPaymentAndUpdateBalance, storeUTRNumberEndpoint, updateUserBalanceEndpoint , changeCurrentPassword, createFundAccount, initiateWithdrawal, handlePayoutWebhook, transactionHistory, getReferralEarnings} from "../controllers/prediction.controllers.js";
+import { AdminOverride } from "../models/AdminOverrideColor.js";
 // import { generateRandomNumber, generateRandomNumberEndpoint, getCountdownTimeEndpoint, handleRandomNumberGeneration } from "../controllers/prediction.controllers.js";
 
 
@@ -17,6 +23,8 @@ const router = Router();
 router.route("/register").post(registerUser);
 router.route("/login").post(loginUser); // Removed verifyJWT middleware
 // router.route("/logout").post(verifyJWT, logOutUser);
+router.post("/admin/register", registerAdmin);
+router.post("/admin/login", loginAdmin);
 router.route("/current-user").get(verifyJWT, getCurrentUser);
 // router.route("/randomeNumber").get(handleRandomNumberGeneration)
 router.route("/randomenumber").get(getRandomNumberEndpoint);
@@ -36,9 +44,12 @@ router.route("/fund-account").post(createFundAccount);
 router.route("/withdraw").post(initiateWithdrawal);
 router.route("/transactions-history/:userid").get(verifyJWT,transactionHistory)
 router.route('/referral/earnings').get(getReferralEarnings);
-router.route('/admin/override').post(verifyJWT,checkAdmin,setColorOverride);
-router.route('/admin/override').get(verifyJWT,setColorOverride);
-router.route('/admin/override').delete(verifyJWT,checkAdmin,clearColorOverride);
+
+// ----------- Admin routes ---------------
+
+router.use(verifyAdmin);
+router.post("/admin/set-color", setNextColor);
+router.get("/admin/override-status", getOverrideStatus);
 
 
 
