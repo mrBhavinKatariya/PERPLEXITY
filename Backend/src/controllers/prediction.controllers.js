@@ -878,7 +878,7 @@ const createFundAccount = async (req, res) => {
   try {
     const { userId, name, accountNumber, ifscCode, email, phone } = req.body;
 
-    if (!userId || !name || !accountNumber || !ifscCode || !email || !phone) {
+    if (!userId || !name || !accountNumber || !ifscCode ) {
       return res.status(400).json({ success: false, message: "All fields are required" });
     }
 
@@ -888,7 +888,6 @@ const createFundAccount = async (req, res) => {
     const contact = await razorpay.contacts.create({
       name,
       type: "customer",
-      email,
       contact,
     });
 
