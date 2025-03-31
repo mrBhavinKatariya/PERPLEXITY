@@ -3,13 +3,46 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import { useNavigate } from 'react-router-dom'; 
+
 
 export default function AdminDashboard() {
   const { admin, logout } = useAuth();
   const [color, setColor] = useState('red');
   const [status, setStatus] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
+  const navigate = useNavigate(); 
 
   const API_URL = process.env.REACT_APP_API_URL || "https://perplexity-bd2d.onrender.com";
+
+  useEffect(() => {
+   // In AdminDashboard.component.jsx
+// AdminDashboard.component.jsx में fetchCurrentUser को अपडेट करें
+const fetchCurrentUser = async () => {
+    try {
+        const token = localStorage.getItem("adminToken");
+        if (!token) {
+            toast.error("No admin token found!");
+            logout();
+            return;
+        }
+
+        const response = await axios.get(`${API_URL}/api/v1/users/current-admin`, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+            },
+        });
+        
+        setCurrentUser(response.data);
+    } catch (err) {
+        console.error("Error fetching current user:", err.response?.data || err.message);
+        toast.error(err.response?.data?.message || 'Session expired!');
+        // logout(); // Uncomment करें
+    }
+};
+    
+    fetchCurrentUser();
+  }, [API_URL, logout]);
 
 
   useEffect(() => {
@@ -21,10 +54,11 @@ export default function AdminDashboard() {
         toast.error('Status fetch failed');
       }
     };
+    
     fetchStatus();
     const interval = setInterval(fetchStatus, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [API_URL]);
 
   const handleSetColor = async () => {
     try {
@@ -38,14 +72,19 @@ export default function AdminDashboard() {
   return (
     <div className="min-h-screen bg-gray-100 p-8">
       <nav className="bg-white shadow-sm mb-8 p-4 rounded-lg flex justify-between items-center">
-        <h1 className="text-xl font-bold">Admin Dashboard</h1>
-        <button
-          onClick={logout}
-          className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition"
-        >
-          Logout
-        </button>
-      </nav>
+  <div>
+    <h1 className="text-xl font-bold">Admin Dashboard</h1>
+    {currentUser && (
+      <p className="text-sm text-gray-600">Logged in as: {currentUser.username}</p>
+    )}
+  </div>
+  <button
+    onClick={logout}
+    className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 transition"
+  >
+    Logout
+  </button>
+</nav>
 
       <div className="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-md">
         <div className="mb-6">

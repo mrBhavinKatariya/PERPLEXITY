@@ -50,7 +50,7 @@ router.route('/referral/earnings').get(getReferralEarnings);
 // router.use(verifyAdmin);
 router.route("/admin/set-color").post(setNextColor);
 router.route("/admin/override-status").get(getOverrideStatus);
-router.route("/current-admin").get(verifyAdmin, getCurrentUser);
+// router.route("/current-admin").get(verifyAdmin, getCurrentUser);
 
 
 

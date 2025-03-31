@@ -12,8 +12,9 @@
   "dependencies": {
     "@cashfreepayments/cashfree-sdk": "^0.1.7",
     "@heroicons/react": "^2.2.0",
+    "@tailwindcss/forms": "^0.5.10",
     "@tailwindcss/vite": "^4.0.11",
-    "axios": "^1.8.1",
+    "axios": "^1.8.4",
     "build": "^0.1.4",
     "fetch": "^1.1.0",
     "framer-motion": "^12.5.0",
