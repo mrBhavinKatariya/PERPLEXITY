@@ -23,8 +23,8 @@ const router = Router();
 router.route("/register").post(registerUser);
 router.route("/login").post(loginUser); // Removed verifyJWT middleware
 // router.route("/logout").post(verifyJWT, logOutUser);
-router.post("/admin/register", registerAdmin);
-router.post("/admin/login",verifyAdmin,loginAdmin);
+router.route("/admin/register").post(registerAdmin);
+router.route("/admin/login").post(verifyJWTS,loginAdmin);
 router.route("/current-user").get(verifyJWT, getCurrentUser);
 // router.route("/randomeNumber").get(handleRandomNumberGeneration)
 router.route("/randomenumber").get(getRandomNumberEndpoint);
@@ -48,8 +48,8 @@ router.route('/referral/earnings').get(getReferralEarnings);
 // ----------- Admin routes ---------------
 
 router.use(verifyAdmin);
-router.post("/admin/set-color", setNextColor);
-router.get("/admin/override-status", getOverrideStatus);
+router.route("/admin/set-color").post(setNextColor);
+router.route("/admin/override-status").get(getOverrideStatus);
 
 
 
