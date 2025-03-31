@@ -839,26 +839,57 @@ const handlePayoutWebhook = asyncHandler(async (req, res) => {
 
 console.log("Does contacts exist?", razorpay.contacts ? "Yes" : "No");
 
+const axios = require("axios");
+
+const createContact = async (user) => {
+  try {
+    const contactData = {
+      name: user.fullname,
+      email: user.email,
+      contact: user.phoneNo,
+      type: "customer",
+    };
+
+    const response = await axios.post(
+      "https://api.razorpay.com/v1/contacts",
+      contactData,
+      {
+        auth: {
+          username: process.env.RAZORPAY_KEY_ID,
+          password: process.env.RAZORPAY_KEY_SECRET,
+        },
+      }
+    );
+
+    return response.data.id; // Return Contact ID
+  } catch (error) {
+    console.error("Error creating contact:", error.response?.data || error.message);
+    throw new Error("Failed to create contact");
+  }
+};
+
 // Create Fund Account
-const createFundAccount = asyncHandler(async (req, res) => {
+const createFundAccount = async (req, res) => {
   try {
     const { userId, name, accountNumber, ifscCode, email, phone } = req.body;
 
-    console.log("userId:", userId);
-    console.log("name:", name);
-    console.log("accountNumber:", accountNumber);
-    console.log("ifscCode:", ifscCode);
+    if (!userId || !name || !accountNumber || !ifscCode || !email || !phone) {
+      return res.status(400).json({ success: false, message: "All fields are required" });
+    }
 
-    console.log("Razorpay Instance:", razorpay);
+    console.log("Creating contact in Razorpay...");
+
     // Create Razorpay Contact
     const contact = await razorpay.contacts.create({
-      name: name,
+      name,
       type: "customer",
-      email: email,
-      contact: phone,
+      email,
+      contact,
     });
 
     console.log("Contact created:", contact);
+
+    console.log("Creating fund account in Razorpay...");
 
     // Create Fund Account
     const fundAccount = await razorpay.fundAccounts.create({
@@ -874,15 +905,23 @@ const createFundAccount = asyncHandler(async (req, res) => {
     console.log("Fund account created:", fundAccount);
 
     // Save fund account ID to user profile
-    await User.findByIdAndUpdate(userId, {
-      $push: {
-        bankAccounts: {
-          fundAccountId: fundAccount.id,
-          last4: accountNumber.slice(-4),
-          bankName: "Bank Name", // Extract from IFSC if needed
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      {
+        $push: {
+          bankAccounts: {
+            fundAccountId: fundAccount.id,
+            last4: accountNumber.slice(-4),
+            bankName: "Bank Name", // Extract from IFSC if needed
+          },
         },
       },
-    });
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
 
     res.status(200).json({
       success: true,
@@ -890,9 +929,9 @@ const createFundAccount = asyncHandler(async (req, res) => {
     });
   } catch (error) {
     console.error("Fund account error:", error);
-    res.status(500).json({ success: false, message: "Failed to add bank account" });
+    res.status(500).json({ success: false, message: error.message || "Failed to add bank account" });
   }
-});
+};
 
 // const createFundAccount = asyncHandler(async (req, res) => {
 //   try {
