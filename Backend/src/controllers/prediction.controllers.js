@@ -839,7 +839,6 @@ const handlePayoutWebhook = asyncHandler(async (req, res) => {
 
 console.log("Does contacts exist?", razorpay.contacts ? "Yes" : "No");
 
-const axios = require("axios");
 
 const createContact = async (user) => {
   try {
