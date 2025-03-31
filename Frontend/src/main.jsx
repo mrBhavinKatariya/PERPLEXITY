@@ -32,7 +32,7 @@ import PrivacyPolicyPage from "./Component/PrivacyPolicy.component";
 import RefundPolicyPage from "./Component/RefundPolicy.component";
 import TermsOfUse from "./Component/terms.component";
 import ShippingPolicy from "./Component/Shipping.component";
-import AdminOverride from "./Component/Admin.component";
+// import AdminOverride from "./Component/Admin.component";
 // import VideoDetails from "./Component/Showvideo.component";
 // import VideoDetails from "./Component/Showvideo";
 // import Channel from "./Component/channel.component";
@@ -72,7 +72,7 @@ const router = createBrowserRouter(
       <Route path="/refund-policy" element = {<RefundPolicyPage/>} />
       <Route path="/terms" element = {<TermsOfUse/>} />
       <Route path="/shipping-policy" element = {<ShippingPolicy/>} />
-      <Route path="admins" element={<AdminOverride/>} />
+      {/* <Route path="admins" element={<AdminOverride/>} /> */}
 
 
 
