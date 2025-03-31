@@ -1099,14 +1099,14 @@ const changeCurrentPassword = asyncHandler(async(req, res) => {
 
 
 const createWithdrawal = asyncHandler(async (req, res) => {
-  const { amount, account_number, ifsc, name, userId } = req.body;
+  const { amount, accountNumber, ifscCode, name, userId } = req.body;
   console.log("req. body",req.body);
 
   // const userId = userId;
 
   
   // Validate input
-  if (!account_number || !ifsc || !name) {
+  if (!accountNumber || !ifscCode || !name) {
     return res.status(400).json({ message: 'Bank details are required' });
   }
 
@@ -1120,8 +1120,8 @@ const createWithdrawal = asyncHandler(async (req, res) => {
   // Create payout
   try {
     const payout = await razorpay.payouts.create({
-      account_number,
-      ifsc,
+      accountNumber,
+      ifscCode,
       amount: amount * 100, // Convert to paisa
       currency: 'INR',
       mode: 'IMPS',
@@ -1130,8 +1130,8 @@ const createWithdrawal = asyncHandler(async (req, res) => {
         account_type: 'bank_account',
         bank_account: {
           name,
-          ifsc,
-          account_number
+          ifscCode,
+          accountNumber
         }
       }
     });
@@ -1144,7 +1144,7 @@ const createWithdrawal = asyncHandler(async (req, res) => {
     const withdrawal = await Withdrawal.create({
       user: userId,
       amount,
-      bankAccount: { account_number, ifsc, name },
+      bankAccount: { accountNumber, ifscCode, name },
       razorpayPayoutId: payout.id,
       status: 'pending'
     });
