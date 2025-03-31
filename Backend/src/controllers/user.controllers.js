@@ -261,7 +261,7 @@ const registerUser = asyncHandler(async (req, res) => {
 
 // Admin Registration
 const registerAdmin = asyncHandler(async (req, res) => {
-  const { username, password } = req.body;
+  const { username, password,fullname,email,phoneNo } = req.body;
 
   console.log("Admin Registration:", username, password);
   console.log("Admin Registration:", req.body);
