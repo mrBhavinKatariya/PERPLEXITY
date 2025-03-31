@@ -405,6 +405,9 @@ const logOutUser = asyncHandler(async (req, res) => {
 // Current User
 const getCurrentUser = asyncHandler(async (req, res) => {
   const user = await User.findById(req.user._id).select("-password -refreshToken");
+  if (!user) {
+    throw new ApiError(404, "User not found");
+  }
   return res
     .status(200)
     .json(new ApiResponse(200, user, "Current user fetched"));

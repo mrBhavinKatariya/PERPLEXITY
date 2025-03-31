@@ -83,11 +83,17 @@ export const verifyAdmin = asyncHandler(async (req, res, next) => {
 
         req.user = user;
         next();
-    } catch (error) {
-        console.error('JWT Error:', error.message); // Log specific error
+    } // verifyAdmin middleware में expiry को हैंडल करें
+    catch (error) {
+        console.error('JWT Error:', error.message);
         if (error.name === 'TokenExpiredError') {
-            return res.status(401).json({ message: "Token expired" });
+            return res.status(401).json({ 
+                message: "Token expired",
+                expiredAt: error.expiredAt // Optional
+            });
         }
-        res.status(401).json({ message: "Invalid token" });
+        res.status(401).json({ 
+            message: "Invalid token",
+            error: error.message // Debugging के लिए
+        });
     }
-});
