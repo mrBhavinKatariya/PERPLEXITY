@@ -263,6 +263,9 @@ const registerUser = asyncHandler(async (req, res) => {
 const registerAdmin = asyncHandler(async (req, res) => {
   const { username, password } = req.body;
 
+  console.log("Admin Registration:", username, password);
+  console.log("Admin Registration:", req.body);
+  
   if (username !== 'Bhavins' || password !== 'Bhavins@123') {
     throw new ApiErrors(403, "Invalid admin credentials");
   }
