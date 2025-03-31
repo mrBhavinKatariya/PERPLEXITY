@@ -59,32 +59,35 @@ export const verifyJWTS = asyncHandler(async(req, _, next) => {
     
 })
 
-
 export const verifyAdmin = asyncHandler(async (req, res, next) => {
     let token;
     
+    // Extract token from cookies or headers
     if (req.cookies.accessToken) {
-      token = req.cookies.accessToken;
+        token = req.cookies.accessToken;
     } else if (req.headers.authorization?.startsWith('Bearer')) {
-      token = req.headers.authorization.split(' ')[1];
+        token = req.headers.authorization.split(' ')[1];
     }
-  
+
     if (!token) {
-      return res.status(401).json({ message: "Not authorized" });
+        return res.status(401).json({ message: "Not authorized" });
     }
-  
+
     try {
-      const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
-      const user = await User.findById(decoded._id).select('-password');
-      
-      if (!user || user.role !== 'admin') {
-        return res.status(403).json({ message: "Admin access required" });
-      }
-  
-      req.user = user;
-      next();
+        const decoded = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET);
+        const user = await User.findById(decoded._id).select('-password');
+        
+        if (!user || user.role !== 'admin') {
+            return res.status(403).json({ message: "Admin access required" });
+        }
+
+        req.user = user;
+        next();
     } catch (error) {
-      console.error('JWT Error:', error);
-      res.status(401).json({ message: "Invalid token" });
+        console.error('JWT Error:', error.message); // Log specific error
+        if (error.name === 'TokenExpiredError') {
+            return res.status(401).json({ message: "Token expired" });
+        }
+        res.status(401).json({ message: "Invalid token" });
     }
-  });
+});
