@@ -860,12 +860,15 @@ const createContact = async (user) => {
       }
     );
 
+    console.log("Contact created:", response.data);
+    
     return response.data.id; // Return Contact ID
   } catch (error) {
     console.error("Error creating contact:", error.response?.data || error.message);
     throw new Error("Failed to create contact");
   }
 };
+
 
 // Create Fund Account
 const createFundAccount = async (req, res) => {
