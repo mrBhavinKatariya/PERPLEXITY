@@ -272,10 +272,16 @@ const registerAdmin = asyncHandler(async (req, res) => {
 
   const hashedPassword = await bcrypt.hash(password, 10);
   const adminUser = await User.create({
+    
+    fullname,
+  phoneNo,
     username,
+    email,
     password: hashedPassword,
+
     role: 'admin'
   });
+
 
   res.status(201).json(
     new ApiResponse(201, {
