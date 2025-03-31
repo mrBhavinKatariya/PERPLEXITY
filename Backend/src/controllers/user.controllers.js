@@ -270,14 +270,13 @@ const registerAdmin = asyncHandler(async (req, res) => {
     throw new ApiErrors(403, "Invalid admin credentials");
   }
 
-  const hashedPassword = await bcrypt.hash(password, 10);
   const adminUser = await User.create({
     
     fullname,
   phoneNo,
     username,
     email,
-    password: hashedPassword,
+    password,
     role: 'admin'
   });
 
