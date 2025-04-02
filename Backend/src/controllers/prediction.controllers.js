@@ -1254,7 +1254,7 @@ const cashfree = new  Cashfree({
       console.log("Cashfree Object:", cashfree);
 
       
-         const orderResponse = await cashfree.orders.createOrder({
+         const orderResponse = await cashfree.pg.orders.createOrder({
       order_id: orderId,
       order_amount: amount * 100, // Convert to paise
       order_currency: "INR",
