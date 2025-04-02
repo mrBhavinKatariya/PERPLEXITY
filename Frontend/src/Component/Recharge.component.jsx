@@ -22,6 +22,7 @@ const RechargePage = ({ user, onClose }) => {
     script.async = true;
     document.body.appendChild(script);
 
+    
     return () => {
       document.body.removeChild(script);
     };
