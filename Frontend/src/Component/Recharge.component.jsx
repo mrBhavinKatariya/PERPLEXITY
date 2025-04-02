@@ -22,7 +22,6 @@ const RechargePage = ({ user, onClose }) => {
     script.async = true;
     document.body.appendChild(script);
 
-    
     return () => {
       document.body.removeChild(script);
     };
@@ -92,9 +91,19 @@ const RechargePage = ({ user, onClose }) => {
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
+      if (!window.Cashfree) {
+        alert("Cashfree SDK not loaded. Please try again later.");
+        return;
+      }
+
       const cashfree = window.Cashfree({
         mode: import.meta.env.VITE_CASHFREE_MODE || "sandbox"
       });
+
+      if (!cashfree || typeof cashfree.redirect !== "function") {
+        alert("Cashfree SDK initialization failed. Please try again later.");
+        return;
+      }
 
       cashfree.redirect({
         paymentSessionId: data.paymentSessionId,

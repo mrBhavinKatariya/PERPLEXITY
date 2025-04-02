@@ -18,7 +18,6 @@ import { ReferralEarning } from "../models/ReferralEarning.models.js";
 import { Cashfree } from 'cashfree-pg';
 
 
-
 dotenv.config()
 let isGenerating = false;
 let countdownStartTime = Date.now();
@@ -1252,7 +1251,8 @@ const cashfree = new  Cashfree({
       const orderId = `ORDER_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
       
       console.log("orderId", orderId);
-      console.log("cashfree", cashfree);
+      console.log("Cashfree Object:", cashfree);
+
       
          const orderResponse = await cashfree.orders.createOrder({
       order_id: orderId,
@@ -1265,6 +1265,7 @@ const cashfree = new  Cashfree({
       }
     });
   
+console.log("Does createOrder exist?", cashfree.orders?.createOrder ? "Yes" : "No");
       res.status(200).json({
         success: true,
         orderId: orderResponse.order_id,
