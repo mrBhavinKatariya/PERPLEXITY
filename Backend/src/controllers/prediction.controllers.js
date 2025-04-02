@@ -1223,7 +1223,7 @@ const changeCurrentPassword = asyncHandler(async(req, res) => {
 
 
 
-const cashfree =  Cashfree({
+const cashfree = new  Cashfree({
     appId: process.env.CASHEFREE_APP_ID,
     secretKey: process.env.CASHEFREE_SECRET_KEY,
     apiVersion: process.env.CASHEFREE_API_VERSION,
