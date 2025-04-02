@@ -1234,10 +1234,19 @@ const cashfree =  Cashfree({
 
 
   const CashfreeCreatePaymentOrder = asyncHandler(async (req, res) => {
+    console.log("req.body",req.body);
+
     try {
       const { amount, userId } = req.body;
+      const user = await User.findById(userId);
 
-      console.log("req.body",req.body);
+      
+    if (!user) {
+      return res.status(404).json({ 
+        success: false, 
+        message: "User not found" 
+      });
+    }
       
   
       const orderId = `ORDER_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
@@ -1245,14 +1254,16 @@ const cashfree =  Cashfree({
       console.log("orderId", orderId);
       console.log("cashfree", cashfree);
       
-      const orderResponse = await cashfree.orders.createOrder({
-        order_id: orderId,
-        order_amount: amount,
-        order_currency: "INR",
-        customer_details: {
-          customer_id: userId,
-        }
-      });
+         const orderResponse = await cashfree.orders.createOrder({
+      order_id: orderId,
+      order_amount: amount * 100, // Convert to paise
+      order_currency: "INR",
+      customer_details: {
+        customer_id: userId.toString(),
+        customer_phone: user.phoneNo,
+        customer_email: user.email
+      }
+    });
   
       res.status(200).json({
         success: true,
@@ -1261,8 +1272,11 @@ const cashfree =  Cashfree({
         amount: orderResponse.order_amount
       });
     } catch (error) {
-      console.error("Cashfree Error:", error);
-      res.status(500).json({ success: false, message: "Payment initiation failed" });
+      console.error("Cashfree Error:", error.response?.data || error);
+      res.status(500).json({ 
+        success: false, 
+        message: error.response?.data?.message || "Payment initiation failed"
+      });
     }
   });
 
