@@ -1,6 +1,4 @@
-// Prediction.controller.jsx   30-3-25:10:57
-
-
+// Prediction.controller 7:54 PM 27/3/25
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { Prediction } from "../models/storeNumber.models.js";
@@ -17,6 +15,8 @@ import bcrypt from 'bcrypt';
 import { sendEmail } from "../utils/SendEmail.utils.js";
 import { log } from "console";
 import { ReferralEarning } from "../models/ReferralEarning.models.js";
+import { Cashfree } from 'cashfree-pg';
+
 
 
 dotenv.config()
@@ -32,94 +32,75 @@ const generateSecureRandomNumber = () => {
   return crypto.randomInt(0, 10); // Generates a number between 0 and 9
 };
 
-
 const handleRandomNumberGeneration = async () => {
-  if (isGenerating) return;
-  isGenerating = true;
-  
-  try {
-    const session = await mongoose.startSession();
-    await session.withTransaction(async () => {
-      // Get latest prediction with lock
-      const last = await Prediction.findOne()
-        .sort({ period: -1 })
-        .session(session)
-        .select('period nextNumber')
-        .lean();
+  if (!isGenerating) {
+    isGenerating = true;
+    try {
+      const lastRecord = await Prediction.findOne().sort({ createdAt: -1 });
 
-      // Calculate new period number
-      const newPeriod = last ? last.period + 1 : 1;
+      let currentNumber;
+      let nextNumber;
+      if (lastRecord) {
+        // If lastRecord.nextNumber is missing, generate a new random number
+        currentNumber = lastRecord.nextNumber ?? generateSecureRandomNumber();
+        // currentNumber = lastRecord.nextNumber || generateSecureRandomNumber();
 
-      // Generate numbers with fallback
-      const currentNumber = last?.nextNumber ?? generateSecureRandomNumber();
-      const nextNumber = generateSecureRandomNumber();
+        nextNumber = generateSecureRandomNumber();
+      } else {
+        // If no lastRecord exists, generate both numbers
+        currentNumber = generateSecureRandomNumber();
+        nextNumber = generateSecureRandomNumber();
+      }
 
-      // Create new prediction record
-      await Prediction.create([{
+      const period = lastRecord ? lastRecord.period + 1 : 1;
+
+      // Validate currentNumber and result
+      if (typeof currentNumber !== 'number' || isNaN(currentNumber)) {
+        throw new Error('Invalid currentNumber');
+      }
+
+      const newPrediction = new Prediction({
         number: currentNumber,
-        nextNumber,
-        period: newPeriod,
+        nextNumber: nextNumber,
         price: Math.floor(Math.random() * 965440),
-        result: currentNumber,
-        createdAt: new Date()
-      }], { session });
+        period: period,
+        result: currentNumber, // Ensure result is assigned
+      });
 
-      // Update countdown synchronously
-      countdownStartTime = Date.now();
-      
-      console.log(`Generated Period ${newPeriod}:`);
-      console.log(`Current: ${currentNumber}, Next: ${nextNumber}`);
-    });
-    
-    await session.endSession();
-  } catch (error) {
-    console.error("Generation Error:", error);
-    // Implement retry logic or alert here
-  } finally {
-    isGenerating = false;
+      await newPrediction.save();
+
+      console.log("Current Number:", currentNumber);
+      console.log("Next Predicted Number:", nextNumber);
+
+      return currentNumber;
+    } catch (error) {
+      console.error("Error in generation:", error);
+    } finally {
+      isGenerating = false;
+    }
   }
 };
 
-// Precise interval using recursive timeout
-const scheduleGeneration = () => {
-  const now = Date.now();
-  const nextInterval = 120000 - (now - countdownStartTime) % 120000;
-  
-  setTimeout(async () => {
-    await handleRandomNumberGeneration();
-    scheduleGeneration();
-  }, nextInterval);
-};
-
-// Start the cycle
-scheduleGeneration();
-
-
-let countdownCache = {
-  time: 120,
-  lastUpdated: Date.now()
-};
-
-setInterval(() => {
-  countdownCache.time = Math.max(120 - Math.floor((Date.now() - countdownStartTime) / 1000), 0);
-}, 1000);
 
 setInterval(() => {
   handleRandomNumberGeneration();
   countdownStartTime = Date.now(); // 🛠️ FIX: Reset countdown timer every 90s
-}, 120000);
+}, 90000);
 
 // API endpoint to get the countdown time
 const getCountdownTimeEndpoint = asyncHandler(async (req, res) => {
-  const elapsed = Math.floor((Date.now() - countdownStartTime)/1000);
-  const remaining = 120 - (elapsed % 120);
-  return res.status(200).json(
-    new ApiResponse(
-      200,
-      { countdownTime: remaining},
-      "Countdown time fetched successfully"
-    )
-  );
+  const elapsedTime = Math.floor((Date.now() - countdownStartTime) / 1000);
+  const countdownTime = Math.max(90 - elapsedTime, 0);
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(
+        200,
+        { countdownTime },
+        "Countdown time fetched successfully"
+      )
+    );
 });
 
 const deleteOldRandomNumbers = async () => {
@@ -392,51 +373,36 @@ const handleUserBetEndpoint = asyncHandler(async (req, res) => {
 
   // Result processing
   try {
-    const currentPrediction = await Prediction.findOne().sort({ createdAt: -1 }).lean();
-    if (!currentPrediction) {
-      throw new Error("No active prediction found");
+    const remainingTime = Math.max(90 - Math.floor((Date.now() - countdownStartTime) / 1000), 0);
+    await new Promise(resolve => setTimeout(resolve, remainingTime * 1000));
+
+    const latestPrediction = await Prediction.findOne().sort({ createdAt: -1 }).lean();
+    const randomNumber = latestPrediction?.number;
+
+    let multiplier = 0;
+    let result = "LOSS";
+    const contractMoney = Number((totalAmount * 0.98).toFixed(2));
+
+    // Updated winning logic
+    if (typeof number === 'number') {
+      if (randomNumber === number) {
+        multiplier = 5; // 5X for correct number
+        result = "WIN";
+      }
+    } else {
+      switch(number) {
+        case 'green':
+          if ([1, 3, 7, 9].includes(randomNumber)) multiplier = 2;
+          break;
+        case 'red':
+          if ([2, 4, 6, 8].includes(randomNumber)) multiplier = 2;
+          break;
+        case 'violet':
+          if ([0, 5].includes(randomNumber)) multiplier = 2; // 2X for violet
+          break;
+      }
+      if (multiplier > 0) result = "WIN";
     }
-
-    const targetPeriod = currentPrediction.period + 1;
-    const expectedResult = currentPrediction.nextNumber;
-
-    const remainingTime = Math.max(120 - Math.floor((Date.now() - countdownStartTime) / 1000), 0);
-  await new Promise(resolve => setTimeout(resolve, remainingTime * 1000));
-
-  const resultPrediction = await Prediction.findOne({ period: targetPeriod }).lean();
-  if (!resultPrediction) {
-    throw new Error("Next period result not generated");
-  }
-
-  const randomNumber = resultPrediction.number;
-
-  let multiplier = 0;
-  let result = "LOSS";
-  const contractMoney = Number((totalAmount * 0.98).toFixed(2));
-
-  
-
-    // Winning logic में निम्नलिखित बदलाव
-if (typeof number === 'number') {
-  if (randomNumber === number) {
-    multiplier =  6; 
-    result = "WIN";
-  }
-} else {
-  switch(number) {
-    case 'green':
-      if ([1,3,7,9].includes(randomNumber)) multiplier = 2;
-      break;
-    case 'red':
-      if ([2,4,6,8].includes(randomNumber)) multiplier = 2;
-    
-      break;
-    case 'violet':
-      if ([0,5].includes(randomNumber)) multiplier = 2;
-      break;
-  }
-  if (multiplier > 0) result = "WIN";
-}
 
     // Winning transaction remains same
     if (result === "WIN") {
@@ -485,6 +451,165 @@ if (typeof number === 'number') {
     return res.status(500).json(new ApiResponse(500, null, "Processing failed"));
   }
 });
+
+
+
+
+// const handleUserBetEndpoint = asyncHandler(async (req, res) => {
+//   const { userId, totalAmount, number: rawNumber } = req.body;
+
+//   // 1. Input Parsing and Validation
+//   let number = rawNumber;
+//   const parsedNumber = Number(rawNumber);
+//   const validColors = ['green', 'red', 'violet'];
+
+//   // Fix syntax error and add type check
+//   if (!isNaN(parsedNumber)) {
+//     number = parsedNumber;
+//   }
+
+//   // Validate user ID format
+//   if (!mongoose.Types.ObjectId.isValid(userId)) {
+//     return res.status(400).json(
+//       new ApiResponse(400, null, "Invalid User ID format")
+//     );
+//   }
+
+//   // Type validation with proper checks
+//   const isColor = validColors.includes(number);
+//   const isNumber = typeof number === 'number' && Number.isInteger(number) && number >= 0 && number <= 9;
+
+//   if (!isColor && !isNumber) {
+//     return res.status(400).json(
+//       new ApiResponse(400, null, "Invalid selection")
+//     );
+//   }
+
+//   // Validate amount as number and positive value
+//   if (typeof totalAmount !== 'number' || totalAmount <= 0) {
+//     return res.status(400).json(
+//       new ApiResponse(400, null, "Invalid amount")
+//     );
+//   }
+
+//   // 2. Balance Deduction
+//   try {
+//     const deductionResult = await User.updateOne(
+//       { _id: userId, balance: { $gte: totalAmount } },
+//       { $inc: { balance: -totalAmount } }
+//     );
+
+//     if (deductionResult.modifiedCount === 0) {
+//       return res.status(400).json(
+//         new ApiResponse(400, null, "Insufficient balance")
+//       );
+//     }
+//   } catch (error) {
+//     console.error("Deduction failed:", error);
+//     return res.status(500).json(
+//       new ApiResponse(500, null, "Transaction failed")
+//     );
+//   }
+
+//   // 3. Game Result Processing
+//   try {
+//     // Get current game round
+//     const currentGame = await GameRound.findOne()
+//       .sort({ startTime: -1 })
+//       .lean();
+    
+//     if (!currentGame) {
+//       throw new Error("No active game round found");
+//     }
+
+//     // Calculate remaining time accurately
+//     const endTime = currentGame.startTime.getTime() + (90 * 1000);
+//     const remainingTime = Math.max(endTime - Date.now(), 0);
+    
+//     // Wait for game result
+//     await new Promise(resolve => setTimeout(resolve, remainingTime));
+
+//     // Get final game result
+//     const finalResult = await GameRound.findById(currentGame._id)
+//       .select('resultNumber')
+//       .lean();
+
+//     if (!finalResult?.resultNumber) {
+//       throw new Error("Game result not available");
+//     }
+
+//     const randomNumber = finalResult.resultNumber;
+
+//     // 4. Win Calculation
+//     let multiplier = 0;
+//     let result = "LOSS";
+//     const contractMoney = Number((totalAmount * 0.98).toFixed(2));
+
+//     if (isNumber) {
+//       if (randomNumber === number) {
+//         multiplier = [0, 5].includes(number) ? 4.5 : 9;
+//         result = "WIN";
+//       }
+//     } else {
+//       switch(number) {
+//         case 'green':
+//           if ([1, 3, 7, 9].includes(randomNumber)) multiplier = 2;
+//           else if (randomNumber === 5) multiplier = 1.5;
+//           break;
+//         case 'red':
+//           if ([2, 4, 6, 8].includes(randomNumber)) multiplier = 2;
+//           else if (randomNumber === 0) multiplier = 1.5;
+//           break;
+//         case 'violet':
+//           if ([0, 5].includes(randomNumber)) multiplier = 1.5;
+//           break;
+//       }
+//       if (multiplier > 0) result = "WIN";
+//     }
+
+//     // 5. Award Winnings
+//     if (result === "WIN") {
+//       const winnings = Number((contractMoney * multiplier).toFixed(2));
+//       await User.updateOne(
+//         { _id: userId },
+//         { $inc: { balance: winnings } }
+//       );
+//     }
+
+//     // 6. Save Bet History
+//     const betHistory = new BetHistory({
+//       userId,
+//       gameRound: currentGame._id,
+//       selectedType: isNumber ? 'number' : 'color',
+//       selection: number,
+//       betAmount: totalAmount,
+//       contractMoney,
+//       resultNumber: randomNumber,
+//       multiplier,
+//       result,
+//       winnings: multiplier > 0 ? Number((contractMoney * multiplier).toFixed(2)) : 0
+//     });
+    
+//     await betHistory.save();
+
+//     return res.status(200).json(
+//       new ApiResponse(200, {
+//         result: randomNumber,
+//         multiplier,
+//         status: result,
+//         contractMoney,
+//         winnings: contractMoney * multiplier
+//       }, "Bet processed successfully")
+//     );
+
+//   } catch (error) {
+//     console.error("Result processing failed:", error);
+//     return res.status(500).json(
+//       new ApiResponse(500, null, error.message || "Result processing failed")
+//     );
+//   }
+// });
+
 
 
 const getUserBetHistoryEndpoint = asyncHandler(async (req, res) => {
@@ -557,30 +682,77 @@ const razorpay = new Razorpay({
 // });
 
 const RazorPayCreatePaymentOrder = asyncHandler(async (req, res) => {
-  try {
-    const { amount } = req.body;
-    
-    const orderRequest = {
-      order_amount: amount,
-      order_currency: "INR",
-      order_id: `ORDER_${Date.now()}`,
-      customer_details: {
-        customer_id: req.user._id,
-        customer_phone: req.user.phone
-      }
-    };
 
-    const response = await Cashfree.PGCreateOrder("2023-08-01", orderRequest);
+  console.log("req.body",req.body);
+  
+  try {
+    const { amount }  = req.body;
+    
+    if (!amount) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Amount is required" });
+    }
+
+     const user = await User.findById(req.user._id).select("-password -refreshToken");
+
+    // Check authenticated user
+    if (!user) {
+      return res.status(401).json({ success: false, message: "User not found" });
+    }
+
+    // Get current user details
+    const currentUser = await User.findById(req.user._id);
+    if (!currentUser) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+   // RazorPayCreatePaymentOrder function में referral logic के अंदर
+
+    // Create Razorpay order
+   const options = {
+    amount: amount * 100,
+    currency: "INR",
+    receipt: crypto.randomBytes(10).toString("hex"),
+    payment_capture: 1,
+  };
+
+
+  // const razorpayResponse = await razorpay.orders.create(options); 
+  const response = await razorpay.orders.create(options);
+
+
+if (currentUser.referredBy) {
+  const referralAmount = amount * 0.1;
+  
+  // Referrer का बैलेंस अपडेट करें
+  await User.findByIdAndUpdate(
+    currentUser.referredBy,
+    { $inc: { walletBalance: referralAmount } },
+    { new: true }
+  );
+
+
+  // ReferralEarning रिकॉर्ड बनाएं
+  await ReferralEarning.create({
+    referrer: currentUser.referredBy,
+    referredUser: currentUser._id,
+    amount: referralAmount,
+    orderId: response.id // Razorpay ऑर्डर ID
+  });
+}
+
+   
 
     res.status(200).json({
       success: true,
-      orderId: response.order_id,
-      paymentSessionId: response.payment_session_id,
-      amount: response.order_amount
+      orderId: response.id,
+      amount: response.amount,
+      keyId: process.env.RAZORPAY_KEY_ID,
     });
   } catch (error) {
-    console.error("Cashfree Error:", error);
-    res.status(500).json({ success: false, message: "Payment failed" });
+    console.error("Error creating Razorpay order:", error);
+    res.status(500).json({ success: false, message: "Failed to create order" });
   }
 });
 
@@ -616,139 +788,235 @@ const getReferralEarnings = asyncHandler(async (req, res) => {
 // Verify Payment and Update Balance
 const RazorpayPaymentAndUpdateBalance = asyncHandler(async (req, res) => {
   try {
-    const { orderId, paymentId, signature } = req.body;
+    const { razorpayPaymentId, razorpayOrderId, razorpaySignature, amount, userId } = req.body;
 
-    // Cashfree signature verification
-    const generatedSignature = crypto
-      .createHmac('sha256', process.env.CASHEFREE_CLIENT_SECRET)
-      .update(orderId + paymentId)
-      .digest('base64');
+    // Create expected signature
+    const expectedSignature = crypto
+      .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+      .update(`${razorpayOrderId}|${razorpayPaymentId}`)
+      .digest("hex");
 
-    if (generatedSignature !== signature) {
-      return res.status(400).json({ success: false, message: "Invalid signature" });
+    // Validate signature
+    if (expectedSignature !== razorpaySignature) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Invalid signature" });
     }
 
-    // बैलेंस अपडेट करें
+    // If signature is valid, update user balance
     const user = await User.findById(userId);
-    user.balance += amount;
+    if (!user) {
+      return res.status(404).json({ success: false, message: "User not found" });
+    }
+
+    // Convert amount from paise to rupees
+    const amountInRupees = amount / 1 ;
+
+    // Update user balance
+    user.balance += amountInRupees;
+    // user.walletBalance += amountInRupees; ------------------------------------view  comment u.balance----------active this
     await user.save();
 
-    res.status(200).json({ success: true, message: "Payment verified" });
+    // Create transaction record
+    const transaction = new Transaction({
+      userId,
+      amount: amountInRupees,
+      type: "credit",
+      paymentMethod: "Razorpay",
+      status: "completed",
+      transactionId: razorpayPaymentId,
+    });
+    await transaction.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Payment verified and balance updated",
+    });
   } catch (error) {
-    console.error("Cashfree Error:", error);
-    res.status(500).json({ success: false, message: "Verification failed" });
+    console.error("Error verifying payment:", error);
+    res
+      .status(500)
+      .json({ success: false, message: "Payment verification failed" });
   }
 });
 
 // Initiate Withdrawal Request
 const initiateWithdrawal = asyncHandler(async (req, res) => {
   try {
-    const { userId, amount, bankAccount } = req.body;
+    const { userId, amount, fundAccountId } = req.body;
 
-    const transferRequest = {
-      beneId: bankAccount.beneId, // पहले से रजिस्टर बेनिफिशरी ID
-      amount: amount,
-      transferId: `TRANSFER_${Date.now()}`,
-      transferMode: "banktransfer"
-    };
+    // Validate input
+    if (!userId || !amount || !fundAccountId) {
+      return res.status(400).json({ message: "Missing required fields" });
+    }
 
-    const response = await Cashfree.PayoutsTransfer(transferRequest);
+    // Find user and check balance
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
-    // ट्रांजैक्शन रिकॉर्ड बनाएं
+    if (user.balance < amount) {
+      return res.status(400).json({ message: "Insufficient balance" });
+    }
+
+    // Deduct balance immediately
+    user.balance -= amount;
+    await user.save();
+
+    // Create transaction record
     const transaction = new Transaction({
       userId,
       amount,
       type: "withdrawal",
+      paymentMethod: "Razorpay Payout",
       status: "processing",
-      transactionId: response.referenceId
+    });
+    await transaction.save();
+
+    // Create Razorpay payout
+    const payoutOptions = {
+      account_number: process.env.RAZORPAY_KEY_ID, // Merchant's account
+      fund_account_id: fundAccountId,
+      amount: amount * 100, // Convert to paise
+      currency: "INR",
+      mode: "IMPS",
+      purpose: "payout",
+      reference_id: `WITHDRAWAL_${transaction._id}`,
+    };
+
+    const payout = await razorpay.payouts.create(payoutOptions);
+
+    // Update transaction with payout ID
+    transaction.transactionId = payout.id;
+    await transaction.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Withdrawal initiated",
+      payoutId: payout.id,
     });
 
-    await transaction.save();
-    res.status(200).json({ success: true, data: response });
   } catch (error) {
-    console.error("Cashfree Payout Error:", error);
+    console.error("Withdrawal error:", error);
+    
+    // Revert balance deduction on error
+    if (user) {
+      user.balance += amount;
+      await user.save();
+    }
+    
     res.status(500).json({ success: false, message: "Withdrawal failed" });
   }
 });
 
 
 // Razorpay Webhook Handler
-// const handlePayoutWebhook = asyncHandler(async (req, res) => {
-//   const body = req.body;
-//   console.log("req.body",req.body);
+const handlePayoutWebhook = asyncHandler(async (req, res) => {
+  const body = req.body;
+  console.log("req.body",req.body);
   
-//   const signature = req.headers['x-razorpay-signature'];
+  const signature = req.headers['x-razorpay-signature'];
 
-//   // Verify webhook signature
-//   const expectedSignature = crypto
-//     .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
-//     .update(JSON.stringify(body))
-//     .digest('hex');
+  // Verify webhook signature
+  const expectedSignature = crypto
+    .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
+    .update(JSON.stringify(body))
+    .digest('hex');
 
-//   if (signature !== expectedSignature) {
-//     return res.status(400).json({ status: 'error', message: 'Invalid signature' });
-//   }
+  if (signature !== expectedSignature) {
+    return res.status(400).json({ status: 'error', message: 'Invalid signature' });
+  }
 
-//   const event = body.event;
-//   const payoutId = body.payload.payout.entity.id;
+  const event = body.event;
+  const payoutId = body.payload.payout.entity.id;
 
-//   try {
-//     // Find associated transaction
-//     const transaction = await Transaction.findOne({ transactionId: payoutId });
-//     if (!transaction) {
-//       return res.status(404).json({ status: 'error', message: 'Transaction not found' });
-//     }
+  try {
+    // Find associated transaction
+    const transaction = await Transaction.findOne({ transactionId: payoutId });
+    if (!transaction) {
+      return res.status(404).json({ status: 'error', message: 'Transaction not found' });
+    }
 
-//     // Handle payout success
-//     if (event === 'payout.processed') {
-//       transaction.status = 'completed';
-//       await transaction.save();
-//     }
-//     // Handle payout failure
-//     else if (event === 'payout.failed') {
-//       transaction.status = 'failed';
-//       await transaction.save();
+    // Handle payout success
+    if (event === 'payout.processed') {
+      transaction.status = 'completed';
+      await transaction.save();
+    }
+    // Handle payout failure
+    else if (event === 'payout.failed') {
+      transaction.status = 'failed';
+      await transaction.save();
 
-//       // Refund user balance
-//       const user = await User.findById(transaction.userId);
-//       if (user) {
-//         user.balance += transaction.amount;
-//         await user.save();
-//       }
-//     }
+      // Refund user balance
+      const user = await User.findById(transaction.userId);
+      if (user) {
+        user.balance += transaction.amount;
+        await user.save();
+      }
+    }
 
-//     res.status(200).json({ status: 'success' });
-//   } catch (error) {
-//     console.error("Webhook error:", error);
-//     res.status(500).json({ status: 'error', message: 'Internal server error' });
-//   }
-// });
+    res.status(200).json({ status: 'success' });
+  } catch (error) {
+    console.error("Webhook error:", error);
+    res.status(500).json({ status: 'error', message: 'Internal server error' });
+  }
+});
 
-// console.log("Does contacts exist?", razorpay.contacts ? "Yes" : "No");
+console.log("Does contacts exist?", razorpay.contacts ? "Yes" : "No");
 
 // Create Fund Account
 const createFundAccount = asyncHandler(async (req, res) => {
   try {
-    const { userId, accountNumber, ifsc, name } = req.body;
+    const { userId, name, accountNumber, ifscCode, email, phone } = req.body;
 
-    const beneResponse = await Cashfree.AddBeneficiary({
-      beneId: `BENE_${userId}_${Date.now()}`,
-      name,
-      email: req.user.email,
-      phone: req.user.phone,
-      bankAccount: accountNumber,
-      ifsc,
-      address: "NA"
+    console.log("userId:", userId);
+    console.log("name:", name);
+    console.log("accountNumber:", accountNumber);
+    console.log("ifscCode:", ifscCode);
+
+    console.log("Razorpay Instance:", razorpay);
+    // Create Razorpay Contact
+    const contact = await razorpay.contacts.create({
+      name: name,
+      type: "customer",
+      email: email,
+      contact: phone,
     });
 
+    console.log("Contact created:", contact);
+
+    // Create Fund Account
+    const fundAccount = await razorpay.fundAccounts.create({
+      contact_id: contact.id,
+      account_type: "bank_account",
+      bank_account: {
+        name,
+        account_number: accountNumber,
+        ifsc: ifscCode,
+      },
+    });
+
+    console.log("Fund account created:", fundAccount);
+
+    // Save fund account ID to user profile
     await User.findByIdAndUpdate(userId, {
-      $push: { bankAccounts: beneResponse.data }
+      $push: {
+        bankAccounts: {
+          fundAccountId: fundAccount.id,
+          last4: accountNumber.slice(-4),
+          bankName: "Bank Name", // Extract from IFSC if needed
+        },
+      },
     });
 
-    res.status(200).json({ success: true, beneId: beneResponse.beneId });
+    res.status(200).json({
+      success: true,
+      fundAccountId: fundAccount.id,
+    });
   } catch (error) {
-    console.error("Beneficiary Error:", error);
-    res.status(500).json({ success: false, message: "Registration failed" });
+    console.error("Fund account error:", error);
+    res.status(500).json({ success: false, message: "Failed to add bank account" });
   }
 });
 
@@ -955,104 +1223,341 @@ const changeCurrentPassword = asyncHandler(async(req, res) => {
 
 
 
-const createWithdrawal = asyncHandler(async (req, res) => {
-  const { amount, accountNumber, ifscCode, name, userId } = req.body;
-  console.log("req. body",req.body);
+const cashfree = new Cashfree({
+    appId: process.env.CASHEFREE_APP_ID,
+    secretKey: process.env.CASHEFREE_SECRET_KEY,
+    apiVersion: process.env.CASHEFREE_API_VERSION,
+    environment: process.env.NODE_ENV === 'production' 
+    ? 'PRODUCTION' 
+    : 'SANDBOX'
+  });
 
-  // const userId = userId;
 
+  const CashfreeCreatePaymentOrder = asyncHandler(async (req, res) => {
+    try {
+      const { amount, userId } = req.body;
   
-  // Validate input
-  if (!accountNumber || !ifscCode || !name) {
-    return res.status(400).json({ message: 'Bank details are required' });
-  }
-
-  const user = await User.findById(userId);
-  
-  // Check sufficient balance
-  if (user.balance < amount) {
-    return res.status(400).json({ message: 'Insufficient balance' });
-  }
-
-  // Create payout
-  try {
-    const payout = await razorpay.payouts.create({
-      accountNumber,
-      ifscCode,
-      amount: amount * 100, // Convert to paisa
-      currency: 'INR',
-      mode: 'IMPS',
-      purpose: 'payout',
-      fund_account: {
-        account_type: 'bank_account',
-        bank_account: {
-          name,
-          ifscCode,
-          accountNumber
+      const orderId = `ORDER_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+      
+      const orderResponse = await cashfree.orders.createOrder({
+        order_id: orderId,
+        order_amount: amount,
+        order_currency: "INR",
+        customer_details: {
+          customer_id: userId,
         }
+      });
+  
+      res.status(200).json({
+        success: true,
+        orderId: orderResponse.order_id,
+        paymentSessionId: orderResponse.payment_session_id,
+        amount: orderResponse.order_amount
+      });
+    } catch (error) {
+      console.error("Cashfree Error:", error);
+      res.status(500).json({ success: false, message: "Payment initiation failed" });
+    }
+  });
+
+
+  const CashfreePaymentVerification = asyncHandler(async (req, res) => {
+    try {
+      const { orderId, paymentSignature, userId } = req.body;
+  
+      // 1. Verify signature using Cashfree's method
+      const generatedSignature = crypto
+        .createHmac('sha256', process.env.CASHEFREE_SECRET_KEY)
+        .update(`${orderId}${req.body.status}`)
+        .digest('base64');
+  
+      if (generatedSignature !== paymentSignature) {
+        return res.status(400).json({ 
+          success: false, 
+          message: "Invalid transaction signature" 
+        });
       }
-    });
+  
+      // 2. Fetch order details from Cashfree
+      const orderDetails = await cashfree.orders.getPayments({
+        orderId: orderId
+      });
+  
+      const payment = orderDetails.payments[0];
+      if (!payment || payment.payment_status !== 'SUCCESS') {
+        return res.status(400).json({
+          success: false,
+          message: "Payment not successful"
+        });
+      }
+  
+      // 3. Get actual paid amount
+      const amount = payment.payment_amount / 100; // Convert to rupees
+  
+      // 4. Update user balance
+      const user = await User.findById(userId);
+      if (!user) {
+        return res.status(404).json({ 
+          success: false, 
+          message: "User not found" 
+        });
+      }
+  
+      // 5. Update balance and handle referral
+      user.balance += amount;
+      await user.save();
+  
+      // 6. Create transaction record
+      const transaction = new Transaction({
+        userId,
+        amount: amount,
+        type: "credit",
+        paymentMethod: payment.payment_method,
+        status: "completed",
+        transactionId: payment.cf_payment_id
+      });
+      await transaction.save();
+  
+      // 7. Handle referral earnings (10% of deposit)
+      if (user.referredBy) {
+        const referralAmount = amount * 0.1;
+        await User.findByIdAndUpdate(
+          user.referredBy,
+          { $inc: { walletBalance: referralAmount } },
+          { new: true }
+        );
+  
+        await ReferralEarning.create({
+          referrer: user.referredBy,
+          referredUser: user._id,
+          amount: referralAmount,
+          orderId: orderId
+        });
+      }
+  
+      res.status(200).json({
+        success: true,
+        message: "Payment verified and balance updated",
+        amountAdded: amount,
+        newBalance: user.balance
+      });
+  
+    } catch (error) {
+      console.error("Verification Error:", error);
+      
+      // Specific error handling
+      let errorMessage = "Payment verification failed";
+      if (error.response && error.response.data) {
+        errorMessage = error.response.data.message || errorMessage;
+      }
+  
+      res.status(500).json({ 
+        success: false, 
+        message: errorMessage,
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  });
 
-    // Deduct user balance
-    user.balance -= amount;
-    await user.save();
 
-    // Create withdrawal record
-    const withdrawal = await Withdrawal.create({
-      user: userId,
-      amount,
-      bankAccount: { accountNumber, ifscCode, name },
-      razorpayPayoutId: payout.id,
-      status: 'pending'
-    });
+  const initiateCashfreePayout = asyncHandler(async (req, res) => {
+    try {
+      const { userId, amount, bankAccount } = req.body;
+  
+      const transferId = `TRANSFER_${Date.now()}`;
+      
+      const payoutResponse = await cashfree.payouts.requestTransfer({
+        beneId: bankAccount.beneId, // Beneficiary ID
+        amount: amount,
+        transferId: transferId,
+        transferMode: "IMPS"
+      });
+  
+      // Transaction record update
+      const transaction = new Transaction({
+        userId,
+        amount,
+        type: "withdrawal",
+        status: payoutResponse.status,
+        transactionId: transferId
+      });
+      await transaction.save();
+  
+      res.status(200).json({
+        success: true,
+        message: "Payout initiated",
+        transferId: transferId
+      });
+    } catch (error) {
+      console.error("Payout Error:", error);
+      res.status(500).json({ success: false, message: "Payout failed" });
+    }
+  });
 
-    res.status(201).json(withdrawal);
-  } catch (error) {
-    console.error('Razorpay Payout Error:', error);
-    res.status(400).json({
-      message: error.error.description || 'Withdrawal failed'
-    });
+  const handleCashfreeWebhook = asyncHandler(async (req, res) => {
+    const signature = req.headers['x-cf-signature'];
+    const rawBody = JSON.stringify(req.body);
+  
+    // 1. Verify webhook signature
+    const expectedSignature = crypto
+      .createHmac('sha256', process.env.CASHEFREE_SECRET_KEY)
+      .update(rawBody)
+      .digest('base64');
+  
+    if (signature !== expectedSignature) {
+      console.error('Invalid webhook signature');
+      return res.status(401).json({ 
+        success: false, 
+        message: "Invalid signature" 
+      });
+    }
+  
+    // 2. Process webhook events
+    try {
+      const { eventType, data } = req.body;
+      const session = await mongoose.startSession();
+      
+      await session.withTransaction(async () => {
+        switch(eventType) {
+          // Payment Success Events
+          case 'PAYMENT_SUCCESS':
+            await processPaymentSuccess(data, session);
+            break;
+  
+          // Payout Success
+          case 'TRANSFER_SUCCESS':
+            await processTransferSuccess(data, session);
+            break;
+  
+          // Payout Failure
+          case 'TRANSFER_FAILED':
+            await processTransferFailed(data, session);
+            break;
+  
+          // Payment Failure
+          case 'PAYMENT_FAILED':
+            await processPaymentFailed(data, session);
+            break;
+  
+          default:
+            console.warn(`Unhandled event type: ${eventType}`);
+        }
+      });
+  
+      session.endSession();
+      res.status(200).json({ success: true });
+  
+    } catch (error) {
+      console.error('Webhook processing error:', error);
+      res.status(500).json({ 
+        success: false,
+        message: 'Webhook processing failed',
+        error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      });
+    }
+  });
+  
+  // Helper functions
+  async function processPaymentSuccess(data, session) {
+    const { orderId, payment } = data;
+    
+    // Update transaction record
+    const transaction = await Transaction.findOneAndUpdate(
+      { transactionId: payment.cf_payment_id },
+      { 
+        status: 'completed',
+        metadata: payment
+      },
+      { session, new: true }
+    );
+  
+    if (!transaction) {
+      throw new Error(`Transaction not found: ${payment.cf_payment_id}`);
+    }
+  
+    // Update user balance
+    await User.findByIdAndUpdate(
+      transaction.userId,
+      { $inc: { balance: transaction.amount } },
+      { session }
+    );
+  
+    // Handle referral bonus if new user
+    if (transaction.metadata?.is_initial_payment) {
+      await handleReferralBonus(transaction.userId, transaction.amount, session);
+    }
   }
-});
-
-// Webhook handler for payout status updates
-const handlePayoutWebhook = asyncHandler(async (req, res) => {
-  const signature = req.headers['x-razorpay-signature'];
-  const body = req.body;
-
-  // Verify webhook signature
-  const isValid = razorpay.validateWebhookSignature(
-    JSON.stringify(body),
-    signature,
-    process.env.RAZORPAY_WEBHOOK_SECRET
-  );
-
-  if (!isValid) {
-    return res.status(400).json({ message: 'Invalid signature' });
-  }
-
-  // Handle payout event
-  if (body.event === 'payout.processed') {
-    await Withdrawal.findOneAndUpdate(
-      { razorpayPayoutId: body.payload.payout.id },
-      { status: 'processed' }
+  
+  async function processTransferSuccess(data, session) {
+    const { transferId } = data;
+    
+    await Transaction.findOneAndUpdate(
+      { transactionId: transferId },
+      { 
+        status: 'completed',
+        processedAt: new Date()
+      },
+      { session }
     );
   }
-  else if (body.event === 'payout.failed') {
-    await Withdrawal.findOneAndUpdate(
-      { razorpayPayoutId: body.payload.payout.id },
-      { status: 'failed' }
+  
+  async function processTransferFailed(data, session) {
+    const { transferId, reason } = data;
+    
+    const transaction = await Transaction.findOneAndUpdate(
+      { transactionId: transferId },
+      { 
+        status: 'failed',
+        failureReason: reason
+      },
+      { session, new: true }
     );
-
-    // Refund user balance if payout failed
-    const withdrawal = await Withdrawal.findOne({ razorpayPayoutId: body.payload.payout.id });
-    await User.findByIdAndUpdate(withdrawal.user, {
-      $inc: { balance: withdrawal.amount }
-    });
+  
+    // Refund user balance
+    if (transaction) {
+      await User.findByIdAndUpdate(
+        transaction.userId,
+        { $inc: { balance: transaction.amount } },
+        { session }
+      );
+    }
+  }
+  
+  async function processPaymentFailed(data, session) {
+    const { orderId, payment } = data;
+    
+    await Transaction.findOneAndUpdate(
+      { transactionId: payment.cf_payment_id },
+      { 
+        status: 'failed',
+        failureReason: payment.error_description
+      },
+      { session }
+    );
+  }
+  
+  async function handleReferralBonus(userId, amount, session) {
+    const user = await User.findById(userId).session(session);
+    if (!user?.referredBy) return;
+  
+    const referralAmount = amount * 0.1; // 10% referral bonus
+    const [_, referralEarning] = await Promise.all([
+      User.findByIdAndUpdate(
+        user.referredBy,
+        { $inc: { walletBalance: referralAmount } },
+        { session }
+      ),
+      ReferralEarning.create([{
+        referrer: user.referredBy,
+        referredUser: userId,
+        amount: referralAmount,
+        orderId: `REF_${Date.now()}`
+      }], { session })
+    ]);
+  
+    return referralEarning;
   }
 
-  res.status(200).json({ success: true });
-});
 
 
 
@@ -1075,6 +1580,9 @@ export {
   initiateWithdrawal,
   transactionHistory,
   getReferralEarnings,
-  createWithdrawal
+  handleCashfreeWebhook,
+  initiateCashfreePayout,
+  CashfreePaymentVerification,
+  CashfreeCreatePaymentOrder,
 
 };
