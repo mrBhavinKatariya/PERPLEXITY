@@ -1243,6 +1243,7 @@ const cashfree = new Cashfree({
       const orderId = `ORDER_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
       
       console.log("orderId", orderId);
+      console.log("cashfree", cashfree);
       
       const orderResponse = await cashfree.orders.createOrder({
         order_id: orderId,
