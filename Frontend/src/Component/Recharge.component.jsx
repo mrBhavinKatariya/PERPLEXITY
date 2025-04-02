@@ -1,28 +1,27 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
-import Razorpay from "razorpay";
 
 const RechargePage = ({ user, onClose }) => {
   const [amount, setAmount] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
   const predefinedAmounts = [100, 300, 500, 1000, 2000, 5000, 10000, 15000, 20000];
   const [error, setError] = useState('');
-  const [phoneNo, setPhoneNo] = useState(user.phoneNo  || "");
-  const [email, setEmail] = useState(user.email);
+  const [phoneNo, setPhoneNo] = useState(user.phoneNo || "");
+  const [email, setEmail] = useState(user.email || "");
   const [userId, setUserId] = useState("");
   const [name, setName] = useState("");
   const [userName, setUserName] = useState("");
   const [countdown, setCountdown] = useState(900);
 
-  const API_URL = import.meta.env.REACT_APP_API_URL || "https://perplexity-bd2d.onrender.com";
+  const API_URL = import.meta.env.VITE_API_URL || "https://perplexity-bd2d.onrender.com";
 
   useEffect(() => {
-    // Load Razorpay script dynamically
+    // Load Cashfree SDK
     const script = document.createElement('script');
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.src = "https://sdk.cashfree.com/js/ui/2.0.0/cashfree.sandbox.js";
     script.async = true;
     document.body.appendChild(script);
-    
+
     return () => {
       document.body.removeChild(script);
     };
@@ -32,54 +31,34 @@ const RechargePage = ({ user, onClose }) => {
     const fetchUser = async () => {
       try {
         const token = localStorage.getItem("token");
-        if (!token) {
-          throw new Error("No token found");
-        }
+        if (!token) throw new Error("No token found");
 
         const response = await axios.get(
           `${API_URL}/api/v1/users/current-user`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
+          { headers: { Authorization: `Bearer ${token}` } }
         );
 
-        console.log("Current user:", response.data);
-        setUserId(response.data.data._id);
-        setUserName(response.data.data.username);
-        setPhoneNo(response.data.data.phoneNo);
-        setName(response.data.data.username);
+        const userData = response.data.data;
+        setUserId(userData._id);
+        setUserName(userData.username);
+        setPhoneNo(userData.phoneNo);
+        setName(userData.username);
       } catch (err) {
-        console.error("Error fetching current user:", err);
+        console.error("Error fetching user:", err);
       }
     };
 
     fetchUser();
-  }, []);
+  }, [API_URL]);
 
   useEffect(() => {
     if (showPopup) {
       const interval = setInterval(() => {
-        setCountdown((prev) => {
-          if (prev <= 1) {
-            setShowPopup(false);
-            clearInterval(interval);
-            return 900;
-          }
-          return prev - 1;
-        });
+        setCountdown(prev => prev <= 1 ? (setShowPopup(false), 900) : prev - 1);
       }, 1000);
-
       return () => clearInterval(interval);
     }
   }, [showPopup]);
-
-  const CloseButton = () => (
-    <button style={styles.closeButton} onClick={onClose}>
-      ×
-    </button>
-  );
 
   const formatTimer = (seconds) => {
     const mins = Math.floor(seconds / 60);
@@ -93,87 +72,71 @@ const RechargePage = ({ user, onClose }) => {
   };
 
   const handleProceedToPayment = () => {
-    if (amount <= 0 ||  amount <= 0) {
-      setError("Minimum amount is 100");
+    if (!amount || amount < 100) {
+      setError("Minimum amount is ₹100");
       return;
     }
-    if (amount > 0) {
-      setCountdown(900);
-      setShowPopup(true);
-    }
+    setCountdown(900);
+    setShowPopup(true);
   };
 
-  const handleRazorpayPayment = async () => {
+  const handleCashfreePayment = async () => {
     try {
       const token = localStorage.getItem("token");
-      if (!token) {
-        alert("Please login to continue");
-        return;
-      }
-  
-      const authConfig = {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      };
-  
-      const response = await axios.post(
-        `${API_URL}/api/v1/users/create-razorpay-order`,
-        { amount: amount },
-        authConfig
+      if (!token) return alert("Please login to continue");
+
+      const { data } = await axios.post(
+        `${API_URL}/api/v1/users/cashfree/create-order`,
+        { amount, customerName: name, customerEmail: email, customerPhone: phoneNo, userId },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-  
-      const options = {
-        key: response.data.keyId,
-        amount: response.data.amount,
-        currency: "INR",
-        order_id: response.data.orderId,
-        name: "Your Company Name",
-        description: "Wallet Recharge",
-        prefill: {
-          name: name,
-          email: email,
-          contact: phoneNo,
-        },
-        handler: async (response) => {
-          try {
-            const verificationResponse = await axios.post(
-              `${API_URL}/api/v1/users/verify-razorpay-payment`,
-              {
-                razorpayPaymentId: response.razorpay_payment_id,
-                razorpayOrderId: response.razorpay_order_id,
-                razorpaySignature: response.razorpay_signature,
-                amount: amount * 100,
-                userId: userId,
-              },
-              authConfig
-            );
-  
-            if (verificationResponse.data.success) {
-              alert("Payment successful!");
-              window.location.reload();
-            }
-          } catch (error) {
-            console.error("Payment verification failed:", error);
-            alert("Payment verification failed");
-          }
-        },
-        theme: {
-          color: "#F37254",
-        },
-      };
-  
-      const rzp = new window.Razorpay(options);
-      rzp.open();
+
+      const cashfree = window.Cashfree({
+        mode: import.meta.env.VITE_CASHFREE_MODE || "sandbox"
+      });
+
+      cashfree.redirect({
+        paymentSessionId: data.paymentSessionId,
+        redirectTarget: "_modal"
+      });
+
+      cashfree.trackPaymentStatus(({ status, reason, orderId }) => {
+        if (status === "SUCCESS") {
+          verifyCashfreePayment(orderId);
+        } else {
+          alert(`Payment failed: ${reason || "Unknown error"}`);
+        }
+      });
+
     } catch (error) {
-      console.error("Razorpay payment failed:", error);
+      console.error("Payment error:", error);
       alert(`Payment failed: ${error.response?.data?.message || error.message}`);
+    } finally {
+      setShowPopup(false);
     }
   };
 
+  const verifyCashfreePayment = async (orderId) => {
+    try {
+      const token = localStorage.getItem("token");
+      const { data } = await axios.post(
+        `${API_URL}/api/v1/users/cashfree/verify-payment`,
+        { orderId, userId },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
 
-        // Only Razorpay payment method
-        const paymentMethods = ["Pay Now"];
+      if (data.success) {
+        alert("Payment successful!");
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error("Verification error:", error);
+      alert("Payment verification failed");
+    }
+  };
+
+  const paymentMethods = ["Pay Now"];
+
   return (
     <div style={styles.container}>
       {!showPopup ? (
@@ -183,12 +146,12 @@ const RechargePage = ({ user, onClose }) => {
           </button>
           <h2 style={styles.heading}>Recharge Wallet</h2>
           <div style={styles.amountGrid}>
-            {predefinedAmounts.map((amt) => (
+            {predefinedAmounts.map(amt => (
               <button
                 key={amt}
                 style={{
                   ...styles.amountButton,
-                  ...(amount == amt && styles.selectedAmount),
+                  ...(amount === amt && styles.selectedAmount),
                 }}
                 onClick={() => handleAmountSelect(amt)}
               >
@@ -202,13 +165,10 @@ const RechargePage = ({ user, onClose }) => {
             style={styles.customInput}
             value={amount || ''}
             onChange={(e) => {
-              const value = parseFloat(e.target.value);
-              if (!isNaN(value)) {
-                setAmount(value);
-              } else {
-                setAmount(null);
-              }
+              const value = parseInt(e.target.value);
+              setAmount(isNaN(value) ? null : Math.max(value, 0));
             }}
+            min="100"
           />
           {error && <div style={styles.errorMessage}>{error}</div>}
           <button style={styles.rechargeButton} onClick={handleProceedToPayment}>
@@ -233,7 +193,7 @@ const RechargePage = ({ user, onClose }) => {
                 <input
                   style={styles.inputField}
                   value={phoneNo}
-                  onChange={(e) => setPhoneNo(e.target.value)}
+                  onChange={(e) => setPhoneNo(e.target.value.replace(/\D/g, ''))}
                   placeholder="Phone"
                   type="tel"
                 />
@@ -247,16 +207,11 @@ const RechargePage = ({ user, onClose }) => {
                 <p style={styles.amountConfirm}>Amount: ₹{amount}</p>
               </div>
               <div style={styles.paymentMethods}>
-                {paymentMethods.map((method) => (
+                {paymentMethods.map(method => (
                   <button
                     key={method}
                     style={styles.methodButton}
-                    onClick={() => {
-                      if (method === "Pay Now") {
-                        handleRazorpayPayment();
-                        setShowPopup(false);
-                      }
-                    }}
+                    onClick={() => method === "Pay Now" && handleCashfreePayment()}
                   >
                     {method}
                   </button>
@@ -264,17 +219,12 @@ const RechargePage = ({ user, onClose }) => {
               </div>
             </div>
             <div style={styles.popupFooter}>
-              <div style={styles.popupActions}>
-                <button
-                  style={styles.cancelButton}
-                  onClick={() => {
-                    setShowPopup(false);
-                    setCountdown(900);
-                  }}
-                >
-                  Cancel
-                </button>
-              </div>
+              <button
+                style={styles.cancelButton}
+                onClick={() => setShowPopup(false)}
+              >
+                Cancel
+              </button>
             </div>
           </div>
         </div>
@@ -396,20 +346,6 @@ const styles = {
     overflowY: "auto",
     paddingRight: "10px",
     maxHeight: "70vh",
-    "&::-webkit-scrollbar": {
-      width: "6px",
-    },
-    "&::-webkit-scrollbar-track": {
-      background: "#f1f1f1",
-      borderRadius: "10px",
-    },
-    "&::-webkit-scrollbar-thumb": {
-      background: "#888",
-      borderRadius: "10px",
-    },
-    "&::-webkit-scrollbar-thumb:hover": {
-      background: "#555",
-    },
   },
   methodButton: {
     width: "100%",

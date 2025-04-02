@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { loginUser, logOutUser, registerUser,getCurrentUser
+import { loginUser, logOutUser, registerUser,getCurrentUser, CashfreeCreatePaymentOrder, CashfreePaymentVerification, initiateCashfreePayout, handleCashfreeWebhook
   
  } from "../controllers/user.controllers.js";
 // import { upload } from "../middlewares/multer.middlewares.js";
@@ -36,6 +36,23 @@ router.route("/withdraw").post(initiateWithdrawal);
 router.route("/transactions-history/:userid").get(verifyJWT,transactionHistory)
 router.route('/referral/earnings').get(getReferralEarnings);
 router.route("/witd").post(createWithdrawal)
+
+// router.js में निम्नलिखित रूट्स ऐड करें
+
+// पेमेंट संबंधित रूट्स
+router.route("/cashfree/create-order")
+  .post(verifyJWT, CashfreeCreatePaymentOrder);
+
+router.route("/cashfree/verify-payment")
+  .post(verifyJWT, CashfreePaymentVerification);
+
+// पेआउट रूट्स  
+router.route("/cashfree/initiate-payout")
+  .post(verifyJWT, initiateCashfreePayout);
+
+// वेबहुक हैंडलिंग
+router.route("/cashfree/webhook")
+  .post(handleCashfreeWebhook);
 
 
 
