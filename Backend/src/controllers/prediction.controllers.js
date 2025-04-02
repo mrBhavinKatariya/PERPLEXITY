@@ -1265,7 +1265,7 @@ const cashfree = new  Cashfree({
       }
     });
   
-console.log("Does createOrder exist?", cashfree.orders?.createOrder ? "Yes" : "No");
+console.log("Does createOrder exist?", cashfree.pg.orders?.createOrder ? "Yes" : "No");
       res.status(200).json({
         success: true,
         orderId: orderResponse.order_id,
