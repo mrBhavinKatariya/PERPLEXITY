@@ -35,7 +35,6 @@ router.route("/fund-account").post(createFundAccount);
 router.route("/withdraw").post(initiateWithdrawal);
 router.route("/transactions-history/:userid").get(verifyJWT,transactionHistory)
 router.route('/referral/earnings').get(getReferralEarnings);
-// router.route("/witd").post(createWithdrawal)
 
 // router.js में निम्नलिखित रूट्स ऐड करें
 

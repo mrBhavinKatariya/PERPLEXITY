@@ -1236,8 +1236,13 @@ const cashfree = new Cashfree({
   const CashfreeCreatePaymentOrder = asyncHandler(async (req, res) => {
     try {
       const { amount, userId } = req.body;
+
+      console.log("req.body",req.body);
+      
   
       const orderId = `ORDER_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
+      
+      console.log("orderId", orderId);
       
       const orderResponse = await cashfree.orders.createOrder({
         order_id: orderId,
