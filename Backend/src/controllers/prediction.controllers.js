@@ -1231,6 +1231,7 @@ const cashfree = new  Cashfree({
     : 'SANDBOX'
   });
 
+  console.log("Orders module exists?", cashfree.orders ? "Yes" : "No");
 
   const CashfreeCreatePaymentOrder = asyncHandler(async (req, res) => {
     console.log("req.body",req.body);
@@ -1261,7 +1262,7 @@ const cashfree = new  Cashfree({
       customer_details: {
         customer_id: userId.toString(),
         customer_phone: user.phoneNo,
-        customer_email: user.email
+        customer_email: user.email 
       }
     });
   
