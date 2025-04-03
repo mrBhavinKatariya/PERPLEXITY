@@ -970,12 +970,10 @@ const createFundAccount = asyncHandler(async (req, res) => {
   try {
     const { userId, name, accountNumber, ifscCode, email, phone } = req.body;
 
-    console.log("Razorpay SDK Loaded:", !!razorpay);
-    console.log("Razorpay Key ID:", process.env.RAZORPAY_KEY_ID);
-    console.log("Razorpay Key Secret:", process.env.RAZORPAY_KEY_SECRET);
-    console.log("Razorpay fundAccount exists?", razorpay.fundAccount ? "Yes" : "No");       
-    console.log("Razorpay contacts exists?", razorpay.contacts ? "Yes" : "No");    
-    console.log("Razorpay contact exists?", razorpay.contact ? "Yes" : "No");    
+    console.log("Razorpay Instance Methods:", Object.keys(razorpay));
+    console.log("Razorpay Contacts Available?", typeof razorpay.contacts);
+    console.log("Razorpay Fund Account Available?", typeof razorpay.fundAccount);
+     
 
     // console.log("Razorpay Instance:", razorpay);
     // Create Razorpay Contact
