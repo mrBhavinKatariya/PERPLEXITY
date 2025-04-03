@@ -27,19 +27,6 @@ const Withdrawal = () => {
     ifscCode: ''
   });
 
-  // Fetch user data on component mount
-  // useEffect(() => {
-  //   const fetchUserData = async () => {
-  //     try {
-  //       const { data } = await axios.get(`${API_URL}/api/v1/users/me`);
-  //       setBalance(data.balance);
-  //       setBankAccounts(data.bankAccounts);
-  //     } catch (error) {
-  //       toast.error('Failed to load user data');
-  //     }
-  //   };
-  //   fetchUserData();
-  // }, []);
 
   useEffect(() => {
       const fetchUser = async () => {
@@ -56,7 +43,18 @@ const Withdrawal = () => {
           console.log("response.data.data._id",response.data.data._id);
           setCurrent_User_Id(response.data.data._id);
           setBalance(response.data.data.balance || 0);
-          setBankAccounts(data.bankAccounts);
+          // setBankAccounts(data.bankAccounts);
+
+          // Set bank accounts with proper formatting
+      if(response.data.data.bankAccounts) {
+        setBankAccounts(response.data.data.bankAccounts.map(account => ({
+          fundAccountId: account.fundAccountId,
+          last4: account.last4,
+          bankName: account.bankName,
+          addedOn: new Date(account.addedOn).toLocaleDateString()
+        })));
+      }
+
           
         } catch (err) {
           console.error("Error fetching user:", err);
@@ -241,7 +239,6 @@ const Withdrawal = () => {
               required
             />
           </div>
-          
                 <div>
                   <label className="block text-sm font-medium text-gray-600">Account Number</label>
                   <input
