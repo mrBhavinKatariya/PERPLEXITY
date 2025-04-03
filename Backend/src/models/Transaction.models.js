@@ -14,7 +14,7 @@ const transactionSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ["credit", "debit"],
+      enum: ["deposit", "withdrawal"],
       required: true,
     },
     paymentMethod: {
@@ -28,7 +28,7 @@ const transactionSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["pending", "completed", "failed"],
+      enum: ["pending","processing", "completed", "failed"],
       default: "pending"
     }
   },
