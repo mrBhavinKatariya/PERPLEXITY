@@ -77,7 +77,7 @@ const Withdrawal = () => {
         fundAccountId: selectedAccount,
       });
 
-      // console.log("user2",userId2);
+
       console.log("current_user_ids",current_user_ids);
 
       
@@ -108,7 +108,8 @@ const Withdrawal = () => {
       }
       const response = await axios.post(`${API_URL}/api/v1/users/fund-account`, {
         userId: current_user_ids,
-        ...newAccount
+        ifsc: newAccount.ifscCode, 
+      ...newAccount
       });
 
       if (response.data.success) {
