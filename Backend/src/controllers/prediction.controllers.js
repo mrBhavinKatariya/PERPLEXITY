@@ -73,6 +73,8 @@ const handleRandomNumberGeneration = async () => {
       // ------------------aa che-----------------
       // console.log("Current Number:", currentNumber);
       // console.log("Next Predicted Number:", nextNumber);
+                       
+
 
       return currentNumber;
     } catch (error) {
@@ -972,52 +974,71 @@ const createFundAccount = asyncHandler(async (req, res) => {
   try {
     const { userId, name, accountNumber, ifscCode, email, phone } = req.body;
 
-    console.log("Razorpay Instance Methods:", Object.keys(razorpay));
-    console.log("Razorpay Contacts Available?", typeof razorpay.contacts);
-    console.log("Razorpay Fund Account Available?", typeof razorpay.fundAccount);
-     
-    // Create Razorpay Contact
-    const contact = await razorpay.contacts.create({
-      name: name,
-      type: "customer",
-      email: email,
-      contact: phone,
-    });
-
-  
-    console.log("Contact created:", contact);
-
-    // Create Fund Account
-    const fundAccount = await razorpay.fundAccount.create({
-      contact_id: contact.id,
-      account_type: "bank_account",
-      bank_account: {
-        name,
-        account_number: accountNumber,
-        ifsc: ifscCode,
+    // First create the contact
+    const contactResponse = await axios.post(
+      'https://api.razorpay.com/v1/contacts',
+      {
+        name: name,
+        email: email,
+        contact: phone,
+        type: "customer"
       },
-    });
+      {
+        auth: {
+          username: process.env.RAZORPAY_KEY_ID,
+          password: process.env.RAZORPAY_KEY_SECRET
+        }
+      }
+    );
 
-    console.log("Fund account created:", fundAccount);
+    const contact = contactResponse.data;
 
-    // Save fund account ID to user profile
+    // Then create the fund account
+    const fundAccountResponse = await axios.post(
+      'https://api.razorpay.com/v1/fund_accounts',
+      {
+        contact_id: contact.id,
+        account_type: "bank_account",
+        bank_account: {
+          name: name,
+          account_number: accountNumber,
+          ifsc: ifscCode
+        }
+      },
+      {
+        auth: {
+          username: process.env.RAZORPAY_KEY_ID,
+          password: process.env.RAZORPAY_KEY_SECRET
+        }
+      }
+    );
+
+    const fundAccount = fundAccountResponse.data;
+
+    // Save to user profile
     await User.findByIdAndUpdate(userId, {
       $push: {
         bankAccounts: {
           fundAccountId: fundAccount.id,
           last4: accountNumber.slice(-4),
-          bankName: "Bank Name", // Extract from IFSC if needed
-        },
-      },
+          bankName: "Bank Name", // You can use IFSC to get actual bank name
+          contactId: contact.id
+        }
+      }
     });
 
     res.status(200).json({
       success: true,
       fundAccountId: fundAccount.id,
+      contactId: contact.id
     });
+
   } catch (error) {
-    console.error("Fund account error:", error);
-    res.status(500).json({ success: false, message: "Failed to add bank account" });
+    console.error("Error:", error.response?.data || error.message);
+    res.status(500).json({ 
+      success: false, 
+      message: error.response?.data?.error?.description || "Failed to add bank account" 
+    });
   }
 });
 
