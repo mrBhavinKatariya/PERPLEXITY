@@ -1258,7 +1258,7 @@ console.log('Cashfree initialized:', cashfree);
         }
       };
   
-      console.log('Creating order with request:', request);
+      console.log('Creating order  with request:', request);
       
       // Create order
       const response = await cashfree.PGCreateOrder(request);
