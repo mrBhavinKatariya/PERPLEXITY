@@ -905,14 +905,21 @@ const initiateWithdrawal = asyncHandler(async (req, res) => {
 
     // Create Razorpay payout
     const payoutOptions = {
-      account_number: process.env.RAZORPAY_KEY_ID, // Merchant's account
+      account_number: process.env.RAZORPAY_ACCOUNT_NUMBER, // Merchant's account
       fund_account_id: fundAccountId,
       amount: amount * 100, // Convert to paise
       currency: "INR",
       mode: "IMPS",
       purpose: "payout",
       reference_id: `WITHDRAWAL_${transaction._id}`,
+
     };
+
+    console.log("Creating payout with options:", {
+      ...payoutOptions,
+      fund_account_id: '***', // Mask sensitive info
+      account_number: '***'
+    });
 
     console.log("payoutOptions",payoutOptions);
     
