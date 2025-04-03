@@ -970,15 +970,14 @@ const createFundAccount = asyncHandler(async (req, res) => {
   try {
     const { userId, name, accountNumber, ifscCode, email, phone } = req.body;
 
-    console.log("Razorpay Instance:", razorpay);
+  
     console.log("Razorpay Key ID:", process.env.RAZORPAY_KEY_ID);
     console.log("Razorpay Key Secret:", process.env.RAZORPAY_KEY_SECRET);
-    console.log("Razorpay fundAccount exists?", razorpay.fundAccount ? "Yes" : "No");    
-    console.log("Razorpay fundAccounts exists?", razorpay.fundAccounts ? "Yes" : "No");    
+    console.log("Razorpay fundAccount exists?", razorpay.fundAccount ? "Yes" : "No");       
     console.log("Razorpay contacts exists?", razorpay.contacts ? "Yes" : "No");    
     console.log("Razorpay contact exists?", razorpay.contact ? "Yes" : "No");    
 
-    console.log("Razorpay Instance:", razorpay);
+    // console.log("Razorpay Instance:", razorpay);
     // Create Razorpay Contact
     const contact = await razorpay.contacts.create({
       name: name,
@@ -990,7 +989,7 @@ const createFundAccount = asyncHandler(async (req, res) => {
     console.log("Contact created:", contact);
 
     // Create Fund Account
-    const fundAccount = await razorpay.fundAccounts.create({
+    const fundAccount = await razorpay.fundAccount.create({
       contact_id: contact.id,
       account_type: "bank_account",
       bank_account: {
