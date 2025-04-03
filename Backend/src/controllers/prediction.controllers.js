@@ -1032,6 +1032,7 @@ const createFundAccount = asyncHandler(async (req, res) => {
 
     const contact = contactResponse.data;
 
+    
     // Then create the fund account
     const fundAccountResponse = await axios.post(
       'https://api.razorpay.com/v1/fund_accounts',
