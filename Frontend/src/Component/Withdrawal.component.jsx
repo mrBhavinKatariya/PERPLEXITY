@@ -82,7 +82,7 @@ const Withdrawal = () => {
   const createRazorpayContact = async (name, email, phone) => {
     try {
       const response = await axios.post(
-          `${API_URL}/api/v1/users/contacts`,
+          `${API_URL}/api/v1/users/RazorCOntacts`,
         {
           name: name,
           type: "customer",
