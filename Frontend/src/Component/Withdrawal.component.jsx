@@ -10,8 +10,11 @@ import {
   FaMoneyCheckAlt
 } from 'react-icons/fa';
 
-const API_URL = import.meta.env.REACT_APP_API_URL || "https://perplexity-bd2d.onrender.com";
-const VITE_RAZORPAY_KEY_ID = import.meta.env.RAZORPAY_KEY_ID 
+// const API_URL = import.meta.env.REACT_APP_API_URL || "http://localhost:8000";
+const API_URL =
+  import.meta.env.REACT_APP_API_URL || "https://perplexity-bd2d.onrender.com";
+
+  const VITE_RAZORPAY_KEY_ID = import.meta.env.RAZORPAY_KEY_ID 
 const VITE_RAZORPAY_KEY_SECRET = import.meta.env.RAZORPAY_KEY_SECRET 
 
 const Withdrawal = () => {
@@ -24,50 +27,62 @@ const Withdrawal = () => {
   const [newAccount, setNewAccount] = useState({
     name: '',
     accountNumber: '',
-    ifscCode: '',
-    email: '',
-    phone: ''
+    ifscCode: ''
   });
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const token = localStorage.getItem("token");
-        if (!token) return;
+  // Fetch user data on component mount
+  // useEffect(() => {
+  //   const fetchUserData = async () => {
+  //     try {
+  //       const { data } = await axios.get(`${API_URL}/api/v1/users/me`);
+  //       setBalance(data.balance);
+  //       setBankAccounts(data.bankAccounts);
+  //     } catch (error) {
+  //       toast.error('Failed to load user data');
+  //     }
+  //   };
+  //   fetchUserData();
+  // }, []);
 
-        const response = await axios.get(
-          `${API_URL}/api/v1/users/current-user`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        console.log("response.data.data._id",response.data.data._id);
-        setCurrent_User_Id(response.data.data._id);
-        setBalance(response.data.data.balance || 0);
-        setBankAccounts(response.data.data.bankAccounts || []);
-        
-      } catch (err) {
-        console.error("Error fetching user:", err);
-      }
-    };
-    fetchUser();
+  useEffect(() => {
+      const fetchUser = async () => {
+        try {
+          const token = localStorage.getItem("token");
+          if (!token) return;
+  
+          const response = await axios.get(
+            `${API_URL}/api/v1/users/current-user`,
+            { headers: { Authorization: `Bearer ${token}` } }
+          );
+          // setUser(response.data.data);
+          // Set balance from API response (adjust according to your API structure)
+          console.log("response.data.data._id",response.data.data._id);
+          setCurrent_User_Id(response.data.data._id);
+          setBalance(response.data.data.balance || 0);
+          setBankAccounts(data.bankAccounts);
+          
+        } catch (err) {
+          console.error("Error fetching user:", err);
+        }
+      };
+      fetchUser();
   }, []);
 
+  
   // Handle withdrawal submission
   const handleWithdrawal = async (e) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem("token");
-      const response = await axios.post(
-        `${API_URL}/api/v1/users/withdraw`, 
-        {
-          userId: current_user_ids,
-          amount: parseFloat(amount),
-          fundAccountId: selectedAccount,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      );
+      const response = await axios.post(`${API_URL}/api/v1/users/withdraw`, {
+        userId: 'current_user_id', // Replace with actual user ID from auth
+        amount: parseFloat(amount),
+        fundAccountId: selectedAccount,
+      });
 
+      console.log("user2",userId2);
+      console.log("current_user_ids",current_user_ids);
+
+      
       if (response.data.success) {
         toast.success('Withdrawal initiated successfully!');
         setBalance(prev => prev - parseFloat(amount));
@@ -76,78 +91,29 @@ const Withdrawal = () => {
     } catch (error) {
       toast.error(error.response?.data?.message || 'Withdrawal failed');
     }
-  };
 
-  // Create Razorpay contact
-  const createRazorpayContact = async (name, email, phone) => {
-    try {
-      const response = await axios.post(
-          `${API_URL}/api/v1/users/RazorCOntacts`,
-        {
-          name: name,
-          type: "customer",
-          email: email,
-          contact: phone,
-        },
-        {
-          auth: {
-            username: import.meta.env.VITE_RAZORPAY_KEY_ID,
-            password: import.meta.env.VITE_RAZORPAY_KEY_SECRET
-          }
-        }
-      );
-      return response.data;
-    } catch (error) {
-      console.error("Contact Creation Failed:", error.response ? error.response.data : error.message);
-      throw new Error("Failed to create Razorpay contact");
-    }
+
   };
 
   // Handle new bank account submission
   const handleAddAccount = async (e) => {
     e.preventDefault();
     try {
-      const token = localStorage.getItem("token");
-      
-      // First create Razorpay contact
-      const contact = await createRazorpayContact(
-        newAccount.name,
-        newAccount.email,
-        newAccount.phone
-      );
-
-      // Then create fund account through your API
-      const response = await axios.post(
-        `${API_URL}/api/v1/users/fund-account`,
-        {
-          userId: current_user_ids,
-          contactId: contact.id,
-          name: newAccount.name,
-          accountNumber: newAccount.accountNumber,
-          ifscCode: newAccount.ifscCode
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      );
+      const response = await axios.post(`${API_URL}/api/v1/users/witd`, {
+        userId: current_user_ids,
+        ...newAccount
+      });
 
       if (response.data.success) {
         toast.success('Bank account added successfully!');
         setBankAccounts([...bankAccounts, {
           fundAccountId: response.data.fundAccountId,
           last4: newAccount.accountNumber.slice(-4),
-          bankName: response.data.bankName || 'Bank'
+          bankName: 'Bank Name' // You might want to fetch actual bank name from IFSC
         }]);
-        setNewAccount({ 
-          name: '', 
-          accountNumber: '', 
-          ifscCode: '',
-          email: '',
-          phone: ''
-        });
+        setNewAccount({ name: '', accountNumber: '', ifscCode: '' });
       }
     } catch (error) {
-      console.error("Error adding account:", error);
       toast.error(error.response?.data?.message || 'Failed to add account');
     }
   };
@@ -242,28 +208,6 @@ const Withdrawal = () => {
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
                     value={newAccount.name}
                     onChange={(e) => setNewAccount({...newAccount, name: e.target.value})}
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-600">Email</label>
-                  <input
-                    type="email"
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
-                    value={newAccount.email}
-                    onChange={(e) => setNewAccount({...newAccount, email: e.target.value})}
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-600">Phone Number</label>
-                  <input
-                    type="tel"
-                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
-                    value={newAccount.phone}
-                    onChange={(e) => setNewAccount({...newAccount, phone: e.target.value})}
                     required
                   />
                 </div>
