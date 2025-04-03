@@ -849,10 +849,10 @@ const initiateWithdrawal = asyncHandler(async (req, res) => {
   try {
     const { userId, amount, fundAccountId } = req.body;
 
-    console.log("req.body",req.body);
-    console.log("userId",userId); 
-    console.log("amount",amount);
-    console.log("fundAccountId",fundAccountId);
+    // console.log("req.body",req.body);
+    // console.log("userId",userId); 
+    // console.log("amount",amount);
+    // console.log("fundAccountId",fundAccountId);
     
     // Validate input
     if (!userId || !amount || !fundAccountId) {
@@ -880,8 +880,8 @@ const initiateWithdrawal = asyncHandler(async (req, res) => {
       acc => acc.fundAccountId === fundAccountId
     );
 
-    console.log("bankAccount",bankAccount);
-    console.log("user",user);
+    // console.log("bankAccount",bankAccount);
+    // console.log("user",user);
     
     if (!bankAccount?.ifsc) {
       return res.status(400).json({ message: "Invalid bank account details" });
