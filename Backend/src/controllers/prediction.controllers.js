@@ -15,7 +15,9 @@ import bcrypt from 'bcrypt';
 import { sendEmail } from "../utils/SendEmail.utils.js";
 import { log } from "console";
 import { ReferralEarning } from "../models/ReferralEarning.models.js";
-import { Cashfree} from "cashfree-pg";
+// import { Cashfree} from "cashfree-pg";
+// import CashfreePG from "cashfree-pg";
+
 
 dotenv.config()
 let isGenerating = false;
@@ -1220,69 +1222,62 @@ const changeCurrentPassword = asyncHandler(async(req, res) => {
 })
 
 
+import { Cashfree } from 'cashfree-pg';
 
+// Initialize Cashfree
 const cashfree = new Cashfree({
-  appId: process.env.CASHEFREE_APP_ID,
-  secretKey: process.env.CASHEFREE_SECRET_KEY,
-  apiVersion: process.env.CASHEFREE_API_VERSION || "2022-09-01",
+  appId: process.env.CASHEFREE_APP_ID || 'CF941972CVMHG1CJJVPS73AG3HFG',
+  secretKey: process.env.CASHEFREE_SECRET_KEY || 'cfsk_ma_prod_acfdd66b8b9ad3dd8fb44e9c41723077_c4645370',
+  apiVersion: '2022-09-01', // Use this exact version string
   env: process.env.NODE_ENV === 'production' ? 'PRODUCTION' : 'SANDBOX'
 });
 
-console.log("Cashfree Object:", cashfree);
-console.log("Cashfree App ID:", process.env.CASHEFREE_APP_ID);
-console.log("Cashfree Secret Key:", process.env.CASHEFREE_SECRET_KEY);
-console.log("Cashfree API Version:", process.env.CASHEFREE_API_VERSION || "2022-09-01");
-
-
-
-  console.log("console.log(cashfree.orders)",cashfree.orders)
-  console.log("Orders module exists?", cashfree.orders ? "Yes" : "No");
+console.log('Cashfree initialized:', cashfree);
 
   const CashfreeCreatePaymentOrder = asyncHandler(async (req, res) => {
     console.log("req.body",req.body);
 
     try {
-      const { amount, userId } = req.body;
-      const user = await User.findById(userId);
-
+      const { amount, userId, customerPhone, customerEmail } = req.body;
       
-    if (!user) {
-      return res.status(404).json({ 
-        success: false, 
-        message: "User not found" 
-      });
-    }
-      
-  
+      // Generate unique order ID
       const orderId = `ORDER_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`;
       
-      console.log("orderId", orderId);
-      console.log("Cashfree Object:", cashfree);
-
-      
-         const orderResponse = await cashfree.paymentGateway.createOrder({
-      order_id: orderId,
-      order_amount: amount * 100, // Convert to paise
-      order_currency: "INR",
-      customer_details: {
-        customer_id: userId.toString(),
-        customer_phone: user.phoneNo,
-        customer_email: user.email 
-      }
-    });
+      // Create order request
+      const request = {
+        order_id: orderId,
+        order_amount: (amount * 100).toString(), // Convert to paise
+        order_currency: "INR",
+        customer_details: {
+          customer_id: userId,
+          customer_phone: customerPhone,
+          customer_email: customerEmail
+        },
+        order_meta: {
+          return_url: "https://yourwebsite.com/return?order_id={order_id}" // Set your return URL
+        }
+      };
   
-console.log("Does createOrder exist?", cashfree.pg.orders?.createOrder ? "Yes" : "No");
-      res.status(200).json({
+      console.log('Creating order with request:', request);
+      
+      // Create order
+      const response = await cashfree.PGCreateOrder(request);
+      
+      console.log('Order created:', response);
+      
+      res.json({
         success: true,
-        orderId: orderResponse.order_id,
-        paymentSessionId: orderResponse.payment_session_id,
-        amount: orderResponse.order_amount
+        orderId: response.order_id,
+        paymentSessionId: response.payment_session_id,
+        paymentUrl: response.payment_link
       });
+      
     } catch (error) {
-      console.error("Cashfree Error:", error.response?.data || error);
-      res.status(500).json({ 
-        success: false, 
-        message: error.response?.data?.message || "Payment initiation failed"
+      console.error('Cashfree error:', error);
+      res.status(500).json({
+        success: false,
+        message: error.message || 'Payment processing failed',
+        errorDetails: error.response?.data || null
       });
     }
   });
