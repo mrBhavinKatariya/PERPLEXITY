@@ -918,9 +918,13 @@ const initiateWithdrawal = asyncHandler(async (req, res) => {
     console.log("Creating payout with options:", {
       ...payoutOptions,
       fund_account_id: '***', // Mask sensitive info
-      account_number: '***'
+      account_number: '***' 
     });
 
+    console.log("Razorpay Client Status:", {
+      initialized: !!razorpay,
+      hasPayoutsAPI: !!razorpay.payouts
+    });
     console.log("payoutOptions",payoutOptions);
     
     const payout = await razorpay.payouts.create(payoutOptions);
