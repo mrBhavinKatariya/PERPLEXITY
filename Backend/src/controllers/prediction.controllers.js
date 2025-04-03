@@ -15,8 +15,7 @@ import bcrypt from 'bcrypt';
 import { sendEmail } from "../utils/SendEmail.utils.js";
 import { log } from "console";
 import { ReferralEarning } from "../models/ReferralEarning.models.js";
-import { Cashfree } from 'cashfree-pg';
-
+import { Cashfree} from "cashfree-pg";
 
 dotenv.config()
 let isGenerating = false;
@@ -962,7 +961,7 @@ const handlePayoutWebhook = asyncHandler(async (req, res) => {
   }
 });
 
-console.log("Does contacts exist?", razorpay.contacts ? "Yes" : "No");
+// console.log("Does contacts exist?", razorpay.contacts ? "Yes" : "No");
 
 // Create Fund Account
 const createFundAccount = asyncHandler(async (req, res) => {
@@ -1222,14 +1221,19 @@ const changeCurrentPassword = asyncHandler(async(req, res) => {
 
 
 
-const cashfree = new  Cashfree({
-    appId: process.env.CASHEFREE_APP_ID,
-    secretKey: process.env.CASHEFREE_SECRET_KEY,
-    apiVersion: process.env.CASHEFREE_API_VERSION,
-    environment: process.env.NODE_ENV === 'production' 
-    ? 'PRODUCTION' 
-    : 'SANDBOX'
-  });
+const cashfree = new Cashfree({
+  appId: process.env.CASHEFREE_APP_ID,
+  secretKey: process.env.CASHEFREE_SECRET_KEY,
+  apiVersion: process.env.CASHEFREE_API_VERSION || "2022-09-01",
+  env: process.env.NODE_ENV === 'production' ? 'PRODUCTION' : 'SANDBOX'
+});
+
+console.log("Cashfree Object:", cashfree);
+console.log("Cashfree App ID:", process.env.CASHEFREE_APP_ID);
+console.log("Cashfree Secret Key:", process.env.CASHEFREE_SECRET_KEY);
+console.log("Cashfree API Version:", process.env.CASHEFREE_API_VERSION || "2022-09-01");
+
+
 
   console.log("console.log(cashfree.orders)",cashfree.orders)
   console.log("Orders module exists?", cashfree.orders ? "Yes" : "No");
@@ -1256,7 +1260,7 @@ const cashfree = new  Cashfree({
       console.log("Cashfree Object:", cashfree);
 
       
-         const orderResponse = await cashfree.pg.orders.createOrder({
+         const orderResponse = await cashfree.paymentGateway.createOrder({
       order_id: orderId,
       order_amount: amount * 100, // Convert to paise
       order_currency: "INR",
