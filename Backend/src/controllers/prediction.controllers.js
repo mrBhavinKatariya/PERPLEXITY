@@ -849,6 +849,11 @@ const initiateWithdrawal = asyncHandler(async (req, res) => {
   try {
     const { userId, amount, fundAccountId } = req.body;
 
+    console.log("req.body",req.body);
+    console.log("userId",userId); 
+    console.log("amount",amount);
+    console.log("fundAccountId",fundAccountId);
+    
     // Validate input
     if (!userId || !amount || !fundAccountId) {
       return res.status(400).json({ message: "Missing required fields" });
@@ -988,7 +993,7 @@ const createFundAccount = asyncHandler(async (req, res) => {
         message: "Invalid Indian phone number"
       });
     }
-    
+
     // First create the contact
     const contactResponse = await axios.post(
       'https://api.razorpay.com/v1/contacts',
