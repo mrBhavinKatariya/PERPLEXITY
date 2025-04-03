@@ -914,6 +914,8 @@ const initiateWithdrawal = asyncHandler(async (req, res) => {
       reference_id: `WITHDRAWAL_${transaction._id}`,
     };
 
+    console.log("payoutOptions",payoutOptions);
+    
     const payout = await razorpay.payouts.create(payoutOptions);
 
     // Update transaction with payout ID
