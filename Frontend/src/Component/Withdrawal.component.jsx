@@ -19,6 +19,7 @@ const Withdrawal = () => {
   const [transactions, setTransactions] = useState([]);
   const [balance, setBalance] = useState(0);
   const [current_user_ids,setCurrent_User_Id] = useState("");
+  const [error, setError] = useState(null);
   const [newAccount, setNewAccount] = useState({
     name: '',
     email: '',
@@ -112,9 +113,14 @@ const Withdrawal = () => {
           last4: newAccount.accountNumber.slice(-4),
           bankName: 'Bank Name' // You might want to fetch actual bank name from IFSC
         }]);
-        setNewAccount({ name: '', accountNumber: '', ifscCode: '' });
+        setNewAccount({ name: '',phone:'', email:'', accountNumber: '', ifscCode: '' });
       }
     } catch (error) {
+
+      if(error.response?.status === 500) {
+        setError('Invalid IFSC Code in Bank Account.');
+        return;
+      }
       toast.error(error.response?.data?.message || 'Failed to add account');
     }
   };
@@ -259,6 +265,8 @@ const Withdrawal = () => {
                     onChange={(e) => setNewAccount({...newAccount, ifscCode: e.target.value})}
                     required
                   />
+
+                {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
                 </div>
               </div>
 
