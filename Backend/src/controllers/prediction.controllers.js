@@ -69,8 +69,10 @@ const handleRandomNumberGeneration = async () => {
 
       await newPrediction.save();
 
-      console.log("Current Number:", currentNumber);
-      console.log("Next Predicted Number:", nextNumber);
+
+      // ------------------aa che-----------------
+      // console.log("Current Number:", currentNumber);
+      // console.log("Next Predicted Number:", nextNumber);
 
       return currentNumber;
     } catch (error) {
@@ -982,6 +984,7 @@ const createFundAccount = asyncHandler(async (req, res) => {
       contact: phone,
     });
 
+  
     console.log("Contact created:", contact);
 
     // Create Fund Account
