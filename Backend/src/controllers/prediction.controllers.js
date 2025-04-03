@@ -1226,8 +1226,8 @@ import { Cashfree } from 'cashfree-pg';
 
 // Initialize Cashfree
 const cashfree = new Cashfree({
-  appId: process.env.CASHEFREE_APP_ID || 'CF941972CVMHG1CJJVPS73AG3HFG',
-  secretKey: process.env.CASHEFREE_SECRET_KEY || 'cfsk_ma_prod_acfdd66b8b9ad3dd8fb44e9c41723077_c4645370',
+  appId: process.env.CASHEFREE_APP_ID ,
+  secretKey: process.env.CASHEFREE_SECRET_KEY ,
   apiVersion: '2022-09-01', // Use this exact version string
   env: process.env.NODE_ENV === 'production' ? 'PRODUCTION' : 'SANDBOX'
 });
