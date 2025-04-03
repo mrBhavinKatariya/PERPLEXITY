@@ -899,6 +899,7 @@ const initiateWithdrawal = asyncHandler(async (req, res) => {
       type: "withdrawal",
       paymentMethod: "Razorpay Payout",
       status: "processing",
+      transactionId: `TEMP-${Date.now()}` 
     });
     await transaction.save();
 
@@ -917,7 +918,10 @@ const initiateWithdrawal = asyncHandler(async (req, res) => {
 
     // Update transaction with payout ID
     transaction.transactionId = payout.id;
+    transaction.status = "processing";
     await transaction.save();
+
+   
 
     res.status(200).json({
       success: true,
@@ -929,7 +933,14 @@ const initiateWithdrawal = asyncHandler(async (req, res) => {
     console.error("Withdrawal error:", error);
     
     // Revert balance deduction on error
-    if (user) {
+    // Update transaction status on error
+    if (transaction) {
+      transaction.status = "failed";
+      await transaction.save();
+    }
+
+    // Revert balance if deducted
+    if (user && user.balance !== undefined) {
       user.balance += amount;
       await user.save();
     }

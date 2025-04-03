@@ -33,6 +33,7 @@ router.route("/verify-razorpay-payment").post(RazorpayPaymentAndUpdateBalance);
 router.route("/change-password").post(verifyJWTS, changeCurrentPassword)
 router.route("/fund-account").post(createFundAccount);
 router.route("/withdraw").post(initiateWithdrawal);
+router.route("/payout-webhook").post(handlePayoutWebhook);
 router.route("/transactions-history/:userid").get(verifyJWT,transactionHistory)
 router.route('/referral/earnings').get(getReferralEarnings);
 
