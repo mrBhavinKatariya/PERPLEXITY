@@ -10,7 +10,9 @@ import {
   FaMoneyCheckAlt
 } from 'react-icons/fa';
 
-const API_URL = import.meta.env.REACT_APP_API_URL || "https://perplexity-bd2d.onrender.com";
+const API_URL = import.meta.env.RAZORPAY_KEY_ID || "https://perplexity-bd2d.onrender.com";
+const VITE_RAZORPAY_KEY_ID = import.meta.env.VITE_RAZORPAY_KEY_ID 
+const VITE_RAZORPAY_KEY_SECRET = import.meta.env.RAZORPAY_KEY_SECRET 
 
 const Withdrawal = () => {
   const [amount, setAmount] = useState('');
