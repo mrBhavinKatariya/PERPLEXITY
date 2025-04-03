@@ -860,14 +860,31 @@ const initiateWithdrawal = asyncHandler(async (req, res) => {
     }
 
     // Find user and check balance
-    const user = await User.findById(userId);
+    const user = await User.findOne({
+      _id: userId,
+      'bankAccounts.fundAccountId': fundAccountId
+    });
+
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      return res.status(404).json({ message: "User or bank account not found" });
     }
 
+
+      
     if (user.balance < amount) {
       return res.status(400).json({ message: "Insufficient balance" });
     }
+    
+    // Get bank account details
+    const bankAccount = user.bankAccounts.find(
+      acc => acc.fundAccountId === fundAccountId
+    );
+
+    if (!bankAccount?.ifsc) {
+      return res.status(400).json({ message: "Invalid bank account details" });
+    }
+
+  
 
     // Deduct balance immediately
     user.balance -= amount;
