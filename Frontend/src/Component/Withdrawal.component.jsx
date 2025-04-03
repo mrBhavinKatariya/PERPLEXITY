@@ -21,6 +21,8 @@ const Withdrawal = () => {
   const [current_user_ids,setCurrent_User_Id] = useState("");
   const [newAccount, setNewAccount] = useState({
     name: '',
+    email: '',
+    phone: '',
     accountNumber: '',
     ifscCode: ''
   });
@@ -94,6 +96,12 @@ const Withdrawal = () => {
   const handleAddAccount = async (e) => {
     e.preventDefault();
     try {
+      if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(newAccount.email)) {
+        return toast.error('Invalid email address');
+      }
+      if (!/^[6-9]\d{9}$/.test(newAccount.phone)) {
+        return toast.error('Invalid Indian phone number');
+      }
       const response = await axios.post(`${API_URL}/api/v1/users/fund-account`, {
         userId: current_user_ids,
         ...newAccount
@@ -207,6 +215,33 @@ const Withdrawal = () => {
                   />
                 </div>
 
+          {/* Email Field */}
+          <div>
+            <label className="block text-sm font-medium text-gray-600">Email Address</label>
+            <input
+              type="email"
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+              value={newAccount.email}
+              onChange={(e) => setNewAccount({...newAccount, email: e.target.value})}
+              required
+            />
+          </div>
+
+
+ {/* Phone Field */}
+ <div>
+            <label className="block text-sm font-medium text-gray-600">Phone Number</label>
+            <input
+              type="tel"
+              className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+              value={newAccount.phone}
+              onChange={(e) => setNewAccount({...newAccount, phone: e.target.value})}
+              pattern="[6-9]{1}[0-9]{9}"
+              title="10-digit Indian phone number"
+              required
+            />
+          </div>
+          
                 <div>
                   <label className="block text-sm font-medium text-gray-600">Account Number</label>
                   <input
