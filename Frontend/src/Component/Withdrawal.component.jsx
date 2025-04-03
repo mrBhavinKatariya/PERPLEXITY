@@ -10,12 +10,7 @@ import {
   FaMoneyCheckAlt
 } from 'react-icons/fa';
 
-// const API_URL = import.meta.env.REACT_APP_API_URL || "http://localhost:8000";
-const API_URL =
-  import.meta.env.REACT_APP_API_URL || "https://perplexity-bd2d.onrender.com";
-
-  const VITE_RAZORPAY_KEY_ID = import.meta.env.RAZORPAY_KEY_ID 
-const VITE_RAZORPAY_KEY_SECRET = import.meta.env.RAZORPAY_KEY_SECRET 
+const API_URL = import.meta.env.REACT_APP_API_URL || "https://perplexity-bd2d.onrender.com";
 
 const Withdrawal = () => {
   const [amount, setAmount] = useState('');
@@ -99,7 +94,7 @@ const Withdrawal = () => {
   const handleAddAccount = async (e) => {
     e.preventDefault();
     try {
-      const response = await axios.post(`${API_URL}/api/v1/users/witd`, {
+      const response = await axios.post(`${API_URL}/api/v1/users/fund-account`, {
         userId: current_user_ids,
         ...newAccount
       });

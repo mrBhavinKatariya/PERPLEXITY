@@ -974,8 +974,6 @@ const createFundAccount = asyncHandler(async (req, res) => {
     console.log("Razorpay Contacts Available?", typeof razorpay.contacts);
     console.log("Razorpay Fund Account Available?", typeof razorpay.fundAccount);
      
-
-    console.log("Razorpay Instance:", razorpay);
     // Create Razorpay Contact
     const contact = await razorpay.contacts.create({
       name: name,
