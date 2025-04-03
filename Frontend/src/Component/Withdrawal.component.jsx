@@ -75,7 +75,7 @@ const Withdrawal = () => {
         userId: current_user_ids, // Replace with actual user ID from auth
         amount: parseFloat(amount),
         fundAccountId: selectedAccount,
-        ifsc: newAccount.ifscCode, 
+        ifsc: ifscCode, 
 
       });
 
