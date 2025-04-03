@@ -64,6 +64,7 @@ const Withdrawal = () => {
       fetchUser();
   }, []);
 
+
   
   // Handle withdrawal submission
   const handleWithdrawal = async (e) => {
@@ -124,6 +125,17 @@ const Withdrawal = () => {
       toast.error(error.response?.data?.message || 'Failed to add account');
     }
   };
+
+
+  const Withdrawal = () => {
+    const [error, setError] = useState(null);
+  
+    useEffect(() => {
+      if (error) {
+        const timer = setTimeout(() => setError(null), 5000);
+        return () => clearTimeout(timer);
+      }
+    }, [error]);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4 sm:px-6 lg:px-8">
