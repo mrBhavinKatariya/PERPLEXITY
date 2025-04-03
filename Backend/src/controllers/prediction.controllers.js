@@ -1254,7 +1254,8 @@ console.log('Cashfree initialized:', cashfree);
           customer_email: customerEmail
         },
         order_meta: {
-          return_url: "https://yourwebsite.com/return?order_id={order_id}" // Set your return URL
+          return_url: `${process.env.FRONTEND_URL}/payment/return?order_id={order_id}`,
+          notify_url: `${process.env.BACKEND_URL}/api/payments/webhook`
         }
       };
   
