@@ -1582,6 +1582,50 @@ const cashfree = new Cashfree({
   }
 
 
+  // -------------
+  // In your backend (Node.js/Express example)
+const  RazorCOntacts =  asyncHandler(async (req, res) => {
+  try {
+    const { name, email, phone } = req.body;
+    
+    const response = await axios.post(
+      'https://api.razorpay.com/v1/contacts',
+      {
+        name,
+        type: "customer",
+        email,
+        contact: phone,
+      },
+      {
+        auth: {
+          username: process.env.RAZORPAY_KEY_ID,
+          password: process.env.RAZORPAY_KEY_SECRET
+        }
+      }
+    );
+    
+    res.json(response.data);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: 'Failed to create contact' });
+  }
+});
+
+
+const createRazorpayContact = async (name, email, phone) => {
+  try {
+    const token = localStorage.getItem("token");
+    const response = await axios.post(
+      `${API_URL}/api/razorpay/contacts`,
+      { name, email, phone },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    return response.data;
+  } catch (error) {
+    console.error("Contact Creation Failed:", error);
+    throw error;
+  }
+};
 
 
 export {
@@ -1607,5 +1651,6 @@ export {
   initiateCashfreePayout,
   CashfreePaymentVerification,
   CashfreeCreatePaymentOrder,
+  RazorCOntacts
 
 };
