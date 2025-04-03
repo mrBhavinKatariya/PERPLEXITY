@@ -970,10 +970,13 @@ const createFundAccount = asyncHandler(async (req, res) => {
   try {
     const { userId, name, accountNumber, ifscCode, email, phone } = req.body;
 
-    console.log("userId:", userId);
-    console.log("name:", name);
-    console.log("accountNumber:", accountNumber);
-    console.log("ifscCode:", ifscCode);
+    console.log("Razorpay Instance:", razorpay);
+    console.log("Razorpay Key ID:", process.env.RAZORPAY_KEY_ID);
+    console.log("Razorpay Key Secret:", process.env.RAZORPAY_KEY_SECRET);
+    console.log("Razorpay fundAccount exists?", razorpay.fundAccount ? "Yes" : "No");    
+    console.log("Razorpay fundAccounts exists?", razorpay.fundAccounts ? "Yes" : "No");    
+    console.log("Razorpay contacts exists?", razorpay.contacts ? "Yes" : "No");    
+    console.log("Razorpay contact exists?", razorpay.contact ? "Yes" : "No");    
 
     console.log("Razorpay Instance:", razorpay);
     // Create Razorpay Contact
@@ -1232,10 +1235,10 @@ const cashfree = new Cashfree({
   env: process.env.NODE_ENV === 'production' ? 'PRODUCTION' : 'SANDBOX'
 });
 
-console.log('Cashfree initialized:', cashfree);
+// console.log('Cashfree initialized:', cashfree);
 
   const CashfreeCreatePaymentOrder = asyncHandler(async (req, res) => {
-    console.log("req.body",req.body);
+    // console.log("req.body",req.body);
 
     try {
       const { amount, userId, customerPhone, customerEmail } = req.body;
