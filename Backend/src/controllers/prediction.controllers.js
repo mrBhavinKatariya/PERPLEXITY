@@ -886,7 +886,6 @@ const initiateWithdrawal = asyncHandler(async (req, res) => {
     if (!bankAccount?.ifsc) {
       return res.status(400).json({ message: "Invalid bank account details" });
     }
-
   
 
     // Deduct balance immediately
@@ -1062,7 +1061,8 @@ const createFundAccount = asyncHandler(async (req, res) => {
           fundAccountId: fundAccount.id,
           last4: accountNumber.slice(-4),
           bankName: "Bank Name", // You can use IFSC to get actual bank name
-          contactId: contact.id
+          contactId: contact.id,
+          ifsc: ifscCode
         }
       }
     });
