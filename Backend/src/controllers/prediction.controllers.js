@@ -874,12 +874,15 @@ const initiateWithdrawal = asyncHandler(async (req, res) => {
     if (user.balance < amount) {
       return res.status(400).json({ message: "Insufficient balance" });
     }
-    
+
     // Get bank account details
     const bankAccount = user.bankAccounts.find(
       acc => acc.fundAccountId === fundAccountId
     );
 
+    console.log("bankAccount",bankAccount);
+    console.log("user",user);
+    
     if (!bankAccount?.ifsc) {
       return res.status(400).json({ message: "Invalid bank account details" });
     }
