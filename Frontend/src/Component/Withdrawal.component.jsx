@@ -96,11 +96,14 @@ const Withdrawal = () => {
   // Handle new bank account submission
   const handleAddAccount = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
     try {
       if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(newAccount.email)) {
+        setIsLoading(false);
         return toast.error('Invalid email address');
       }
       if (!/^[6-9]\d{9}$/.test(newAccount.phone)) {
+        setIsLoading(false);
         return toast.error('Invalid Indian phone number');
       }
       const response = await axios.post(`${API_URL}/api/v1/users/fund-account`, {
@@ -124,6 +127,9 @@ const Withdrawal = () => {
         return;
       }
       toast.error(error.response?.data?.message || 'Failed to add account');
+    }
+    finally {
+      setIsLoading(false); // Stop loading regardless of success/error
     }
   };
 
