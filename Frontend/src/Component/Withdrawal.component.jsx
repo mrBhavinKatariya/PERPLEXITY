@@ -278,7 +278,7 @@ const Withdrawal = () => {
                     type="text"
                     className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
                     value={newAccount.ifscCode}
-                    onChange={(e) => setNewAccount({...newAccount, ifscCode: e.target.value})}
+                    onChange={(e) => setNewAccount({...newAccount, ifscCode: e.target.value.toUpperCase()})}
                     required
                   />
 
