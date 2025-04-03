@@ -127,17 +127,18 @@ const Withdrawal = () => {
   };
 
 
-  const Withdrawal = () => {
-    const [error, setError] = useState(null);
-  
+
+
     useEffect(() => {
       if (error) {
-        const timer = setTimeout(() => setError(null), 5000);
+        const timer = setTimeout(() => {
+          setError(null);
+        }, 5000);
         return () => clearTimeout(timer);
       }
     }, [error]);
 
-  }
+  
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-5xl mx-auto space-y-8">
@@ -220,15 +221,7 @@ const Withdrawal = () => {
               <FiCreditCard className="w-6 h-6 text-blue-600" /> Add Bank Account
             </h3>
 
-             {/* Error Message Display */}
-        {error && (
-          <div className="mb-4 p-4 bg-red-50 border-l-4 border-red-400 text-red-700 rounded-lg flex items-center animate-fade-in">
-            <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-            </svg>
-            <span>{error}</span>
-          </div>
-        )}
+            
             <form onSubmit={handleAddAccount} className="space-y-6">
               <div className="space-y-4">
                 <div>
@@ -289,7 +282,15 @@ const Withdrawal = () => {
                     required
                   />
 
-                {/* {error && <p className="text-red-500 text-sm mt-1">{error}</p>} */}
+               {/* Error Message Display */}
+        {error && (
+          <div className="mb-4 mt-[10px] p-4 bg-red-50 border-l-4 border-red-400 text-red-700 rounded-lg flex items-center animate-fade-in">
+            <svg className="w-5 h-5 mr-2" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            </svg>
+            <span>{error}</span>
+          </div>
+        )}
                 </div>
               </div>
 
