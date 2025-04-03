@@ -137,6 +137,7 @@ const Withdrawal = () => {
       }
     }, [error]);
 
+  }
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-5xl mx-auto space-y-8">
@@ -364,4 +365,4 @@ const Withdrawal = () => {
   );
 };
 
-export default Withdrawal;
+export default Withdrawal
