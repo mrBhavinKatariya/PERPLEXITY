@@ -17,7 +17,7 @@ import { log } from "console";
 import { ReferralEarning } from "../models/ReferralEarning.models.js";
 // import { Cashfree} from "cashfree-pg";
 // import CashfreePG from "cashfree-pg";
-
+import axios from "axios";
 
 dotenv.config()
 let isGenerating = false;
