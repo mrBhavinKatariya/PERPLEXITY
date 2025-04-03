@@ -72,12 +72,12 @@ const Withdrawal = () => {
     e.preventDefault();
     try {
       const response = await axios.post(`${API_URL}/api/v1/users/withdraw`, {
-        userId: 'current_user_id', // Replace with actual user ID from auth
+        userId: current_user_ids, // Replace with actual user ID from auth
         amount: parseFloat(amount),
         fundAccountId: selectedAccount,
       });
 
-      console.log("user2",userId2);
+      // console.log("user2",userId2);
       console.log("current_user_ids",current_user_ids);
 
       
