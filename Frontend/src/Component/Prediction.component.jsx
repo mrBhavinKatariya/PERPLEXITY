@@ -285,7 +285,7 @@ const handlePrevHistory = () => {
       setShowPopup(true);
     } finally {
       setQuantity(1);
-      setContractMoney(10);
+      setContractMoney(20);
     }
   };
 
