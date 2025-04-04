@@ -1360,6 +1360,7 @@ const transactionHistory = asyncHandler(async (req, res) => {
         type: transaction.type,
         description: transaction.description,
         status: transaction.status,
+        transactionId: transaction.transactionId, // Keep this if needed
         date: `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`,
 
 
