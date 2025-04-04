@@ -927,6 +927,8 @@ const initiateWithdrawal = asyncHandler(async (req, res) => {
 
     // Update transaction with payout ID
     transaction.transactionId = payout.id;
+    console.log("payout.id",payout.id);
+    
     transaction.status = "processing";
     await transaction.save();
 
