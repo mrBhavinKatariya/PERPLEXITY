@@ -924,7 +924,7 @@ const initiateWithdrawal = asyncHandler(async (req, res) => {
     console.log("payoutOptions",payoutOptions);
     
     const payout = await razorpay.payouts.create(payoutOptions);
-
+    console.log("payout",payout);
     // Update transaction with payout ID
     transaction.transactionId = payout.id;
     console.log("payout.id",payout.id);
