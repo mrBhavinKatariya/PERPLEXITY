@@ -106,11 +106,19 @@ const Withdrawal = () => {
         setIsLoading(false);
         return toast.error("Invalid Indian phone number");
       }
+
+      if (newAccount.upiId && !/^[a-zA-Z0-9.-]+@[a-zA-Z]+$/.test(newAccount.upiId)) {
+        setError('Invalid UPI ID format (e.g., name@bank)');
+        setIsLoading(false);
+        return;
+      }
+
       const response = await axios.post(
         `${API_URL}/api/v1/users/fund-account`,
         {
           userId: current_user_ids,
           ifsc: newAccount.ifscCode,
+          upiId: newAccount.upiId,
           ...newAccount,
         }
       );
@@ -338,9 +346,11 @@ const Withdrawal = () => {
                       onChange={(e) =>
                         setNewAccount({ ...newAccount, upiId: e.target.value })
                       }
+                      
                       placeholder="yourname@upi"
                       pattern="^[a-zA-Z0-9.-]+@[a-zA-Z]+$"
                       title="Enter a valid UPI ID (e.g., example@upi)"
+                      required
                     />
                   </div>
 
