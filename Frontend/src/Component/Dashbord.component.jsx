@@ -57,7 +57,7 @@ export default function Dashboard() {
         <div className="flex items-center justify-between mx-auto max-w-screen-xl">
           {/* Logo Section */}
           <Link to="/" className="flex items-center">
-            <img src="/download (3).png" className=" mr-3 h-[80px] w-[90px] ml-[30px]" alt="Logo" />
+            <img src="/download.png" className=" mr-3 h-[60px] w-[60px] ml-[30px]" alt="Logo" />
           </Link>
 
           {/* Desktop Navigation Links */}
