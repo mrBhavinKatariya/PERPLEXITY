@@ -18,6 +18,14 @@ const bankAccountSchema = new Schema(
       type: String,
       required: true,
     },
+    accountNumber: {
+      type: String,
+      required: true,
+    },
+    UPIId: {
+      type: String,
+      required: true,
+    },
     ifsc: {
       type: String,
       required: true,
@@ -64,8 +72,8 @@ const userSchema = new Schema(
     },
     role: {
       type: String,
-      enum: ['user', 'admin'],
-      default: 'user'
+      enum: ["user", "admin"],
+      default: "user",
     },
     phoneNo: {
       type: String, // Changed from Number to String to preserve formatting
@@ -87,18 +95,18 @@ const userSchema = new Schema(
     ],
     referralCode: { type: String, unique: true },
     referredBy: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "User",
-      },
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+    },
 
     bankAccounts: [bankAccountSchema],
 
     passwordResetToken: {
       type: String,
     },
-    version: { 
-      type: Number, 
-      default: 0 
+    version: {
+      type: Number,
+      default: 0,
     },
 
     passwordResetExpires: {
@@ -123,21 +131,22 @@ userSchema.pre("save", async function (next) {
 
 userSchema.index({ _id: 1, version: 1 });
 
-userSchema.pre('save', async function(next) {
-    if (!this.referralCode) {
-      let isUnique = false;
-      while (!isUnique) {
-        const code = crypto.randomBytes(4).toString('hex').toUpperCase();
-        const existingUser = await this.constructor.findOne({ referralCode: code });
-        if (!existingUser) {
-          this.referralCode = code;
-          isUnique = true;
-        }
+userSchema.pre("save", async function (next) {
+  if (!this.referralCode) {
+    let isUnique = false;
+    while (!isUnique) {
+      const code = crypto.randomBytes(4).toString("hex").toUpperCase();
+      const existingUser = await this.constructor.findOne({
+        referralCode: code,
+      });
+      if (!existingUser) {
+        this.referralCode = code;
+        isUnique = true;
       }
     }
-    next();
-  });
-  
+  }
+  next();
+});
 
 userSchema.methods.isPasswordCorrect = async function (password) {
   return await bcrypt.compare(password, this.password);
