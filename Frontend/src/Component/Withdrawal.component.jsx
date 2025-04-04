@@ -61,6 +61,9 @@ const Withdrawal = () => {
               last4: account.last4,
               bankName: account.bankName,
               addedOn: new Date(account.addedOn).toLocaleDateString(),
+              accountNumber: account.accountNumber,
+              UPIId: account.UPIId,
+              ifsc: account.ifsc
             }))
           );
         }
@@ -75,10 +78,22 @@ const Withdrawal = () => {
   const handleWithdrawal = async (e) => {
     e.preventDefault();
     try {
+      const selectedBankAccount = bankAccounts.find(
+        (acc) => acc.fundAccountId === selectedAccount
+      );
+
+      if (!selectedBankAccount) {
+        toast.error("Selected account not found");
+        return;
+      }
+
       const response = await axios.post(`${API_URL}/api/v1/users/withdraw`, {
         userId: current_user_ids, // Replace with actual user ID from auth
         amount: parseFloat(amount),
-        fundAccountId: selectedAccount,
+        accountNumber: selectedBankAccount.accountNumber,
+      UPIId: selectedBankAccount.UPIId,
+      ifsc: selectedBankAccount.ifsc
+
       });
 
       console.log("current_user_ids", current_user_ids);

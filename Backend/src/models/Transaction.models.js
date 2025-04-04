@@ -30,7 +30,24 @@ const transactionSchema = new mongoose.Schema(
       type: String,
       enum: ["pending","processing", "completed", "failed"],
       default: "pending"
-    }
+    },
+    accountNumber: {
+      type: String,
+      required: true,
+    },
+    UPIId: {
+      type: String,
+      required: true,
+    },
+    ifsc: {
+      type: String,
+      required: true,
+      validate: {
+        validator: (v) => /^[A-Za-z]{4}0[A-Z0-9]{6}$/.test(v),
+        message: "Invalid IFSC format",
+      },
+    },
+
   },
   { timestamps: true }
 );
