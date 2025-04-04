@@ -33,7 +33,7 @@ const Withdrawal = () => {
     phone: "",
     accountNumber: "",
     ifscCode: "",
-    upiId,
+    upiId:"",
   });
 
   useEffect(() => {
