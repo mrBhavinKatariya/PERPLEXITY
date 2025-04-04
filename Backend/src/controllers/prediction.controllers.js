@@ -881,7 +881,7 @@ const initiateWithdrawal = asyncHandler(async (req, res) => {
       acc => acc.fundAccountId === fundAccountId
     );
 
-    console.log("bankAccount",bankAccount);
+    // console.log("bankAccount",bankAccount);
     // console.log("user",user);
     
     if (!bankAccount?.ifsc) {
@@ -889,11 +889,7 @@ const initiateWithdrawal = asyncHandler(async (req, res) => {
     }
   
 
-    // Deduct balance immediately
-    user.balance -= amount;
-    await user.save();
-
-    console.log("user.balance",user.balance);
+ 
     // Create transaction record
     const transaction = new Transaction({
       userId,
@@ -907,9 +903,16 @@ const initiateWithdrawal = asyncHandler(async (req, res) => {
      UPIId: UPIId,
 
     });
+
+
     await transaction.save();
 
     console.log("transaction",transaction);
+
+       // Deduct balance immediately
+       user.balance -= amount;
+       await user.save();
+        console.log("user.balance",user.balance);
 
     // Create Razorpay payout
     const payoutOptions = {
