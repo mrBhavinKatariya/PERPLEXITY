@@ -848,7 +848,7 @@ const RazorpayPaymentAndUpdateBalance = asyncHandler(async (req, res) => {
 
 const initiateWithdrawal = asyncHandler(async (req, res) => {
   try {
-    const { userId, amount, fundAccountId } = req.body;
+    const { userId, amount, fundAccountId,UPIId,ifsc,accountNumber } = req.body;
 
     console.log("req.body",req.body);
     // console.log("userId",userId); 
@@ -900,7 +900,11 @@ const initiateWithdrawal = asyncHandler(async (req, res) => {
       type: "withdrawal",
       paymentMethod: "Razorpay Payout",
       status: "processing",
-      transactionId: `TEMP-${Date.now()}` 
+      transactionId: `TEMP-${Date.now()}` ,
+      ifsc: ifsc,
+      accountNumber: accountNumber,
+     UPIId: UPIId,
+
     });
     await transaction.save();
 
