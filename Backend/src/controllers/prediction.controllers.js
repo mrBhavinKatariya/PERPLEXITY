@@ -904,7 +904,7 @@ const initiateWithdrawal = asyncHandler(async (req, res) => {
       transactionId: `TEMP-${Date.now()}` ,
       ifsc: ifsc,
       accountNumber: accountNumber,
-     UPIId: UPIId,
+      UPIId: UPIId,
 
     });
     await transaction.save();
