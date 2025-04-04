@@ -20,15 +20,15 @@ const bankAccountSchema = new Schema(
     },
     accountNumber: {
       type: String,
-      required: true,
+      // required: true,
     },
     UPIId: {
       type: String,
-      required: true,
+      // required: true,
     },
     ifsc: {
       type: String,
-      required: true,
+      // required: true,
       validate: {
         validator: (v) => /^[A-Za-z]{4}0[A-Z0-9]{6}$/.test(v),
         message: "Invalid IFSC format",
