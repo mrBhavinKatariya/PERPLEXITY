@@ -91,7 +91,12 @@ const Withdrawal = () => {
     } catch (error) {
       toast.error(error.response?.data?.message || "Withdrawal failed");
     }
-  };
+  finally{
+    toast.success("Withdrawal initiated successfully!");
+        setBalance((prev) => prev - parseFloat(amount));
+        setAmount("");
+  }
+}  ;
 
   // Handle new bank account submission
   const handleAddAccount = async (e) => {
