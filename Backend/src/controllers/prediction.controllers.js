@@ -1159,7 +1159,6 @@ const createFundAccount = asyncHandler(async (req, res) => {
           name: name,
           account_number: accountNumber,
           ifsc: ifscCode,
-          UPIId: UPIId
         }
       },
       {
