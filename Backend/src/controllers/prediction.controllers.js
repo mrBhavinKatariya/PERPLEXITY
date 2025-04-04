@@ -1174,7 +1174,7 @@ const createFundAccount = asyncHandler(async (req, res) => {
       $push: {
         bankAccounts: {
           fundAccountId: fundAccount.id,
-          last4: accountNumber.slice(-4),
+          accountNumber: accountNumber,
           bankName: "Bank Name", // You can use IFSC to get actual bank name
           contactId: contact.id,
           ifsc: ifscCode
@@ -1185,6 +1185,7 @@ const createFundAccount = asyncHandler(async (req, res) => {
     res.status(200).json({
       success: true,
       fundAccountId: fundAccount.id,
+      accountNumber: accountNumber.id,
       contactId: contact.id
     });
 
