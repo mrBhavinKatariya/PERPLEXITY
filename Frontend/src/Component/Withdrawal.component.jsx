@@ -96,6 +96,12 @@ const Withdrawal = () => {
 
   const handleWithdrawal = async (e) => {
     e.preventDefault();
+
+    if (parseFloat(amount) < 1000) {
+      toast.error("Minimum withdrawal amount is ₹1000");
+      return;
+    }
+
     setIsLoading(true);
     try {
       const selectedBankAccount = bankAccounts.find(
@@ -251,11 +257,15 @@ const Withdrawal = () => {
                     className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
-                    min="100"
+                    min="1000"
+                    step="100"
                     required
                   />
                   <span className="absolute left-3 top-3 text-gray-400">₹</span>
                 </div>
+                <div className="text-sm text-gray-500 mt-1">
+              Minimum withdrawal amount: ₹1000
+            </div>
               </div>
 
               <div>
