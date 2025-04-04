@@ -65,9 +65,9 @@ export default function Dashboard() {
             <ul className="flex items-center space-x-6">
               {[ 
                 { to: "/", label: "Home" },
-                { to: "/jewellery", label: "Jewellery" },
-                // { to: "/prediction", label: "Prediction" }, ---------------- ACTIVE KRVANU
-                // { to: "/setting", label: "Setting" },----------------ACTIVE KRVANU
+                // { to: "/jewellery", label: "Jewellery" },
+                { to: "/prediction", label: "Prediction" }, // ---------------- ACTIVE KRVANU
+                { to: "/setting", label: "Setting" }, // ----------------ACTIVE KRVANU
 
 
                 // { to: "/create-video", label: "My Content" },
@@ -122,10 +122,10 @@ export default function Dashboard() {
     <ul className="space-y-4">
       {[ 
         { to: "/", label: "Home" },
-        { to: "/jewellery", label: "Jewellery" },
+        // { to: "/jewellery", label: "Jewellery" },
         // { to: "/home", label: "Home" },
-        // { to: "/prediction", label: "prediction" }, ----------ACTIVE KRVANU CHE
-        // { to: "/setting", label: "Setting" },-------------------ACTIVE KRVANU CHE
+        { to: "/prediction", label: "prediction" }, //----------ACTIVE KRVANU CHE
+        { to: "/setting", label: "Setting" },//-------------------ACTIVE KRVANU CHE
       ].map((link, index) => (
         <li key={index}>
           <NavLink
