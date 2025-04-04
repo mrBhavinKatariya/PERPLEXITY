@@ -850,7 +850,7 @@ const initiateWithdrawal = asyncHandler(async (req, res) => {
   try {
     const { userId, amount, fundAccountId } = req.body;
 
-    // console.log("req.body",req.body);
+    console.log("req.body",req.body);
     // console.log("userId",userId); 
     // console.log("amount",amount);
     // console.log("fundAccountId",fundAccountId);
