@@ -7,16 +7,10 @@ import {
   FiArrowUpRight,
   FiCheckCircle,
 } from "react-icons/fi";
-import {
-  FaWallet,
-  FaMoneyBillWave,
-  FaCoins,
-  FaChartLine,
-  FaMoneyCheckAlt,
-} from "react-icons/fa";
+import { FaChartLine } from "react-icons/fa";
 
 const API_URL =
-  import.meta.env.REACT_APP_API_URL || "https://perplexity-bd2d.onrender.com";
+  import.meta.env.VITE_API_URL || "https://perplexity-bd2d.onrender.com";
 
 const Withdrawal = () => {
   const [amount, setAmount] = useState("");
@@ -24,43 +18,63 @@ const Withdrawal = () => {
   const [selectedAccount, setSelectedAccount] = useState("");
   const [transactions, setTransactions] = useState([]);
   const [balance, setBalance] = useState(0);
-  const [current_user_ids, setCurrent_User_Id] = useState("");
+  const [currentUserId, setCurrentUserId] = useState("");
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [transactionsLoading, setTransactionsLoading] = useState(false);
   const [newAccount, setNewAccount] = useState({
     name: "",
     email: "",
     phone: "",
     accountNumber: "",
     ifscCode: "",
-    UPIId:"",
+    UPIId: "",
   });
 
   useEffect(() => {
-    const fetchUser = async () => {
+    const fetchUserData = async () => {
       try {
         const token = localStorage.getItem("token");
         if (!token) return;
 
-        const response = await axios.get(
+        setTransactionsLoading(true);
+        
+        // Fetch user data
+        const userResponse = await axios.get(
           `${API_URL}/api/v1/users/current-user`,
           { headers: { Authorization: `Bearer ${token}` } }
         );
-        // setUser(response.data.data);
-        // Set balance from API response (adjust according to your API structure)
-        console.log("response.data.data._id", response.data.data._id);
-        setCurrent_User_Id(response.data.data._id);
-        setBalance(response.data.data.balance || 0);
-        // setBankAccounts(data.bankAccounts);
 
-        // Set bank accounts with proper formatting
-        if (response.data.data.bankAccounts) {
+        const userId = userResponse.data.data._id;
+        setCurrentUserId(userId);
+        setBalance(userResponse.data.data.balance || 0);
+
+        // Fetch transactions
+        const transactionsResponse = await axios.get(
+          `${API_URL}/api/v1/users/transactions-history/${userId}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+            params: {
+              page: currentPage,
+              limit: 10
+            }
+          }
+        );
+
+        console.log("Transactions Response:", transactionsResponse.data);
+        
+        setTransactions(transactionsResponse.data.transactions || []);
+        setTotalPages(transactionsResponse.data.totalPages || 1);
+
+        // Set bank accounts
+        if (userResponse.data.data.bankAccounts) {
           setBankAccounts(
-            response.data.data.bankAccounts.map((account) => ({
+            userResponse.data.data.bankAccounts.map((account) => ({
               fundAccountId: account.fundAccountId,
-              last4: account.last4,
-              bankName: account.bankName,
-              addedOn: new Date(account.addedOn).toLocaleDateString(),
+              last4: account.accountNumber?.slice(-4) || '****',
+              bankName: account.bankName || "Bank",
               accountNumber: account.accountNumber,
               UPIId: account.UPIId,
               ifsc: account.ifsc
@@ -68,15 +82,19 @@ const Withdrawal = () => {
           );
         }
       } catch (err) {
-        console.error("Error fetching user:", err);
+        console.error("Error fetching data:", err);
+        toast.error("Failed to load user data");
+      } finally {
+        setTransactionsLoading(false);
       }
     };
-    fetchUser();
-  }, []);
 
-  // Handle withdrawal submission
+    fetchUserData();
+  }, [currentPage]);
+
   const handleWithdrawal = async (e) => {
     e.preventDefault();
+    setIsLoading(true);
     try {
       const selectedBankAccount = bankAccounts.find(
         (acc) => acc.fundAccountId === selectedAccount
@@ -87,59 +105,67 @@ const Withdrawal = () => {
         return;
       }
 
-      const response = await axios.post(`${API_URL}/api/v1/users/withdraw`, {
-        userId: current_user_ids, // Replace with actual user ID from auth
-        amount: parseFloat(amount),
-        accountNumber: selectedBankAccount.accountNumber,
-      UPIId: selectedBankAccount.UPIId,
-      ifsc: selectedBankAccount.ifsc,
-        fundAccountId: selectedAccount,
-      });
-
-      console.log("current_user_ids", current_user_ids);
+      const response = await axios.post(
+        `${API_URL}/api/v1/users/withdraw`,
+        {
+          userId: currentUserId,
+          amount: parseFloat(amount),
+          accountNumber: selectedBankAccount.accountNumber,
+          UPIId: selectedBankAccount.UPIId,
+          ifsc: selectedBankAccount.ifsc,
+          fundAccountId: selectedAccount,
+        },
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+        }
+      );
 
       if (response.data.success) {
         toast.success("Withdrawal initiated successfully!");
         setBalance((prev) => prev - parseFloat(amount));
         setAmount("");
+        // Refresh transactions
+        const transactionsResponse = await axios.get(
+          `${API_URL}/api/v1/users/transactions-history/${currentUserId}`,
+          {
+            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+            params: { page: 1, limit: 10 }
+          }
+        );
+        setTransactions(transactionsResponse.data.transactions || []);
       }
     } catch (error) {
       toast.error(error.response?.data?.message || "Withdrawal failed");
+    } finally {
+      setIsLoading(false);
     }
-  finally{
-    toast.success("Withdrawal initiated successfully!");
-        setBalance((prev) => prev - parseFloat(amount));
-        setAmount("");
-  }
-}  ;
+  };
 
-  // Handle new bank account submission
   const handleAddAccount = async (e) => {
     e.preventDefault();
     setIsLoading(true);
     try {
       if (!/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i.test(newAccount.email)) {
-        setIsLoading(false);
         return toast.error("Invalid email address");
       }
       if (!/^[6-9]\d{9}$/.test(newAccount.phone)) {
-        setIsLoading(false);
         return toast.error("Invalid Indian phone number");
       }
-
       if (newAccount.UPIId && !/^[a-zA-Z0-9.-]+@[a-zA-Z]+$/.test(newAccount.UPIId)) {
         setError('Invalid UPI ID format (e.g., name@bank)');
-        setIsLoading(false);
         return;
       }
 
       const response = await axios.post(
         `${API_URL}/api/v1/users/fund-account`,
         {
-          userId: current_user_ids,
+          userId: currentUserId,
           ifsc: newAccount.ifscCode,
           UPIId: newAccount.UPIId,
           ...newAccount,
+        },
+        {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
         }
       );
 
@@ -150,8 +176,11 @@ const Withdrawal = () => {
           {
             fundAccountId: response.data.fundAccountId,
             last4: newAccount.accountNumber.slice(-4),
-            bankName: "Bank Name", // You might want to fetch actual bank name from IFSC
-          },
+            bankName: response.data.bankName || "Bank",
+            accountNumber: newAccount.accountNumber,
+            UPIId: newAccount.UPIId,
+            ifsc: newAccount.ifscCode
+          }
         ]);
         setNewAccount({
           name: "",
@@ -165,19 +194,17 @@ const Withdrawal = () => {
     } catch (error) {
       if (error.response?.status === 500) {
         setError("Invalid IFSC Code in Bank Account.");
-        return;
+      } else {
+        toast.error(error.response?.data?.message || "Failed to add account");
       }
-      toast.error(error.response?.data?.message || "Failed to add account");
     } finally {
-      setIsLoading(false); // Stop loading regardless of success/error
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
     if (error) {
-      const timer = setTimeout(() => {
-        setError(null);
-      }, 5000);
+      const timer = setTimeout(() => setError(null), 5000);
       return () => clearTimeout(timer);
     }
   }, [error]);
@@ -207,14 +234,12 @@ const Withdrawal = () => {
           {/* Withdrawal Form */}
           <div className="bg-white rounded-2xl shadow-lg p-6">
             <h3 className="text-xl font-semibold text-gray-800 mb-6 flex items-center gap-2">
-              <FiArrowUpRight className="w-6 h-6 text-green-600" /> Withdraw
-              Funds
+              <FiArrowUpRight className="w-6 h-6 text-green-600" /> Withdraw Funds
             </h3>
             <form onSubmit={handleWithdrawal} className="space-y-6">
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-2 flex items-center gap-2">
-                  <FiDollarSign className="w-4 h-4 text-gray-500" /> Amount
-                  (INR)
+                  <FiDollarSign className="w-4 h-4 text-gray-500" /> Amount (INR)
                 </label>
                 <div className="relative">
                   <input
@@ -231,8 +256,7 @@ const Withdrawal = () => {
 
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-2 flex items-center gap-2">
-                  <FiCreditCard className="w-4 h-4 text-gray-500" /> Select Bank
-                  Account
+                  <FiCreditCard className="w-4 h-4 text-gray-500" /> Select Bank Account
                 </label>
                 <select
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all appearance-none bg-white"
@@ -241,7 +265,7 @@ const Withdrawal = () => {
                   required
                 >
                   <option value="">Choose an account</option>
-                  {bankAccounts?.map((account) => (
+                  {bankAccounts.map((account) => (
                     <option
                       key={account.fundAccountId}
                       value={account.fundAccountId}
@@ -255,9 +279,9 @@ const Withdrawal = () => {
               <button
                 type="submit"
                 className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-medium py-3 px-6 rounded-xl transition-all duration-200 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={!selectedAccount || !amount}
+                disabled={!selectedAccount || !amount || isLoading}
               >
-                Initiate Withdrawal
+                {isLoading ? "Processing..." : "Initiate Withdrawal"}
               </button>
             </form>
           </div>
@@ -265,8 +289,7 @@ const Withdrawal = () => {
           {/* Add Bank Account Form */}
           <div className="bg-white rounded-2xl shadow-lg p-6">
             <h3 className="text-xl font-semibold text-gray-800 mb-6 flex items-center gap-2">
-              <FiCreditCard className="w-6 h-6 text-blue-600" /> Add Bank
-              Account
+              <FiCreditCard className="w-6 h-6 text-blue-600" /> Add Bank Account
             </h3>
 
             <form onSubmit={handleAddAccount} className="space-y-6">
@@ -286,7 +309,6 @@ const Withdrawal = () => {
                   />
                 </div>
 
-                {/* Email Field */}
                 <div>
                   <label className="block text-sm font-medium text-gray-600">
                     Email Address
@@ -302,7 +324,6 @@ const Withdrawal = () => {
                   />
                 </div>
 
-                {/* Phone Field */}
                 <div>
                   <label className="block text-sm font-medium text-gray-600">
                     Phone Number
@@ -319,6 +340,7 @@ const Withdrawal = () => {
                     required
                   />
                 </div>
+
                 <div>
                   <label className="block text-sm font-medium text-gray-600">
                     Account Number
@@ -353,45 +375,41 @@ const Withdrawal = () => {
                     }
                     required
                   />
-
-                  {/* Add this new UPI ID field */}
-                  <div>
-                    <label className="block text-sm font-medium text-gray-600">
-                      UPI ID
-                    </label>
-                    <input
-                      type="text"
-                      className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
-                      value={newAccount.UPIId}
-                      onChange={(e) =>
-                        setNewAccount({ ...newAccount, UPIId: e.target.value })
-                      }
-                      
-                      placeholder="yourname@upi"
-                      pattern="^[a-zA-Z0-9.-]+@[a-zA-Z]+$"
-                      title="Enter a valid UPI ID (e.g., example@upi)"
-                      required
-                    />
-                  </div>
-
-                  {/* Error Message Display */}
-                  {error && (
-                    <div className="mb-4 mt-[10px] p-4 bg-red-50 border-l-4 border-red-400 text-red-700 rounded-lg flex items-center animate-fade-in">
-                      <svg
-                        className="w-5 h-5 mr-2"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <path
-                          fillRule="evenodd"
-                          d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
-                          clipRule="evenodd"
-                        />
-                      </svg>
-                      <span>{error}</span>
-                    </div>
-                  )}
                 </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-600">
+                    UPI ID
+                  </label>
+                  <input
+                    type="text"
+                    className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
+                    value={newAccount.UPIId}
+                    onChange={(e) =>
+                      setNewAccount({ ...newAccount, UPIId: e.target.value })
+                    }
+                    placeholder="yourname@upi"
+                    pattern="^[a-zA-Z0-9.-]+@[a-zA-Z]+$"
+                    title="Enter a valid UPI ID (e.g., example@upi)"
+                  />
+                </div>
+
+                {error && (
+                  <div className="mb-4 mt-[10px] p-4 bg-red-50 border-l-4 border-red-400 text-red-700 rounded-lg flex items-center animate-fade-in">
+                    <svg
+                      className="w-5 h-5 mr-2"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    <span>{error}</span>
+                  </div>
+                )}
               </div>
 
               <button
@@ -434,76 +452,79 @@ const Withdrawal = () => {
         {/* Transaction History */}
         <div className="bg-white rounded-2xl shadow-lg p-6">
           <h3 className="text-xl font-semibold text-gray-800 mb-6 flex items-center gap-2">
-            <FiCheckCircle className="w-6 h-6 text-purple-600" /> Transaction
-            History
+            <FiCheckCircle className="w-6 h-6 text-purple-600" /> Transaction History
           </h3>
-          <div className="overflow-x-auto rounded-lg border border-gray-100">
-            <table className="w-full">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
-                    Date
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
-                    Amount
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
-                    Status
-                  </th>
-                  <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
-                    Transaction ID
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {transactions?.length > 0 ? (
-                  transactions.map((transaction) => (
-                    <tr
-                      key={transaction._id}
-                      className="hover:bg-gray-50 transition-colors"
-                    >
-                      <td className="px-6 py-4 text-sm text-gray-700">
-                        {new Date(transaction.createdAt).toLocaleDateString(
-                          "en-IN"
-                        )}
-                      </td>
-                      <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                        ₹{transaction.amount}
-                      </td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium capitalize ${
-                            transaction.status === "completed"
-                              ? "bg-green-100 text-green-800"
-                              : transaction.status === "failed"
-                              ? "bg-red-100 text-red-800"
-                              : "bg-amber-100 text-amber-800"
-                          }`}
-                        >
-                          {transaction.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-sm text-gray-700 font-mono">
-                        {transaction.transactionId}
+          {transactionsLoading ? (
+            <div className="flex justify-center items-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+            </div>
+          ) : (
+            <div className="overflow-x-auto rounded-lg border border-gray-100">
+              <table className="w-full">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
+                      Date
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
+                      Amount
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
+                      Status
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
+                      Transaction ID
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {transactions.length > 0 ? (
+                    transactions.map((transaction) => (
+                      <tr
+                        key={transaction._id}
+                        className="hover:bg-gray-50 transition-colors"
+                      >
+                        <td className="px-6 py-4 text-sm text-gray-700">
+                          {new Date(transaction.createdAt).toLocaleDateString("en-IN")}
+                        </td>
+                        <td className="px-6 py-4 text-sm font-medium text-gray-900">
+                          ₹{transaction.amount?.toFixed(2) || '0.00'}
+                        </td>
+                        <td className="px-6 py-4">
+                          <span
+                            className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium capitalize ${
+                              transaction.status === "completed"
+                                ? "bg-green-100 text-green-800"
+                                : transaction.status === "failed"
+                                ? "bg-red-100 text-red-800"
+                                : "bg-amber-100 text-amber-800"
+                            }`}
+                          >
+                            {transaction.status}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-700 font-mono">
+                          {transaction._id?.slice(-8) || 'N/A'}
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td
+                        colSpan="4"
+                        className="px-6 py-8 text-center text-gray-400"
+                      >
+                        <div className="flex flex-col items-center justify-center">
+                          <FiCreditCard className="w-12 h-12 text-gray-300 mb-4" />
+                          No transactions found
+                        </div>
                       </td>
                     </tr>
-                  ))
-                ) : (
-                  <tr>
-                    <td
-                      colSpan="4"
-                      className="px-6 py-8 text-center text-gray-400"
-                    >
-                      <div className="flex flex-col items-center justify-center">
-                        <FiCreditCard className="w-12 h-12 text-gray-300 mb-4" />
-                        No transactions found
-                      </div>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
     </div>

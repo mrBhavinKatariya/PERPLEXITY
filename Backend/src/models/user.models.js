@@ -26,6 +26,10 @@ const bankAccountSchema = new Schema(
       type: String,
       // required: true,
     },
+    transactionId: {
+      type: String,
+      // required: true,
+    },
     ifsc: {
       type: String,
       // required: true,
