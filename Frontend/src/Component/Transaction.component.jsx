@@ -5,8 +5,10 @@ import {
   FiCheckCircle, 
   FiChevronLeft, 
   FiChevronRight, 
-  FiCreditCard 
+  FiCreditCard,
+  FiLoader
 } from 'react-icons/fi';
+import { motion } from 'framer-motion';
 
 const API_URL =
   import.meta.env.REACT_APP_API_URL || "https://perplexity-bd2d.onrender.com";
@@ -17,50 +19,85 @@ const TransactionHistory = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [loading, setLoading] = useState(true);
   const [currentUserId, setCurrentUserId] = useState(null);
+  const [isPageChanging, setIsPageChanging] = useState(false);
+
+  const fetchTransactions = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem("token");
+      if (!token) throw new Error("Authentication required");
+
+      // Get current user
+      const userResponse = await axios.get(
+        `${API_URL}/api/v1/users/current-user`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      const userId = userResponse.data.data._id;
+      setCurrentUserId(userId);
+
+      // Fetch transactions
+      const response = await axios.get(
+        `${API_URL}/api/v1/users/transactions-history/${userId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+          params: { page: currentPage, limit: 10 }
+        }
+      );
+
+      setTransactions(response.data.transactions);
+      setTotalPages(response.data.totalPages);
+    } catch (error) {
+      const message = error.response?.data?.message || error.message;
+      toast.error(`Error: ${message}`);
+    } finally {
+      setLoading(false);
+      setIsPageChanging(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchTransactions = async () => {
-      try {
-        setLoading(true);
-        const token = localStorage.getItem("token");
-        if (!token) throw new Error("Authentication required");
-
-        // Get current user
-        const userResponse = await axios.get(
-          `${API_URL}/api/v1/users/current-user`,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        
-        const userId = userResponse.data.data._id;
-        setCurrentUserId(userId);
-
-        // Fetch transactions
-        const response = await axios.get(
-          `${API_URL}/api/v1/users/transactions-history/${userId}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-            params: { page: currentPage, limit: 10 }
-          }
-        );
-
-        setTransactions(response.data.transactions);
-        setTotalPages(response.data.totalPages);
-      } catch (error) {
-        const message = error.response?.data?.message || error.message;
-        toast.error(`Error: ${message}`);
-      } finally {
-        setLoading(false);
-      }
-    };
-
     fetchTransactions();
   }, [currentPage]);
+
+  const handlePageChange = (newPage) => {
+    setIsPageChanging(true);
+    setCurrentPage(newPage);
+  };
+
+  // Skeleton loader for table rows
+  const SkeletonRow = () => (
+    <motion.tr 
+      initial={{ opacity: 0.5 }}
+      animate={{ opacity: 1 }}
+      transition={{ repeat: Infinity, repeatType: "reverse", duration: 1 }}
+      className="hover:bg-gray-50"
+    >
+      <td className="px-6 py-4">
+        <div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse"></div>
+      </td>
+      <td className="px-6 py-4">
+        <div className="h-4 bg-gray-200 rounded w-1/2 animate-pulse"></div>
+      </td>
+      <td className="px-6 py-4">
+        <div className="h-6 bg-gray-200 rounded-full w-20 animate-pulse"></div>
+      </td>
+      <td className="px-6 py-4">
+        <div className="h-4 bg-gray-200 rounded w-full animate-pulse"></div>
+      </td>
+    </motion.tr>
+  );
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-5xl mx-auto space-y-8">
         {/* Header */}
-        <div className="bg-white rounded-2xl shadow-lg p-6">
+        <motion.div 
+          initial={{ y: -20, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="bg-white rounded-2xl shadow-lg p-6"
+        >
           <div className="flex items-center gap-4">
             <div className="p-3 bg-purple-100 rounded-xl">
               <FiCheckCircle className="w-8 h-8 text-purple-600" />
@@ -72,7 +109,7 @@ const TransactionHistory = () => {
               </p>
             </div>
           </div>
-        </div>
+        </motion.div>
 
         {/* Transaction Table */}
         <div className="bg-white rounded-2xl shadow-lg p-6">
@@ -96,18 +133,19 @@ const TransactionHistory = () => {
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {loading ? (
-                  <tr>
-                    <td colSpan="4" className="px-6 py-8 text-center">
-                      <div className="flex justify-center items-center py-12">
-                        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
-                      </div>
-                    </td>
-                  </tr>
+                  <>
+                    {[...Array(5)].map((_, index) => (
+                      <SkeletonRow key={index} />
+                    ))}
+                  </>
                 ) : transactions.length > 0 ? (
                   transactions.map((transaction) => (
-                    <tr
+                    <motion.tr
                       key={transaction.transactionId || transaction._id}
-                      className="hover:bg-gray-50 transition-colors"
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ duration: 0.3 }}
+                      className="hover:bg-gray-50"
                     >
                       <td className="px-6 py-4 text-sm text-gray-700">
                         {new Date(transaction.createdAt).toLocaleDateString("en-IN")}
@@ -131,7 +169,7 @@ const TransactionHistory = () => {
                       <td className="px-6 py-4 text-sm text-gray-700 font-mono">
                         {transaction.transactionId || transaction._id?.slice(-8) || 'N/A'}
                       </td>
-                    </tr>
+                    </motion.tr>
                   ))
                 ) : (
                   <tr>
@@ -150,35 +188,54 @@ const TransactionHistory = () => {
           {/* Pagination */}
           {totalPages > 1 && (
             <div className="flex items-center justify-between mt-6">
-              <button
-                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                disabled={currentPage === 1}
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={() => handlePageChange(Math.max(currentPage - 1, 1))}
+                disabled={currentPage === 1 || isPageChanging}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg border ${
-                  currentPage === 1 
+                  currentPage === 1 || isPageChanging
                     ? 'border-gray-200 text-gray-400 cursor-not-allowed' 
                     : 'border-gray-300 text-gray-700 hover:bg-gray-50'
                 }`}
               >
-                <FiChevronLeft className="w-5 h-5" />
+                {isPageChanging && currentPage > 1 ? (
+                  <FiLoader className="w-5 h-5 animate-spin" />
+                ) : (
+                  <FiChevronLeft className="w-5 h-5" />
+                )}
                 Previous
-              </button>
+              </motion.button>
               
               <div className="text-sm text-gray-600">
-                Page {currentPage} of {totalPages}
+                {isPageChanging ? (
+                  <motion.div 
+                    animate={{ opacity: [0.5, 1, 0.5] }}
+                    transition={{ repeat: Infinity, duration: 1.5 }}
+                  >
+                    Loading...
+                  </motion.div>
+                ) : (
+                  `Page ${currentPage} of ${totalPages}`
+                )}
               </div>
               
-              <button
-                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                disabled={currentPage === totalPages}
+              <motion.button
+                whileTap={{ scale: 0.95 }}
+                onClick={() => handlePageChange(Math.min(currentPage + 1, totalPages))}
+                disabled={currentPage === totalPages || isPageChanging}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg border ${
-                  currentPage === totalPages
+                  currentPage === totalPages || isPageChanging
                     ? 'border-gray-200 text-gray-400 cursor-not-allowed'
                     : 'border-gray-300 text-gray-700 hover:bg-gray-50'
                 }`}
               >
                 Next
-                <FiChevronRight className="w-5 h-5" />
-              </button>
+                {isPageChanging && currentPage < totalPages ? (
+                  <FiLoader className="w-5 h-5 animate-spin" />
+                ) : (
+                  <FiChevronRight className="w-5 h-5" />
+                )}
+              </motion.button>
             </div>
           )}
         </div>
