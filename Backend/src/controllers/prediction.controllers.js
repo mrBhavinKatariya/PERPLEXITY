@@ -1112,6 +1112,8 @@ const createFundAccount = asyncHandler(async (req, res) => {
   try {
     const { userId, name, accountNumber, ifscCode, email, phone, UPIId } = req.body;
 
+    console.log("Request Body:", req.body);
+
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return res.status(400).json({ 
         success: false, 

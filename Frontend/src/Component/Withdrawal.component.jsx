@@ -33,7 +33,7 @@ const Withdrawal = () => {
     phone: "",
     accountNumber: "",
     ifscCode: "",
-    upiId:"",
+    UPIId:"",
   });
 
   useEffect(() => {
@@ -112,7 +112,7 @@ const Withdrawal = () => {
         return toast.error("Invalid Indian phone number");
       }
 
-      if (newAccount.upiId && !/^[a-zA-Z0-9.-]+@[a-zA-Z]+$/.test(newAccount.upiId)) {
+      if (newAccount.UPIId && !/^[a-zA-Z0-9.-]+@[a-zA-Z]+$/.test(newAccount.UPIId)) {
         setError('Invalid UPI ID format (e.g., name@bank)');
         setIsLoading(false);
         return;
@@ -123,7 +123,7 @@ const Withdrawal = () => {
         {
           userId: current_user_ids,
           ifsc: newAccount.ifscCode,
-          upiId: newAccount.upiId,
+          UPIId: newAccount.UPIId,
           ...newAccount,
         }
       );
@@ -144,7 +144,7 @@ const Withdrawal = () => {
           email: "",
           accountNumber: "",
           ifscCode: "",
-          upiId: "",
+          UPIId: "",
         });
       }
     } catch (error) {
@@ -347,9 +347,9 @@ const Withdrawal = () => {
                     <input
                       type="text"
                       className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all"
-                      value={newAccount.upiId}
+                      value={newAccount.UPIId}
                       onChange={(e) =>
-                        setNewAccount({ ...newAccount, upiId: e.target.value })
+                        setNewAccount({ ...newAccount, UPIId: e.target.value })
                       }
                       
                       placeholder="yourname@upi"
