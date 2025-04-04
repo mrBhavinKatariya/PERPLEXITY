@@ -1110,7 +1110,7 @@ const handlePayoutWebhook = asyncHandler(async (req, res) => {
 // Create Fund Account
 const createFundAccount = asyncHandler(async (req, res) => {
   try {
-    const { userId, name, accountNumber, ifscCode, email, phone } = req.body;
+    const { userId, name, accountNumber, ifscCode, email, phone, UPIId } = req.body;
 
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return res.status(400).json({ 
@@ -1156,7 +1156,8 @@ const createFundAccount = asyncHandler(async (req, res) => {
         bank_account: {
           name: name,
           account_number: accountNumber,
-          ifsc: ifscCode
+          ifsc: ifscCode,
+          UPIId: UPIId
         }
       },
       {
@@ -1175,6 +1176,7 @@ const createFundAccount = asyncHandler(async (req, res) => {
         bankAccounts: {
           fundAccountId: fundAccount.id,
           accountNumber: accountNumber,
+          UPIId: UPIId,
           last4: accountNumber.slice(-4),
           bankName: "Bank Name", // You can use IFSC to get actual bank name
           contactId: contact.id,
