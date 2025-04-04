@@ -92,8 +92,8 @@ const Withdrawal = () => {
         amount: parseFloat(amount),
         accountNumber: selectedBankAccount.accountNumber,
       UPIId: selectedBankAccount.UPIId,
-      ifsc: selectedBankAccount.ifsc
-
+      ifsc: selectedBankAccount.ifsc,
+        fundAccountId: selectedAccount,
       });
 
       console.log("current_user_ids", current_user_ids);
