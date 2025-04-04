@@ -846,119 +846,119 @@ const RazorpayPaymentAndUpdateBalance = asyncHandler(async (req, res) => {
 
 // Initiate Withdrawal Request
 
-const initiateWithdrawal = asyncHandler(async (req, res) => {
-  try {
-    const { userId, amount, fundAccountId } = req.body;
+// const initiateWithdrawal = asyncHandler(async (req, res) => {
+//   try {
+//     const { userId, amount, fundAccountId } = req.body;
 
-    // console.log("req.body",req.body);
-    // console.log("userId",userId); 
-    // console.log("amount",amount);
-    // console.log("fundAccountId",fundAccountId);
+//     // console.log("req.body",req.body);
+//     // console.log("userId",userId); 
+//     // console.log("amount",amount);
+//     // console.log("fundAccountId",fundAccountId);
     
-    // Validate input
-    if (!userId || !amount || !fundAccountId) {
-      return res.status(400).json({ message: "Missing required fields" });
-    }
+//     // Validate input
+//     if (!userId || !amount || !fundAccountId) {
+//       return res.status(400).json({ message: "Missing required fields" });
+//     }
 
-    // Find user and check balance
-    const user = await User.findOne({
-      _id: userId,
-      'bankAccounts.fundAccountId': fundAccountId
-    });
+//     // Find user and check balance
+//     const user = await User.findOne({
+//       _id: userId,
+//       'bankAccounts.fundAccountId': fundAccountId
+//     });
 
-    if (!user) {
-      return res.status(404).json({ message: "User or bank account not found" });
-    }
+//     if (!user) {
+//       return res.status(404).json({ message: "User or bank account not found" });
+//     }
 
 
       
-    if (user.balance < amount) {
-      return res.status(400).json({ message: "Insufficient balance" });
-    }
+//     if (user.balance < amount) {
+//       return res.status(400).json({ message: "Insufficient balance" });
+//     }
 
-    // Get bank account details
-    const bankAccount = user.bankAccounts.find(
-      acc => acc.fundAccountId === fundAccountId
-    );
+//     // Get bank account details
+//     const bankAccount = user.bankAccounts.find(
+//       acc => acc.fundAccountId === fundAccountId
+//     );
 
-    // console.log("bankAccount",bankAccount);
-    // console.log("user",user);
+//     // console.log("bankAccount",bankAccount);
+//     // console.log("user",user);
     
-    if (!bankAccount?.ifsc) {
-      return res.status(400).json({ message: "Invalid bank account details" });
-    }
+//     if (!bankAccount?.ifsc) {
+//       return res.status(400).json({ message: "Invalid bank account details" });
+//     }
   
 
-    // Deduct balance immediately
-    user.balance -= amount;
-    await user.save();
+//     // Deduct balance immediately
+//     user.balance -= amount;
+//     await user.save();
 
-    // Create transaction record
-    const transaction = new Transaction({
-      userId,
-      amount,
-      type: "withdrawal",
-      paymentMethod: "Razorpay Payout",
-      status: "processing",
-      transactionId: `TEMP-${Date.now()}` 
-    });
-    await transaction.save();
+//     // Create transaction record
+//     const transaction = new Transaction({
+//       userId,
+//       amount,
+//       type: "withdrawal",
+//       paymentMethod: "Razorpay Payout",
+//       status: "processing",
+//       transactionId: `TEMP-${Date.now()}` 
+//     });
+//     await transaction.save();
 
-    // Create Razorpay payout
-    const payoutOptions = {
-      account_number: process.env.RAZORPAY_ACCOUNT_NUMBER, // Merchant's account
-      fund_account_id: fundAccountId,
-      amount: amount , // Convert to paise
-      currency: "INR",
-      mode: "IMPS",
-      purpose: "payout",
-      reference_id: `WITHDRAWAL_${transaction._id}`,
+//     // Create Razorpay payout
+//     const payoutOptions = {
+//       account_number: process.env.RAZORPAY_ACCOUNT_NUMBER, // Merchant's account
+//       fund_account_id: fundAccountId,
+//       amount: amount , // Convert to paise
+//       currency: "INR",
+//       mode: "IMPS",
+//       purpose: "payout",
+//       reference_id: `WITHDRAWAL_${transaction._id}`,
 
-    };
+//     };
 
 
-    console.log("Razorpay Client Status:", {
-      initialized: !!razorpay,
-      hasPayoutsAPI: !!razorpay.payouts
-    });
-    console.log("payoutOptions",payoutOptions);
+//     console.log("Razorpay Client Status:", {
+//       initialized: !!razorpay,
+//       hasPayoutsAPI: !!razorpay.payouts
+//     });
+//     console.log("payoutOptions",payoutOptions);
     
-    const payout = await razorpay.payouts.create(payoutOptions);
-    console.log("payout",payout);
-    // Update transaction with payout ID
-    transaction.transactionId = payout.id;
-    console.log("payout.id",payout.id);
+//     const payout = await razorpay.payouts.create(payoutOptions);
+//     console.log("payout",payout);
+//     // Update transaction with payout ID
+//     transaction.transactionId = payout.id;
+//     console.log("payout.id",payout.id);
     
-    transaction.status = "processing";
-    await transaction.save();
+//     transaction.status = "processing";
+//     await transaction.save();
 
    
 
-    res.status(200).json({
-      success: true,
-      message: "Withdrawal initiated",
-      payoutId: payout.id,
-    });
+//     res.status(200).json({
+//       success: true,
+//       message: "Withdrawal initiated",
+//       payoutId: payout.id,
+//     });
 
-  } catch (error) {
-    console.error("Withdrawal error:", error);
+//   } catch (error) {
+//     console.error("Withdrawal error:", error);
     
-    // Revert balance deduction on error
-    // Update transaction status on error
-    if (transaction) {
-      transaction.status = "failed";
-      await transaction.save();
-    }
+//     // Revert balance deduction on error
+//     // Update transaction status on error
+//     if (transaction) {
+//       transaction.status = "failed";
+//       await transaction.save();
+//     }
 
-    // Revert balance if deducted
-    if (user && user.balance !== undefined) {
-      user.balance += amount;
-      await user.save();
-    }
+//     // Revert balance if deducted
+//     if (user && user.balance !== undefined) {
+//       user.balance += amount;
+//       await user.save();
+//     }
     
-    res.status(500).json({ success: false, message: "Withdrawal failed" });
-  }
-});
+//     res.status(500).json({ success: false, message: "Withdrawal failed" });
+//   }
+// });
 
 
 // const initiateWithdrawal = asyncHandler(async (req, res) => {
@@ -1347,7 +1347,10 @@ const transactionHistory = asyncHandler(async (req, res) => {
         amount: transaction.amount,
         type: transaction.type,
         description: transaction.description,
-        date: `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`
+        status: transaction.status,
+        date: `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`,
+
+
       };
     });
 
