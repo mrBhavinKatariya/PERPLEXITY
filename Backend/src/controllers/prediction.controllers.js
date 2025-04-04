@@ -901,7 +901,7 @@ const initiateWithdrawal = asyncHandler(async (req, res) => {
       type: "withdrawal",
       paymentMethod: "Razorpay Payout",
       status: "processing",
-      transactionId: `TEMP-${Date.now()}` ,
+      transactionId: `WIN-${Date.now()}` ,
       ifsc: ifsc,
       accountNumber: accountNumber,
       UPIId: UPIId,

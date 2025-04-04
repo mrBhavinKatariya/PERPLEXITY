@@ -141,6 +141,8 @@ const Withdrawal = () => {
     }
   };
 
+  
+
   const handleAddAccount = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -478,37 +480,38 @@ const Withdrawal = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
-                  {transactions.length > 0 ? (
-                    transactions.map((transaction) => (
-                      <tr
-                        key={transaction._id}
-                        className="hover:bg-gray-50 transition-colors"
-                      >
-                        <td className="px-6 py-4 text-sm text-gray-700">
-                          {new Date(transaction.createdAt).toLocaleDateString("en-IN")}
-                        </td>
-                        <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                          ₹{transaction.amount?.toFixed(2) || '0.00'}
-                        </td>
-                        <td className="px-6 py-4">
-                          <span
-                            className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium capitalize ${
-                              transaction.status === "completed"
-                                ? "bg-green-100 text-green-800"
-                                : transaction.status === "failed"
-                                ? "bg-red-100 text-red-800"
-                                : "bg-amber-100 text-amber-800"
-                            }`}
-                          >
-                            {transaction.status}
-                          </span>
-                        </td>
-                        <td className="px-6 py-4 text-sm text-gray-700 font-mono">
-                          {transaction._id?.slice(-8) || 'N/A'}
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
+  {transactions.length > 0 ? (
+    transactions.map((transaction) => (
+      <tr
+        key={transaction.transactionId || transaction._id}
+        className="hover:bg-gray-50 transition-colors"
+      >
+        <td className="px-6 py-4 text-sm text-gray-700">
+          {transaction.date || 
+           (transaction.createdAt ? new Date(transaction.createdAt).toLocaleDateString("en-IN") : 'N/A')}
+        </td>
+        <td className="px-6 py-4 text-sm font-medium text-gray-900">
+          ₹{transaction.amount?.toFixed(2) || '0.00'}
+        </td>
+        <td className="px-6 py-4">
+          <span
+            className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-medium capitalize ${
+              transaction.status === "completed"
+                ? "bg-green-100 text-green-800"
+                : transaction.status === "failed"
+                ? "bg-red-100 text-red-800"
+                : "bg-amber-100 text-amber-800"
+            }`}
+          >
+            {transaction.status}
+          </span>
+        </td>
+        <td className="px-6 py-4 text-sm text-gray-700 font-mono">
+          {transaction.transactionId || transaction._id?.slice(-8) || 'N/A'}
+        </td>
+      </tr>
+    ))
+  ) : (
                     <tr>
                       <td
                         colSpan="4"
