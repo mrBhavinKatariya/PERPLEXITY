@@ -366,7 +366,7 @@ const handlePrevHistory = () => {
         <div style={styles.rulesContent}>
           <div style={styles.ruleSection}>
             <p style={styles.ruleTime}>
-              ⏰ 3 minutes per issue, 2m 30s to order, 30s to show result
+              ⏰ 2 minutes per issue, 2m  to order, 20s to show result
               <br />
               🕒 480 issues/day | 💰 Contract amount after 2% fee: 98
             </p>
@@ -374,23 +374,23 @@ const handlePrevHistory = () => {
             <div style={styles.ruleItem}>
               <span style={styles.ruleTitle}>🎯 JOIN GREEN (1,3,7,9)</span>
               <span style={styles.rulePayout}>Win: 196 (98×2)</span>
-              <span style={styles.ruleSpecial}>If 5 appears: 147 (98×1.5)</span>
+    
             </div>
 
             <div style={styles.ruleItem}>
               <span style={styles.ruleTitle}>🎯 JOIN RED (2,4,6,8)</span>
               <span style={styles.rulePayout}>Win: 196 (98×2)</span>
-              <span style={styles.ruleSpecial}>If 0 appears: 147 (98×1.5)</span>
+              {/* <span style={styles.ruleSpecial}>If 0 appears: 147 (98×2)</span> */}
             </div>
 
             <div style={styles.ruleItem}>
               <span style={styles.ruleTitle}>🎯 JOIN VIOLET (0,5)</span>
-              <span style={styles.rulePayout}>Win: 441 (98×4.5)</span>
+              <span style={styles.rulePayout}>Win: 441 (98×2)</span>
             </div>
 
             <div style={styles.ruleItem}>
               <span style={styles.ruleTitle}>🎯 SELECT NUMBER</span>
-              <span style={styles.rulePayout}>Win: 882 (98×9)</span>
+              <span style={styles.rulePayout}>Win: 882 (98×6)</span>
             </div>
 
             <p style={styles.ruleNote}>

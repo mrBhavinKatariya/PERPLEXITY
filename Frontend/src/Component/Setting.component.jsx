@@ -9,6 +9,7 @@ import {
   HiGift,
   HiInformationCircle,
   HiChevronDown,
+  HiArrowRight
 } from "react-icons/hi";
 import axios from "axios";
 import RechargePage from "./Recharge.component";
@@ -32,6 +33,7 @@ const SettingsPage = () => {
   const [showWalletDropdown, setShowWalletDropdown] = useState(false);
   const [showAboutDropdown, setShowAboutDropdown] = useState(false);
   const [showCopiedMessage, setShowCopiedMessage] = useState(false);
+  const [showDailyBonusModal, setShowDailyBonusModal] = useState(false);
   const [showAccountSecurityDropdown, setShowAccountSecurityDropdown] =
     useState(false);
 
@@ -72,6 +74,23 @@ const SettingsPage = () => {
       setTimeout(() => setShowCopiedMessage(false), 2000);
     }
   };
+  
+  useEffect(() => {
+    if (showDailyBonusModal) {
+      document.body.style.overflow = 'hidden';
+      document.body.style.position = 'fixed';
+      document.body.style.width = '100%';
+    } else {
+      document.body.style.overflow = 'auto';
+      document.body.style.position = 'static';
+    }
+  
+    return () => {
+      document.body.style.overflow = 'auto';
+      document.body.style.position = 'static';
+    };
+  }, [showDailyBonusModal]);
+  
   
   return (
     <div className="min-h-screen bg-gray-50 p-4 md:p-8">
@@ -142,15 +161,106 @@ const SettingsPage = () => {
           </div>
           {showPromotionsDropdown && (
             <div className="space-y-3">
-              <button className="w-full p-3 bg-yellow-100 rounded-lg hover:bg-yellow-200">
-                Daily Bonuses
-              </button>
+             <button 
+  onClick={() => setShowDailyBonusModal(true)}
+  className="w-full p-3 bg-yellow-100 rounded-lg hover:bg-yellow-200"
+>
+  Daily Bonuses
+</button>
               <button className="w-full p-3 bg-purple-100 rounded-lg hover:bg-purple-200">
                 Special Offers
               </button>
             </div>
           )}
         </div>
+
+        {showDailyBonusModal && (
+  <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+    <div className="bg-gradient-to-br from-purple-50 to-blue-50 rounded-2xl shadow-xl w-full max-w-md flex flex-col max-h-[95vh] border border-white/20">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-6 shrink-0 rounded-[15px]">
+        <div className="flex items-center space-x-3">
+          <div className="bg-white/10 p-2 rounded-full">
+            <HiGift className="w-8 h-8 text-white/90" />
+          </div>
+          <h3 className="text-2xl font-bold text-white tracking-tight">
+            Referral Benefits
+          </h3>
+        </div>
+      </div>
+
+      {/* Scrollable Content */}
+      <div className="flex-1 overflow-y-auto px-6 py-4 space-y-6">
+        {/* Commission Section */}
+        <div className="flex items-start gap-4">
+          <div className="shrink-0 p-3 bg-green-100 rounded-full">
+            <HiCurrencyRupee className="w-6 h-6 text-green-600" />
+          </div>
+          <p className="text-lg text-gray-800 leading-relaxed">
+            Earn <span className="font-bold text-purple-600">10% commission</span> on 
+            every recharge made by your referred users. 
+            Instant rewards, lifetime benefits!
+          </p>
+        </div>
+
+        {/* How It Works */}
+        <div className="bg-white rounded-xl p-5 shadow-md border border-purple-100">
+          <div className="flex items-center gap-2 text-blue-600 mb-4">
+            <HiInformationCircle className="w-5 h-5" />
+            <span className="font-semibold">How It Works</span>
+          </div>
+          <div className="space-y-4 text-gray-700">
+            {[
+              {
+                title: "User signs up with your referral code",
+                desc: "Your unique code connects them to your network"
+              },
+              {
+                title: "They make any recharge",
+                desc: "Applies to every top-up they perform"
+              },
+              {
+                title: "You instantly get 10% of each recharge",
+                desc: "Lifetime benefits - Earn from every transaction they make"
+              }
+            ].map((item, index) => (
+              <div key={index} className="flex items-start gap-3">
+                <span className="text-green-500 text-xl mt-1">✓</span>
+                <div>
+                  <p className="font-medium">{item.title}</p>
+                  <p className="text-sm text-gray-500 mt-1">{item.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Calculation Example */}
+        <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-5 rounded-lg text-center">
+          <p className="text-sm text-gray-600 mb-3">Example Calculation</p>
+          <div className="flex items-center justify-center gap-3">
+            <span className="text-2xl font-bold text-purple-600">₹1000</span>
+            <HiArrowRight className="w-5 h-5 text-gray-400" />
+            <span className="text-2xl font-bold text-green-600">₹100</span>
+          </div>
+          <p className="text-sm text-gray-600 mt-2">
+            10% commission on ₹1000 recharge
+          </p>
+        </div>
+      </div>
+
+      {/* Close Button */}
+      <div className="p-6 shrink-0 border-t border-purple-100">
+        <button
+          onClick={() => setShowDailyBonusModal(false)}
+          className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-semibold py-3 rounded-xl transition-all duration-200 shadow-md"
+        >
+          Got It!
+        </button>
+      </div>
+    </div>
+  </div>
+)}
 
         {/* Recharge Section */}
         <div className="bg-white p-6 rounded-xl shadow-sm">

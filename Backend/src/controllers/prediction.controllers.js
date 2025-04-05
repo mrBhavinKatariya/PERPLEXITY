@@ -763,6 +763,9 @@ if (currentUser.referredBy) {
 
 // Get Referral Earnings
 const getReferralEarnings = asyncHandler(async (req, res) => {
+
+  console.log("req.user",req.user);
+  console.log("req.body",req.body);
   try {
     // Authenticated user को पहचानें
     const user = await User.findById(req.user._id);

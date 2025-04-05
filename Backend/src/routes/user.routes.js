@@ -22,7 +22,7 @@ router.route("/randomenumber").get(getRandomNumberEndpoint);
 router.route("/countdowntime").get(getCountdownTimeEndpoint);
 router.route("/lastrandomenumber").get(getLastTenRandomNumbersEndpoint)
 router.route("/delete-old-random-numbers").delete(deleteOldRandomNumbers);
-router.route('/utr-number').post(storeUTRNumberEndpoint);
+// router.route('/utr-number').post(storeUTRNumberEndpoint);
 router.route('/update-balance').post(updateUserBalanceEndpoint);
 router.route('/get-balance/:userId').get(verifyJWT,getUserBalanceEndpoint);
 router.route('/deduct-balance').post(deductUserBalance); // user re jyare bet mari te  amount confirm button

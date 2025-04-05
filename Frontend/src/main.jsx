@@ -32,6 +32,7 @@ import PrivacyPolicyPage from "./Component/PrivacyPolicy.component";
 import RefundPolicyPage from "./Component/RefundPolicy.component";
 import TermsOfUse from "./Component/terms.component";
 import ShippingPolicy from "./Component/Shipping.component";
+import ReferralEarnings from "./Component/ReferralEarnings.component";
 // import AdminOverride from "./Component/Admin.component";
 // import VideoDetails from "./Component/Showvideo.component";
 // import VideoDetails from "./Component/Showvideo";
@@ -64,6 +65,9 @@ const router = createBrowserRouter(
       <Route path="/history/:username" element={<History/>} /> */}
       <Route path="/withdrawal" element={<Withdrawal/>} />
       <Route path="/Transaction-history" element={<TransactionHistory/>} />
+      <Route path="/referral/earnings" element={<ReferralEarnings/>} />
+
+
       {/*------------------ Aaya thi  remove thase -------------- */}
       <Route path="/jewellery" element = {<Jewellery/>} />
       <Route path="/aboutus" element = {<AboutUs/>} />
