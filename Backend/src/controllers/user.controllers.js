@@ -26,7 +26,7 @@ const generateRefreshToken = async (userId) => {
 
 
 const registerUser = asyncHandler(async (req, res) => {
-    const { username, email, password, fullname, phoneNo, referralCode   } = req.body;
+    const { username, email, password, fullname, phoneNo, referralCode, balance  } = req.body;
     console.log("req.body",req.body);
     // console.log("refid",referralCode);
   

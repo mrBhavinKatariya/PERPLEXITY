@@ -12,6 +12,7 @@ function RegisterPage() {
         fullname: "",
         phoneNo: "",
         referralCode: "" ,
+        balance: 50,
     });
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
