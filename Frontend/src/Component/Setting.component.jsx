@@ -9,7 +9,9 @@ import {
   HiGift,
   HiInformationCircle,
   HiChevronDown,
-  HiArrowRight
+  HiArrowRight,
+  HiUsers,
+  HiChat,
 } from "react-icons/hi";
 import axios from "axios";
 import RechargePage from "./Recharge.component";
@@ -34,6 +36,7 @@ const SettingsPage = () => {
   const [showAboutDropdown, setShowAboutDropdown] = useState(false);
   const [showCopiedMessage, setShowCopiedMessage] = useState(false);
   const [showDailyBonusModal, setShowDailyBonusModal] = useState(false);
+  const [showEarningsDropdown, setShowEarningsDropdown] = useState(false);
   const [showAccountSecurityDropdown, setShowAccountSecurityDropdown] =
     useState(false);
 
@@ -337,6 +340,41 @@ const SettingsPage = () => {
           )}
         </div>
 
+
+        <div className="bg-white p-6 rounded-xl shadow-sm">
+          <div
+            className="flex items-center justify-between mb-4 cursor-pointer"
+            onClick={() => setShowEarningsDropdown(!showEarningsDropdown)}
+          >
+            <div className="flex items-center">
+              <HiCurrencyRupee className="w-6 h-6 text-green-500 mr-2" />
+              <h2 className="text-xl font-semibold">Earnings</h2>
+            </div>
+            <HiChevronDown
+              className={`transform transition-transform ${
+                showEarningsDropdown ? "rotate-180" : ""
+              }`}
+            />
+          </div>
+          {showEarningsDropdown && (
+            <div className="space-y-3">
+              <button
+                onClick={() => navigate("/referral-earnings")}
+                className="w-full p-3 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 flex items-center justify-center space-x-2"
+              >
+                <HiUsers className="w-5 h-5" />
+                <span>Referral Earnings</span>
+              </button>
+              <button
+                onClick={() => window.open("https://t.me/bbazaarshop", "_blank")}
+                className="w-full p-3 bg-teal-100 text-teal-600 rounded-lg hover:bg-teal-200 flex items-center justify-center space-x-2"
+              >
+                <HiChat className="w-5 h-5" />
+                <span>Telegram Channel</span>
+              </button>
+            </div>
+          )}
+        </div>
         {/* About Section */}
         <div className="bg-white p-6 rounded-xl shadow-sm  mb-[15px]">
           <div

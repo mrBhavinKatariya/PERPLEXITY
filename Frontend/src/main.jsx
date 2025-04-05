@@ -65,7 +65,7 @@ const router = createBrowserRouter(
       <Route path="/history/:username" element={<History/>} /> */}
       <Route path="/withdrawal" element={<Withdrawal/>} />
       <Route path="/Transaction-history" element={<TransactionHistory/>} />
-      <Route path="/referral/earnings" element={<ReferralEarnings/>} />
+      <Route path="/referral-earnings" element={<ReferralEarnings/>} />
 
 
       {/*------------------ Aaya thi  remove thase -------------- */}
