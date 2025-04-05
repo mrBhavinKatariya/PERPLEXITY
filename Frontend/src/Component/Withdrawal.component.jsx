@@ -145,6 +145,8 @@ const Withdrawal = () => {
     } catch (error) {
       toast.error(error.response?.data?.message || "Withdrawal failed");
     } finally {
+      setBalance((prev) => prev - parseFloat(amount));
+      setAmount("");
       setIsLoading(false);
     }
   };

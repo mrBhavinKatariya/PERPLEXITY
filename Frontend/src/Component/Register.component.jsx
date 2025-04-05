@@ -17,12 +17,39 @@ function RegisterPage() {
     const [success, setSuccess] = useState("");
     const navigate = useNavigate();
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [showWelcomePopup, setShowWelcomePopup] = useState(false);
+
+
+    const validateEmail = (email) => {
+        const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return re.test(String(email).toLowerCase());
+    };
+
+    const validatePhone = (phone) => {
+        const re = /^[6-9]\d{9}$/;
+        return re.test(String(phone));
+    };
 
     const handleRegister = async () => {
-        setIsSubmitting(true); // Start loading
-        setError(""); // Clear previous errors
+        setError("");
+        setSuccess("");
+        if (!credentials.username || !credentials.email || !credentials.password || !credentials.fullname || !credentials.phoneNo) {
+            setError("All fields are required");
+            return;
+        }
 
-        console.log("Using API URL:", API_URL);
+
+        if (!validateEmail(credentials.email)) {
+            return setError("Please enter a valid email address");
+        }
+
+        if (!validatePhone(credentials.phoneNo)) {
+            return setError("Phone number must be 10 digits");
+        }
+        setIsSubmitting(true); // Start loading
+        setError("")
+
+        // console.log("Using API URL:", API_URL);
         try {
             const response = await axios.post(`${API_URL}/api/v1/users/register`, credentials, {
                 headers: {
@@ -36,6 +63,7 @@ function RegisterPage() {
 
             // Store the token in localStorage
             localStorage.setItem("token", accessToken);
+            setShowWelcomePopup(true);
             console.log("Token stored:", accessToken);
             // Redirect user to the homepage
             navigate("/prediction");
@@ -63,9 +91,33 @@ function RegisterPage() {
             setIsSubmitting(false); // Stop loading regardless of success/error
         }
         
-        
-        
     };
+
+    const handleRegistrationError = (error) => {
+        console.error("Registration failed:", error);
+        if (!error.response) {
+            setError("Network error. Please check your connection.");
+            return;
+        }
+
+        const { status } = error.response;
+        const errorMessages = {
+            409: "All fields are required.",
+            410: "Username or email already exists.",
+            412: "Invalid referral code",
+            default: "Registration failed. Please try again."
+        };
+
+        setError(errorMessages[status] || errorMessages.default);
+    };
+
+    const handleClosePopup = () => {
+        setShowWelcomePopup(false);
+        navigate("/prediction");
+    };
+
+
+
 
     return (
         <div className="flex items-center justify-center min-h-screen bg-gray-900 p-4">
@@ -181,8 +233,41 @@ function RegisterPage() {
                             </a>
                         </p>
                     </div>
+
+                    {showWelcomePopup && (
+                    <div className="fixed inset-0 bg-black/75 backdrop-blur-sm flex items-center justify-center z-50">
+                        <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-8 rounded-xl border border-cyan-500/30 w-full max-w-md relative">
+                            <h2 className="text-2xl font-bold text-cyan-400 mb-4">🎉 Registration Successful!</h2>
+                            <p className="text-gray-300 mb-6">
+                                Welcome to our community! Join our Telegram channel for updates and support.
+                            </p>
+
+                            <div className="space-y-4">
+                                <button
+                                    onClick={() => window.open("https://t.me/your_channel", "_blank")}
+                                    className="w-full flex items-center justify-center gap-2 bg-cyan-600 hover:bg-cyan-700 text-white py-3 rounded-lg transition-all"
+                                >
+                                    <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                                        <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221l-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.446 1.394c-.14.14-.26.258-.534.258l.213-3.053 5.56-5.022c.24-.213-.054-.333-.373-.121l-6.869 4.326-2.96-.924c-.64-.203-.658-.64.135-.954l11.566-4.458c.538-.196 1.006.128.832.941z"/>
+                                    </svg>
+                                    Join Telegram Channel
+                                </button>
+
+                                <button
+                                    onClick={handleClosePopup}
+                                    className="w-full bg-gray-700 hover:bg-gray-600 text-gray-300 py-3 rounded-lg transition-all"
+                                >
+                                    Continue to App
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
                 </div>
             </div>
+        
+          
+        
         </div>
     );
 }
