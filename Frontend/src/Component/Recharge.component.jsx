@@ -13,6 +13,7 @@ const RechargePage = ({ user, onClose }) => {
   const [name, setName] = useState("");
   const [userName, setUserName] = useState("");
   const [countdown, setCountdown] = useState(900);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
   const API_URL = import.meta.env.REACT_APP_API_URL || "https://perplexity-bd2d.onrender.com";
 
@@ -105,9 +106,11 @@ const RechargePage = ({ user, onClose }) => {
 
   const handleRazorpayPayment = async () => {
     try {
+      setIsProcessingPayment(true);
       const token = localStorage.getItem("token");
       if (!token) {
         alert("Please login to continue");
+        setIsProcessingPayment(false);
         return;
       }
   
@@ -143,7 +146,7 @@ const RechargePage = ({ user, onClose }) => {
                 razorpayPaymentId: response.razorpay_payment_id,
                 razorpayOrderId: response.razorpay_order_id,
                 razorpaySignature: response.razorpay_signature,
-                amount: amount * 100,
+                amount: amount ,
                 userId: userId,
               },
               authConfig
@@ -156,6 +159,8 @@ const RechargePage = ({ user, onClose }) => {
           } catch (error) {
             console.error("Payment verification failed:", error);
             alert("Payment verification failed");
+          } finally {
+            setIsProcessingPayment(false);
           }
         },
         theme: {
@@ -168,12 +173,14 @@ const RechargePage = ({ user, onClose }) => {
     } catch (error) {
       console.error("Razorpay payment failed:", error);
       alert(`Payment failed: ${error.response?.data?.message || error.message}`);
+      setIsProcessingPayment(false);
+    } finally {
+      setTimeout(() => setIsProcessingPayment(false), 3000);
     }
   };
 
-
-        // Only Razorpay payment method
-        const paymentMethods = ["Pay Now"];
+  const paymentMethods = ["Pay Now"];
+  
   return (
     <div style={styles.container}>
       {!showPopup ? (
@@ -250,15 +257,20 @@ const RechargePage = ({ user, onClose }) => {
                 {paymentMethods.map((method) => (
                   <button
                     key={method}
-                    style={styles.methodButton}
+                    style={{
+                      ...styles.methodButton,
+                      backgroundColor: isProcessingPayment ? "#e2e8f0" : "#f7fafc",
+                      cursor: isProcessingPayment ? "not-allowed" : "pointer"
+                    }}
                     onClick={() => {
                       if (method === "Pay Now") {
                         handleRazorpayPayment();
-                        setShowPopup(false);
+                        // setShowPopup(false);
                       }
                     }}
+                    disabled={isProcessingPayment}
                   >
-                    {method}
+                    {isProcessingPayment ? "Paying Now..." : method}
                   </button>
                 ))}
               </div>
