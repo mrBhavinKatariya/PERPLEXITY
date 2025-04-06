@@ -817,7 +817,7 @@ const RazorpayPaymentAndUpdateBalance = asyncHandler(async (req, res) => {
     }
 
     // Convert amount from paise to rupees
-    const amountInRupees = amount / 100 ;
+    const amountInRupees = amount;
 
     // Update user balance
     user.balance += amountInRupees;
