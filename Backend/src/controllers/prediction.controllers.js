@@ -851,6 +851,8 @@ const RazorpayPaymentAndUpdateBalance = asyncHandler(async (req, res) => {
   try {
     const { razorpayPaymentId, razorpayOrderId, razorpaySignature, amount } = req.body;
 
+    console.log("req.body",req.body);
+
     // Validate required fields
     if (!razorpayPaymentId || !razorpayOrderId || !razorpaySignature || !amount) {
       return res.status(400).json({ success: false, message: "Missing required fields" });
