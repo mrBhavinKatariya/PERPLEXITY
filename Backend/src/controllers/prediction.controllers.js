@@ -817,7 +817,7 @@ const RazorpayPaymentAndUpdateBalance = asyncHandler(async (req, res) => {
     }
 
     // Convert amount from paise to rupees
-    const amountInRupees = amount / 1 ;
+    const amountInRupees = amount / 100 ;
 
     // Update user balance
     user.balance += amountInRupees;
@@ -961,7 +961,7 @@ const initiateWithdrawal = asyncHandler(async (req, res) => {
     const transaction = new Transaction({
       userId,
       amount,
-      type: "withdrawal",
+      type: "debit", // withdrawal
       paymentMethod: "Razorpay Payout",
       status: "processing",
       transactionId: `WIN-${Date.now()}` ,
