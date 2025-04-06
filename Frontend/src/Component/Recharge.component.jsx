@@ -146,7 +146,7 @@ const RechargePage = ({ user, onClose }) => {
                 razorpayPaymentId: response.razorpay_payment_id,
                 razorpayOrderId: response.razorpay_order_id,
                 razorpaySignature: response.razorpay_signature,
-                amount: amount ,
+                amount: amount * 100,
                 userId: userId,
               },
               authConfig
