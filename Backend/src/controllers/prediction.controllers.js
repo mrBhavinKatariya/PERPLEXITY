@@ -793,9 +793,68 @@ const getReferralEarnings = asyncHandler(async (req, res) => {
   }
 });
 // Verify Payment and Update Balance
+// const RazorpayPaymentAndUpdateBalance = asyncHandler(async (req, res) => {
+//   try {
+//     const { razorpayPaymentId, razorpayOrderId, razorpaySignature, amount, userId } = req.body;
+
+//     // Create expected signature
+//     const expectedSignature = crypto
+//       .createHmac("sha256", process.env.RAZORPAY_KEY_SECRET)
+//       .update(`${razorpayOrderId}|${razorpayPaymentId}`)
+//       .digest("hex");
+
+//     // Validate signature
+//     if (expectedSignature !== razorpaySignature) {
+//       return res
+//         .status(400)
+//         .json({ success: false, message: "Invalid signature" });
+//     }
+
+//     // If signature is valid, update user balance
+//     const user = await User.findById(userId);
+//     if (!user) {
+//       return res.status(404).json({ success: false, message: "User not found" });
+//     }
+
+//     // Convert amount from paise to rupees
+//     const amountInRupees = amount / 1 ;
+
+//     // Update user balance
+//     user.balance += amountInRupees;
+//     // user.walletBalance += amountInRupees; ------------------------------------view  comment u.balance----------active this
+//     await user.save();
+
+//     // Create transaction record
+//     const transaction = new Transaction({
+//       userId,
+//       amount: amountInRupees,
+//       type: "credit",
+//       paymentMethod: "Razorpay",
+//       status: "completed",
+//       transactionId: razorpayPaymentId,
+//     });
+//     await transaction.save();
+
+//     res.status(200).json({
+//       success: true,
+//       message: "Payment verified and balance updated",
+//     });
+//   } catch (error) {
+//     console.error("Error verifying payment:", error);
+//     res
+//       .status(500)
+//       .json({ success: false, message: "Payment verification failed" });
+//   }
+// });
+
 const RazorpayPaymentAndUpdateBalance = asyncHandler(async (req, res) => {
   try {
-    const { razorpayPaymentId, razorpayOrderId, razorpaySignature, amount, userId } = req.body;
+    const { razorpayPaymentId, razorpayOrderId, razorpaySignature, amount } = req.body;
+
+    // Validate required fields
+    if (!razorpayPaymentId || !razorpayOrderId || !razorpaySignature || !amount) {
+      return res.status(400).json({ success: false, message: "Missing required fields" });
+    }
 
     // Create expected signature
     const expectedSignature = crypto
@@ -804,34 +863,35 @@ const RazorpayPaymentAndUpdateBalance = asyncHandler(async (req, res) => {
       .digest("hex");
 
     // Validate signature
-    if (expectedSignature !== razorpaySignature) {
+    const isSignatureValid = expectedSignature === razorpaySignature;
+    if (!isSignatureValid) {
       return res
         .status(400)
         .json({ success: false, message: "Invalid signature" });
     }
 
-    // If signature is valid, update user balance
-    const user = await User.findById(userId);
+    // Get authenticated user (better than taking userId from body)
+    const user = await User.findById(req.user?._id);
     if (!user) {
       return res.status(404).json({ success: false, message: "User not found" });
     }
 
-    // Convert amount from paise to rupees
-    const amountInRupees = amount / 1 ;
+    // Convert amount from paise to rupees (divide by 100)
+    const amountInRupees = amount / 100;
 
     // Update user balance
-    user.balance += amountInRupees;
-    // user.walletBalance += amountInRupees; ------------------------------------view  comment u.balance----------active this
+    user.walletBalance += amountInRupees;
     await user.save();
 
     // Create transaction record
     const transaction = new Transaction({
-      userId,
+      userId: user._id,
       amount: amountInRupees,
       type: "credit",
       paymentMethod: "Razorpay",
       status: "completed",
       transactionId: razorpayPaymentId,
+      orderId: razorpayOrderId // Store order ID for reference
     });
     await transaction.save();
 
