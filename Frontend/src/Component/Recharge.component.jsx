@@ -153,7 +153,9 @@ const RechargePage = ({ user, onClose }) => {
             );
   
             if (verificationResponse.data.success) {
-              alert("Payment successful!");
+              // alert("Payment successful!");
+              setShowPopup(false);
+              CloseButton();
               window.location.reload();
             }
           } catch (error) {
