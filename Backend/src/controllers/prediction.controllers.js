@@ -161,57 +161,57 @@ const getLastTenRandomNumbersEndpoint = asyncHandler(async (req, res) => {
 });
 
 // API endpoint to store UTR number
-const storeUTRNumberEndpoint = asyncHandler(async (req, res) => {
-  const { utrNumber, amount, userId, userDetails } = req.body;
-  const { phone, status } = userDetails;
-  console.log("Request Body:", req.body);
+// const storeUTRNumberEndpoint = asyncHandler(async (req, res) => {
+//   const { utrNumber, amount, userId, userDetails } = req.body;
+//   const { phone, status } = userDetails;
+//   console.log("Request Body:", req.body);
 
-  // Validate required fields
-  if (!utrNumber) {
-    return res
-      .status(400)
-      .json(new ApiResponse(400, null, "UTR number is required"));
-  }
+//   // Validate required fields
+//   if (!utrNumber) {
+//     return res
+//       .status(400)
+//       .json(new ApiResponse(400, null, "UTR number is required"));
+//   }
 
-  if (!amount) {
-    return res
-      .status(402)
-      .json(new ApiResponse(402, null, "Amount is required"));
-  }
+//   if (!amount) {
+//     return res
+//       .status(402)
+//       .json(new ApiResponse(402, null, "Amount is required"));
+//   }
 
-  if (!userId) {
-    return res.status(404).json(new ApiResponse(404, null, "Please login"));
-  }
+//   if (!userId) {
+//     return res.status(404).json(new ApiResponse(404, null, "Please login"));
+//   }
 
-  try {
-    // Create a new UTR number record
-    const utrRecord = new UTRNumber({
-      utrNumber,
-      amount,
-      userId,
-      phone,
-      status: status || "pending",
-    });
+//   try {
+//     // Create a new UTR number record
+//     const utrRecord = new UTRNumber({
+//       utrNumber,
+//       amount,
+//       userId,
+//       phone,
+//       status: status || "pending",
+//     });
 
-    // Save the record to the database
-    await utrRecord.save();
+//     // Save the record to the database
+//     await utrRecord.save();
 
-    return res
-      .status(201)
-      .json(new ApiResponse(201, utrRecord, "UTR number stored successfully"));
-  } catch (error) {
-    console.error("Error storing UTR number:", error);
-    return res
-      .status(500)
-      .json(
-        new ApiResponse(
-          500,
-          null,
-          "An error occurred while storing the UTR number"
-        )
-      );
-  }
-});
+//     return res
+//       .status(201)
+//       .json(new ApiResponse(201, utrRecord, "UTR number stored successfully"));
+//   } catch (error) {
+//     console.error("Error storing UTR number:", error);
+//     return res
+//       .status(500)
+//       .json(
+//         new ApiResponse(
+//           500,
+//           null,
+//           "An error occurred while storing the UTR number"
+//         )
+//       );
+//   }
+// });
 
 // API endpoint to update user balance
 const updateUserBalanceEndpoint = asyncHandler(async (req, res) => {
@@ -1787,7 +1787,7 @@ export {
   getRandomNumberEndpoint,
   getLastTenRandomNumbersEndpoint,
   deleteOldRandomNumbers,
-  storeUTRNumberEndpoint,
+  // storeUTRNumberEndpoint,
   updateUserBalanceEndpoint,
   getUserBalanceEndpoint,
   deductUserBalance,
