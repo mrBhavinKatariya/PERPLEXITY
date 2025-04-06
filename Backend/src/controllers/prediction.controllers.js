@@ -71,8 +71,8 @@ const handleRandomNumberGeneration = async () => {
 
 
       // ------------------aa che-----------------
-      // console.log("Current Number:", currentNumber);
-      // console.log("Next Predicted Number:", nextNumber);
+      console.log("Current Number:", currentNumber);
+      console.log("Next Predicted Number:", nextNumber);
                        
 
 
