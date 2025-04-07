@@ -65,9 +65,9 @@ export default function Dashboard() {
             <ul className="flex items-center space-x-6">
               {[ 
                 { to: "/", label: "Home" },
-                // { to: "/jewellery", label: "Jewellery" },
-                { to: "/prediction", label: "Prediction" }, // ---------------- ACTIVE KRVANU
-                { to: "/setting", label: "Setting" }, // ----------------ACTIVE KRVANU
+                { to: "/jewellery", label: "Jewellery" },
+                // { to: "/prediction", label: "Prediction" }, // ---------------- ACTIVE KRVANU
+                // { to: "/setting", label: "Setting" }, // ----------------ACTIVE KRVANU
 
 
                 // { to: "/create-video", label: "My Content" },
