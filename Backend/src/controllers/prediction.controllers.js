@@ -89,12 +89,12 @@ const handleRandomNumberGeneration = async () => {
 setInterval(() => {
   handleRandomNumberGeneration();
   countdownStartTime = Date.now(); // 🛠️ FIX: Reset countdown timer every 90s
-}, 90000);
+}, 120000);
 
 // API endpoint to get the countdown time
 const getCountdownTimeEndpoint = asyncHandler(async (req, res) => {
   const elapsedTime = Math.floor((Date.now() - countdownStartTime) / 1000);
-  const countdownTime = Math.max(90 - elapsedTime, 0);
+  const countdownTime = Math.max(120 - elapsedTime, 0);
 
   return res
     .status(200)
@@ -377,7 +377,7 @@ const handleUserBetEndpoint = asyncHandler(async (req, res) => {
 
   // Result processing
   try {
-    const remainingTime = Math.max(90 - Math.floor((Date.now() - countdownStartTime) / 1000), 0);
+    const remainingTime = Math.max(120 - Math.floor((Date.now() - countdownStartTime) / 1000), 0);
     await new Promise(resolve => setTimeout(resolve, remainingTime * 1000));
 
     const latestPrediction = await Prediction.findOne().sort({ createdAt: -1 }).lean();
