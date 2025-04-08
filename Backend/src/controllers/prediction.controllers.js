@@ -1,4 +1,4 @@
-// Prediction.controller 7:54 PM 27/3/25
+// Prediction.controller 7:54 PM 8/4/25
 import { asyncHandler } from "../utils/asyncHandler.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 import { Prediction } from "../models/storeNumber.models.js";
@@ -29,10 +29,22 @@ const generateRefreshToken = async (userId) => {
 
 // Function to generate a secure random number between 0 and 9
 const generateSecureRandomNumber = () => {
-  return crypto.randomInt(0, 10); // Generates a number between 0 and 9
+  try {
+    const num = crypto.randomInt(0, 10);
+    console.log('Generated secure number:', num);
+    return num;
+  } catch (error) {
+    console.error('Crypto error:', error);
+    return Math.floor(Math.random() * 10); // Fallback
+  }
 };
 
 const handleRandomNumberGeneration = async () => {
+
+  console.log('\n--- Triggering number generation ---');
+  console.log('Generation lock status:', isGenerating);
+
+
   if (!isGenerating) {
     isGenerating = true;
     try {
@@ -52,22 +64,18 @@ const handleRandomNumberGeneration = async () => {
         nextNumber = generateSecureRandomNumber();
       }
 
-      const period = lastRecord ? lastRecord.period + 1 : 1;
-
-      // Validate currentNumber and result
-      if (typeof currentNumber !== 'number' || isNaN(currentNumber)) {
-        throw new Error('Invalid currentNumber');
-      }
 
       const newPrediction = new Prediction({
         number: currentNumber,
         nextNumber: nextNumber,
         price: Math.floor(Math.random() * 965440),
-        period: period,
+        period: lastRecord ? lastRecord.period + 1 : 1,
         result: currentNumber, // Ensure result is assigned
       });
 
+      console.log('Saving new prediction...');
       await newPrediction.save();
+      console.log('Prediction saved successfully');
 
 
       // ------------------aa che-----------------
@@ -76,12 +84,15 @@ const handleRandomNumberGeneration = async () => {
                        
 
 
-      return currentNumber;
+      // return currentNumber;
     } catch (error) {
       console.error("Error in generation:", error);
     } finally {
       isGenerating = false;
     }
+  }
+  else{
+    console.log('Generation already in progress - skipping');
   }
 };
 
