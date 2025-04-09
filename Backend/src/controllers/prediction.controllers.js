@@ -413,7 +413,7 @@ const handleUserBetEndpoint = asyncHandler(async (req, res) => {
           if ([2, 4, 6, 8].includes(randomNumber)) multiplier = 2;
           break;
         case 'violet':
-          if ([0, 5].includes(randomNumber)) multiplier = 2; // 2X for violet
+          if ([0, 5].includes(randomNumber)) multiplier = 3; // 3X for violet
           break;
       }
       if (multiplier > 0) result = "WIN";
