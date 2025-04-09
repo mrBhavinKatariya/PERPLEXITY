@@ -385,12 +385,12 @@ const handlePrevHistory = () => {
 
             <div style={styles.ruleItem}>
               <span style={styles.ruleTitle}>🎯 JOIN VIOLET (0,5)</span>
-              <span style={styles.rulePayout}>Win: 441 (98×2)</span>
+              <span style={styles.rulePayout}>Win: 294 (98×3)</span>
             </div>
 
             <div style={styles.ruleItem}>
               <span style={styles.ruleTitle}>🎯 SELECT NUMBER</span>
-              <span style={styles.rulePayout}>Win: 882 (98×6)</span>
+              <span style={styles.rulePayout}>Win: 490 (98×5)</span>
             </div>
 
             <p style={styles.ruleNote}>
