@@ -48,7 +48,7 @@ const PrivacyPolicy = () => {
             <dl className="grid gap-4">
               {[
                 { term: 'You', definition: 'means the individual accessing or using the Service...' },
-                { term: 'Company', definition: 'refers to Mantri Malls' },
+                { term: 'Company', definition: 'refers to Wavelina Store' },
                 // Add all other definitions here
               ].map((item, idx) => (
                 <div key={idx} className="border-l-4 border-blue-100 pl-4">
@@ -116,18 +116,25 @@ const PrivacyPolicy = () => {
 
         {/* Contact Section */}
         <section className="mt-12 border-t pt-8">
-          <h2 className="text-2xl font-semibold text-gray-800 mb-4">Contact Us</h2>
-          <p className="text-gray-600">
-            If you have any questions about this Privacy Policy, You can contact us:
-          </p>
-          <a 
-            href="https://mantrigame.com/contact" 
-            className="mt-2 inline-flex items-center text-blue-600 hover:text-blue-800"
-          >
-            <span>By visiting this page on our website</span>
-            <HiChevronRight className="ml-1 w-5 h-5" />
-          </a>
-        </section>
+  <h2 className="text-2xl font-semibold text-gray-800 mb-4">Contact Us</h2>
+  <p className="text-gray-600">
+    If you have any questions about this Privacy Policy, You can contact us:
+  </p> <br/>
+  <a 
+    href="mailto:care.wavelina.store@proton.me"
+    className="mt-2 inline-flex items-center text-blue-600 hover:text-blue-800"
+  >
+    <span>By email: care.wavelina.store@proton.me</span>
+    <HiChevronRight className="ml-1 w-5 h-5" />
+  </a>
+  <a 
+    href="https://wavelina.store/privacy-policy" 
+    className="mt-2 inline-flex items-center text-blue-600 hover:text-blue-800"
+  >
+    <span>By visiting this page on our website</span>
+    <HiChevronRight className="ml-1 w-5 h-5" />
+  </a>
+</section>
 
         <div className="mt-8 text-sm text-gray-500 text-center">
         Last updated: {new Date().toLocaleDateString("en-IN")}
