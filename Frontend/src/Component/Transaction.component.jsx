@@ -148,8 +148,15 @@ const TransactionHistory = () => {
                       className="hover:bg-gray-50"
                     >
                       <td className="px-6 py-4 text-sm text-gray-700">
-                        {new Date(transaction.createdAt).toLocaleDateString("en-IN")}
-                      </td>
+  {transaction.date ? (
+    new Date(
+      // Convert DD/MM/YYYY to YYYY-MM-DD format
+      transaction.date.split('/').reverse().join('-')
+    ).toLocaleDateString('en-IN')
+  ) : (
+    <span className="text-red-500">Invalid Date</span>
+  )}
+</td>
                       <td className="px-6 py-4 text-sm font-medium text-gray-900">
                         ₹{transaction.amount?.toFixed(2) || '0.00'}
                       </td>
