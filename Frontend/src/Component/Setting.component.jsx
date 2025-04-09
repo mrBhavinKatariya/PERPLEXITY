@@ -366,7 +366,7 @@ const SettingsPage = () => {
                 <span>Referral Earnings</span>
               </button>
               <button
-                onClick={() => window.open("https://t.me/bbazaarshop", "_blank")}
+                onClick={() => window.open("https://t.me/wavelinastore", "_blank")}
                 className="w-full p-3 bg-teal-100 text-teal-600 rounded-lg hover:bg-teal-200 flex items-center justify-center space-x-2"
               >
                 <HiChat className="w-5 h-5" />
