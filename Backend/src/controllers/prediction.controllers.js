@@ -30,9 +30,7 @@ const generateRefreshToken = async (userId) => {
 // Function to generate a secure random number between 0 and 9
 const generateSecureRandomNumber = () => {
   try {
-    const num = crypto.randomInt(0, 10);
-    console.log('Generated secure number:', num);
-    return num;
+    return crypto.randomInt(0, 10); // 0-9 tak secure random
   } catch (error) {
     console.error('Crypto error:', error);
     return Math.floor(Math.random() * 10); // Fallback
@@ -40,67 +38,41 @@ const generateSecureRandomNumber = () => {
 };
 
 const handleRandomNumberGeneration = async () => {
-
-  console.log('\n--- Triggering number generation ---');
-  console.log('Generation lock status:', isGenerating);
-
-
   if (!isGenerating) {
     isGenerating = true;
     try {
       const lastRecord = await Prediction.findOne().sort({ createdAt: -1 });
 
-      let currentNumber;
-      let nextNumber;
-      if (lastRecord) {
-        // If lastRecord.nextNumber is missing, generate a new random number
-        currentNumber = lastRecord.nextNumber ?? generateSecureRandomNumber();
-        // currentNumber = lastRecord.nextNumber || generateSecureRandomNumber();
+      // Current number = pichle record ka nextNumber, nahi toh naya generate
+      const currentNumber = lastRecord?.nextNumber ?? generateSecureRandomNumber();
+      
+      // Naya nextNumber generate karo
+      const nextNumber = generateSecureRandomNumber();
 
-        nextNumber = generateSecureRandomNumber();
-      } else {
-        // If no lastRecord exists, generate both numbers
-        currentNumber = generateSecureRandomNumber();
-        nextNumber = generateSecureRandomNumber();
-      }
-
-
+      // Naya record banaye aur save karein
       const newPrediction = new Prediction({
         number: currentNumber,
         nextNumber: nextNumber,
         price: Math.floor(Math.random() * 965440),
-        period: lastRecord ? lastRecord.period + 1 : 1,
-        result: currentNumber, // Ensure result is assigned
+        period: (lastRecord?.period || 0) + 1,
+        result: currentNumber,
       });
 
-      console.log('Saving new prediction...');
       await newPrediction.save();
-      console.log('Prediction saved successfully');
-
-
-      // ------------------aa che-----------------
-      console.log("Current Number:", currentNumber);
-      console.log("Next Predicted Number:", nextNumber);
-                       
-
-
-      // return currentNumber;
+      console.log(`Generated: ${currentNumber}, Next: ${nextNumber}`);
+      
     } catch (error) {
-      console.error("Error in generation:", error);
+      console.error("Error:", error);
     } finally {
       isGenerating = false;
     }
   }
-  else{
-    console.log('Generation already in progress - skipping');
-  }
 };
 
 
-setInterval(() => {
-  handleRandomNumberGeneration();
-  countdownStartTime = Date.now(); // 🛠️ FIX: Reset countdown timer every 90s
-}, 120000);
+
+// Har 120 seconds par trigger karein
+setInterval(handleRandomNumberGeneration, 120000);
 
 // API endpoint to get the countdown time
 const getCountdownTimeEndpoint = asyncHandler(async (req, res) => {
