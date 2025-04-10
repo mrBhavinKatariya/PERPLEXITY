@@ -72,7 +72,10 @@ const handleRandomNumberGeneration = async () => {
 
 
 // Har 120 seconds par trigger karein
-setInterval(handleRandomNumberGeneration, 120000);
+setInterval(() => {
+  handleRandomNumberGeneration();
+  countdownStartTime = Date.now(); // 🛠️ FIX: Reset countdown timer every 90s
+}, 120000);
 
 // API endpoint to get the countdown time
 const getCountdownTimeEndpoint = asyncHandler(async (req, res) => {
