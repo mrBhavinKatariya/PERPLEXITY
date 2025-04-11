@@ -99,7 +99,7 @@
     border-radius: 5px;
   }
   
-  button {
+  /* button {
     background-color: #3498db;
     color: white;
     border: none;
@@ -108,7 +108,7 @@
     cursor: pointer;
     font-size: 1.1rem;
     transition: background-color 0.3s;
-  }
+  } */
   
   button:hover {
     background-color: #2980b9;
