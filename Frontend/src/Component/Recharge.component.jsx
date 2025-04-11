@@ -94,7 +94,7 @@ const RechargePage = ({ user, onClose }) => {
   };
 
   const handleProceedToPayment = () => {
-    if (amount <= 0 ||  amount <= 99) {
+    if (amount <= 0 ||  amount <= 0) {
       setError("Minimum amount is 100");
       return;
     }
@@ -160,9 +160,10 @@ const RechargePage = ({ user, onClose }) => {
             }
           } catch (error) {
             console.error("Payment verification failed:", error);
-            alert("Payment verification failed");
           } finally {
             setIsProcessingPayment(false);
+            setShowPopup(false);
+            CloseButton();
           }
         },
         theme: {
