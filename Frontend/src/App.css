@@ -110,9 +110,9 @@
     transition: background-color 0.3s;
   } */
   
-  button:hover {
+  /* button:hover {
     background-color: #2980b9;
-  }
+  } */
   
   .result {
     padding: 15px;
