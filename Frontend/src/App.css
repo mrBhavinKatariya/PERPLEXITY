@@ -1,5 +1,28 @@
 @import "tailwindcss";
 
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+
+/* Mobile-specific adjustments */
+@media (max-width: 768px) {
+  .number-button {
+    min-width: 25px !important;
+    min-height: 25px !important;
+  }
+  
+  .balance-group {
+    font-size: 0.9rem;
+  }
+  
+  .timer {
+    font-size: 1.2rem;
+  }
+}
+
 /* src/App.css */
 .game-container {
     max-width: 600px;

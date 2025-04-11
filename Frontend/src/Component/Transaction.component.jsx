@@ -1,14 +1,14 @@
-import { useState, useEffect } from 'react';
-import axios from 'axios';
-import { toast } from 'react-toastify';
-import { 
-  FiCheckCircle, 
-  FiChevronLeft, 
-  FiChevronRight, 
+import { useState, useEffect } from "react";
+import axios from "axios";
+import { toast } from "react-toastify";
+import {
+  FiCheckCircle,
+  FiChevronLeft,
+  FiChevronRight,
   FiCreditCard,
-  FiLoader
-} from 'react-icons/fi';
-import { motion } from 'framer-motion';
+  FiLoader,
+} from "react-icons/fi";
+import { motion } from "framer-motion";
 
 const API_URL =
   import.meta.env.REACT_APP_API_URL || "https://perplexity-bd2d.onrender.com";
@@ -32,7 +32,7 @@ const TransactionHistory = () => {
         `${API_URL}/api/v1/users/current-user`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      
+
       const userId = userResponse.data.data._id;
       setCurrentUserId(userId);
 
@@ -41,7 +41,7 @@ const TransactionHistory = () => {
         `${API_URL}/api/v1/users/transactions-history/${userId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
-          params: { page: currentPage, limit: 10 }
+          params: { page: currentPage, limit: 10 },
         }
       );
 
@@ -67,7 +67,7 @@ const TransactionHistory = () => {
 
   // Skeleton loader for table rows
   const SkeletonRow = () => (
-    <motion.tr 
+    <motion.tr
       initial={{ opacity: 0.5 }}
       animate={{ opacity: 1 }}
       transition={{ repeat: Infinity, repeatType: "reverse", duration: 1 }}
@@ -92,7 +92,7 @@ const TransactionHistory = () => {
     <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-8 px-4 sm:px-6 lg:px-8">
       <div className="max-w-5xl mx-auto space-y-8">
         {/* Header */}
-        <motion.div 
+        <motion.div
           initial={{ y: -20, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           transition={{ duration: 0.5 }}
@@ -103,7 +103,9 @@ const TransactionHistory = () => {
               <FiCheckCircle className="w-8 h-8 text-purple-600" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Transaction History</h1>
+              <h1 className="text-2xl font-bold text-gray-900">
+                Transaction History
+              </h1>
               <p className="text-gray-500 mt-1">
                 All your financial transactions in one place
               </p>
@@ -148,17 +150,17 @@ const TransactionHistory = () => {
                       className="hover:bg-gray-50"
                     >
                       <td className="px-6 py-4 text-sm text-gray-700">
-  {transaction.date ? (
-    new Date(
-      // Convert DD/MM/YYYY to YYYY-MM-DD format
-      transaction.date.split('/').reverse().join('-')
-    ).toLocaleDateString('en-IN')
-  ) : (
-    <span className="text-red-500">Invalid Date</span>
-  )}
-</td>
+                        {transaction.date ? (
+                          new Date(
+                            // Convert DD/MM/YYYY to YYYY-MM-DD format
+                            transaction.date.split("/").reverse().join("-")
+                          ).toLocaleDateString("en-IN")
+                        ) : (
+                          <span className="text-red-500">Invalid Date</span>
+                        )}
+                      </td>
                       <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                        ₹{transaction.amount?.toFixed(2) || '0.00'}
+                        ₹{transaction.amount?.toFixed(2) || "0.00"}
                       </td>
                       <td className="px-6 py-4">
                         <span
@@ -174,13 +176,18 @@ const TransactionHistory = () => {
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-700 font-mono">
-                        {transaction.transactionId || transaction._id?.slice(-8) || 'N/A'}
+                        {transaction.transactionId ||
+                          transaction._id?.slice(-8) ||
+                          "N/A"}
                       </td>
                     </motion.tr>
                   ))
                 ) : (
                   <tr>
-                    <td colSpan="4" className="px-6 py-8 text-center text-gray-400">
+                    <td
+                      colSpan="4"
+                      className="px-6 py-8 text-center text-gray-400"
+                    >
                       <div className="flex flex-col items-center justify-center">
                         <FiCreditCard className="w-12 h-12 text-gray-300 mb-4" />
                         No transactions found
@@ -201,8 +208,8 @@ const TransactionHistory = () => {
                 disabled={currentPage === 1 || isPageChanging}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg border ${
                   currentPage === 1 || isPageChanging
-                    ? 'border-gray-200 text-gray-400 cursor-not-allowed' 
-                    : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                    ? "border-gray-200 text-gray-400 cursor-not-allowed"
+                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
                 }`}
               >
                 {isPageChanging && currentPage > 1 ? (
@@ -212,10 +219,10 @@ const TransactionHistory = () => {
                 )}
                 Previous
               </motion.button>
-              
+
               <div className="text-sm text-gray-600">
                 {isPageChanging ? (
-                  <motion.div 
+                  <motion.div
                     animate={{ opacity: [0.5, 1, 0.5] }}
                     transition={{ repeat: Infinity, duration: 1.5 }}
                   >
@@ -225,15 +232,17 @@ const TransactionHistory = () => {
                   `Page ${currentPage} of ${totalPages}`
                 )}
               </div>
-              
+
               <motion.button
                 whileTap={{ scale: 0.95 }}
-                onClick={() => handlePageChange(Math.min(currentPage + 1, totalPages))}
+                onClick={() =>
+                  handlePageChange(Math.min(currentPage + 1, totalPages))
+                }
                 disabled={currentPage === totalPages || isPageChanging}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg border ${
                   currentPage === totalPages || isPageChanging
-                    ? 'border-gray-200 text-gray-400 cursor-not-allowed'
-                    : 'border-gray-300 text-gray-700 hover:bg-gray-50'
+                    ? "border-gray-200 text-gray-400 cursor-not-allowed"
+                    : "border-gray-300 text-gray-700 hover:bg-gray-50"
                 }`}
               >
                 Next

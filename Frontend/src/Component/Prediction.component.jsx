@@ -3,6 +3,7 @@ import axios from "axios";
 // import { FaTrophy } from "react-icons/fa";
 import RechargePage from "./Recharge.component";
 import { FaTrophy, FaSyncAlt } from "react-icons/fa";
+import "../App.css";
 
 export default function ColorPredictionGame() {
   const [timeLeft, setTimeLeft] = useState(120);
@@ -19,6 +20,8 @@ export default function ColorPredictionGame() {
   const [userBalance, setUserBalance] = useState(0); // User's available balance
   const [error, setError] = useState(""); // Error message for insufficient balance
   const [userId, setUserId] = useState(null); // Changed to null initial state
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [user, setUser] = useState({
     id: "", // Initialize with an empty string or fetch from authentication
     name: "",
@@ -34,14 +37,25 @@ export default function ColorPredictionGame() {
   const [authError, setAuthError] = useState("");
 
   const [disabledButtons, setDisabledButtons] = useState(() => {
-    const saved = localStorage.getItem('disabledButtons');
-    return saved ? JSON.parse(saved) : {
-      joinGreen: false,
-      joinRed: false,
-      joinViolet: false,
-      digits: [],
-    };
+    const saved = localStorage.getItem("disabledButtons");
+    return saved
+      ? JSON.parse(saved)
+      : {
+          joinGreen: false,
+          joinRed: false,
+          joinViolet: false,
+          digits: [],
+        };
   });
+
+  // Add resize listener
+  useEffect(() => {
+    const handleResize = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
 
   const API_URL =
     import.meta.env.REACT_APP_API_URL || "https://perplexity-bd2d.onrender.com";
@@ -108,16 +122,21 @@ export default function ColorPredictionGame() {
 
   // Add refresh handler function in the component
   const handleRefresh = async () => {
+    setIsRefreshing(true);
     try {
       // Refresh all data
-      await fetchUserBalance();
-      await fetchLastTenRandomNumbers(1);
-      await fetchUserHistory();
+      await Promise.all([
+        fetchUserBalance(),
+        fetchLastTenRandomNumbers(1),
+        fetchUserHistory(),
+        new Promise((resolve) => setTimeout(resolve, 2000)),
+      ]);
       setPage(1);
       setHistoryPage(1);
-      await fetchUserHistory(1);
     } catch (error) {
       console.error("Refresh error:", error);
+    } finally {
+      setIsRefreshing(false);
     }
   };
 
@@ -177,7 +196,7 @@ export default function ColorPredictionGame() {
           },
         }
       );
-  
+
       if (response.data.success) {
         setUserHistory(response.data.data);
         // Add total pages if available from API
@@ -188,36 +207,33 @@ export default function ColorPredictionGame() {
     }
   }, [userId, historyPage]);
 
-const handlePrevHistory = () => {
-  setHistoryPage((prev) => Math.max(1, prev - 1));
-};
+  const handlePrevHistory = () => {
+    setHistoryPage((prev) => Math.max(1, prev - 1));
+  };
 
   // Add these pagination handlers
   const handleNextHistory = () => {
     setHistoryPage((prev) => prev + 1);
   };
 
-// In the JSX for pagination buttons
-<div style={historyStyles.pagination}>
-  <button
-    style={styles.paginationButton}
-    onClick={handlePrevHistory}
-    disabled={historyPage === 1}
-  >
-    Previous
-  </button>
-  <button
-    style={styles.paginationButton}
-    onClick={handleNextHistory}
-    disabled={userHistory.length <= historyPage * 10}
-  >
-    Next
-  </button>
-  <div className="mb-[20px]"></div>
-</div>
-
-
-
+  // In the JSX for pagination buttons
+  <div style={historyStyles.pagination}>
+    <button
+      style={styles.paginationButton}
+      onClick={handlePrevHistory}
+      disabled={historyPage === 1}
+    >
+      Previous
+    </button>
+    <button
+      style={styles.paginationButton}
+      onClick={handleNextHistory}
+      disabled={userHistory.length <= historyPage * 10}
+    >
+      Next
+    </button>
+    <div className="mb-[20px]"></div>
+  </div>;
 
   // Add this useEffect to fetch history when page or user changes
   useEffect(() => {
@@ -227,9 +243,9 @@ const handlePrevHistory = () => {
   }, [userId, historyPage, fetchUserHistory]);
 
   useEffect(() => {
-    localStorage.setItem('disabledButtons', JSON.stringify(disabledButtons));
+    localStorage.setItem("disabledButtons", JSON.stringify(disabledButtons));
   }, [disabledButtons]);
- 
+
   const handleConfirmBet = async () => {
     // Remove isLoading check to allow multiple submissions
     setShowPopup(false);
@@ -291,20 +307,21 @@ const handlePrevHistory = () => {
 
   // Fetch countdown time from the API
   useEffect(() => {
+    const fetchCountdownTime = async () => {
+      try {
+        const response = await axios.get(
+          `${API_URL}/api/v1/users/countdownTime`
+        );
+        const serverCountdown = response.data.data.countdownTime; // Assuming API returns seconds
+        const newEndTime = Date.now() + serverCountdown * 1000;
 
-   const fetchCountdownTime = async () => {
-    try {
-      const response = await axios.get(`${API_URL}/api/v1/users/countdownTime`);
-      const serverCountdown = response.data.data.countdownTime; // Assuming API returns seconds
-      const newEndTime = Date.now() + serverCountdown * 1000;
-      
-      // Update both state and localStorage
-      localStorage.setItem('timerEndTime', newEndTime.toString());
-      setEndTime(newEndTime);
-      setTimeLeft(serverCountdown);
-    } catch (error) {
-      console.error('Error fetching countdown time:', error);
-    }
+        // Update both state and localStorage
+        localStorage.setItem("timerEndTime", newEndTime.toString());
+        setEndTime(newEndTime);
+        setTimeLeft(serverCountdown);
+      } catch (error) {
+        console.error("Error fetching countdown time:", error);
+      }
     };
 
     // Initial fetch
@@ -319,9 +336,9 @@ const handlePrevHistory = () => {
   // Timer logic
   useEffect(() => {
     const initializeTimer = async () => {
-      const storedEndTime = localStorage.getItem('timerEndTime');
+      const storedEndTime = localStorage.getItem("timerEndTime");
       const currentTime = Date.now();
-  
+
       if (storedEndTime) {
         const remaining = parseInt(storedEndTime) - currentTime;
         if (remaining > 0) {
@@ -333,7 +350,7 @@ const handlePrevHistory = () => {
       // If no valid local time, start new timer
       startNewTimer();
     };
-  
+
     initializeTimer();
   }, []);
 
@@ -351,12 +368,10 @@ const handlePrevHistory = () => {
 
   const startNewTimer = () => {
     const newEndTime = Date.now() + 120000;
-    localStorage.setItem('timerEndTime', newEndTime.toString());
+    localStorage.setItem("timerEndTime", newEndTime.toString());
     setEndTime(newEndTime);
     setTimeLeft(120);
   };
-  
-
 
   // Rules Popup JSX
   const renderRulesPopup = () => (
@@ -366,7 +381,7 @@ const handlePrevHistory = () => {
         <div style={styles.rulesContent}>
           <div style={styles.ruleSection}>
             <p style={styles.ruleTime}>
-              ⏰ 2 minutes per issue, 2m  to order, 20s to show result
+              ⏰ 2 minutes per issue, 2m to order, 20s to show result
               <br />
               🕒 480 issues/day | 💰 Contract amount after 2% fee: 98
             </p>
@@ -374,7 +389,6 @@ const handlePrevHistory = () => {
             <div style={styles.ruleItem}>
               <span style={styles.ruleTitle}>🎯 JOIN GREEN (1,3,7,9)</span>
               <span style={styles.rulePayout}>Win: 196 (98×2)</span>
-    
             </div>
 
             <div style={styles.ruleItem}>
@@ -481,13 +495,15 @@ const handlePrevHistory = () => {
 
     const fetchRandomNumber = async () => {
       try {
-        const response = await axios.get(`${API_URL}/api/v1/users/randomeNumber`);
+        const response = await axios.get(
+          `${API_URL}/api/v1/users/randomeNumber`
+        );
         const newNumber = response.data.data.number;
         console.log("New Random Number:", newNumber);
-    
+
         // Immediately fetch the latest records
         await fetchLastTenRandomNumbers(1);
-        
+
         // Refresh user history to show settled bets
         await fetchUserHistory(1);
         setHistoryPage(1);
@@ -512,16 +528,16 @@ const handlePrevHistory = () => {
     };
   }, [timeLeft, fetchLastTenRandomNumbers, selectedNumbers, fetchUserHistory]);
 
-   // Timer countdown effect (keep existing)
-   useEffect(() => {
+  // Timer countdown effect (keep existing)
+  useEffect(() => {
     if (!endTime) return;
-  
-    const interval = setInterval( async() => {
+
+    const interval = setInterval(async () => {
       const remaining = endTime - Date.now();
       if (remaining <= 0) {
         startNewTimer();
         setTimeLeft(0);
-        localStorage.removeItem('timerEndTime');
+        localStorage.removeItem("timerEndTime");
         clearInterval(interval);
         // Trigger end-of-timer actions
         await fetchRandomNumber();
@@ -530,7 +546,7 @@ const handlePrevHistory = () => {
         setTimeLeft(Math.floor(remaining / 1000));
       }
     }, 1000);
-  
+
     return () => clearInterval(interval);
   }, [endTime]);
 
@@ -542,7 +558,7 @@ const handlePrevHistory = () => {
         joinViolet: false,
         digits: [],
       });
-      localStorage.removeItem('disabledButtons'); // Optional: Clear localStorage entry
+      localStorage.removeItem("disabledButtons"); // Optional: Clear localStorage entry
       setTimeout(() => {
         setTimeLeft(120);
       }, 120000);
@@ -554,30 +570,30 @@ const handlePrevHistory = () => {
     if (timeLeft > 20) {
       setSelectedNumber(num);
       setShowPopup(true);
-  
+
       // Disable buttons based on selection
-      if (num === 'green') {
-        setDisabledButtons(prev => ({
+      if (num === "green") {
+        setDisabledButtons((prev) => ({
           ...prev,
           joinGreen: true,
-          digits: Array.from(new Set([...prev.digits, 1, 3, 7, 9]))
+          digits: Array.from(new Set([...prev.digits, 1, 3, 7, 9])),
         }));
-      } else if (num === 'red') {
-        setDisabledButtons(prev => ({
+      } else if (num === "red") {
+        setDisabledButtons((prev) => ({
           ...prev,
           joinRed: true,
-          digits: Array.from(new Set([...prev.digits, 2, 4, 6, 8]))
+          digits: Array.from(new Set([...prev.digits, 2, 4, 6, 8])),
         }));
-      } else if (num === 'violet') {
-        setDisabledButtons(prev => ({
+      } else if (num === "violet") {
+        setDisabledButtons((prev) => ({
           ...prev,
           joinViolet: true,
-          digits: Array.from(new Set([...prev.digits, 0, 5]))
+          digits: Array.from(new Set([...prev.digits, 0, 5])),
         }));
-      } else if (typeof num === 'number') {
-        setDisabledButtons(prev => ({
+      } else if (typeof num === "number") {
+        setDisabledButtons((prev) => ({
           ...prev,
-          digits: Array.from(new Set([...prev.digits, num]))
+          digits: Array.from(new Set([...prev.digits, num])),
         }));
       }
     }
@@ -624,26 +640,59 @@ const handlePrevHistory = () => {
 
   return (
     <div style={styles.container}>
-            {showLoginPopup && renderLoginPopup()}
+      {showLoginPopup && renderLoginPopup()}
       {/* Balance and Recharge Section */}
-      <div style={styles.balanceContainer}>
-        <div style={styles.balanceGroup}>
-          <span style={styles.balanceLabel}>Available Balance:</span>
-          <span style={styles.balanceAmount}>₹{userBalance.toFixed(2)}</span>
+      {/* Modified Balance and Recharge Section */}
+      <div style={styles.combinedContainer}>
+        {/* Buttons and Balance Section */}
+        <div style={styles.topRow}>
+          <FaSyncAlt
+            style={{
+              ...styles.refreshIcon,
+              animation: isRefreshing ? "spin 1s linear infinite" : "none",
+              pointerEvents: isRefreshing ? "none" : "auto",
+              opacity: isRefreshing ? 0.6 : 1,
+            }}
+            onClick={!isRefreshing ? handleRefresh : undefined}
+            title={isRefreshing ? "Refreshing..." : "Refresh Data"}
+          />
+          <div style={styles.balanceGroup}>
+            <span style={styles.balanceLabel}> Balance:</span>
+            <span style={styles.balanceAmount}>₹{userBalance.toFixed(2)}</span>
+          </div>
+          <div style={styles.buttonGroup}>
+            <button
+              style={styles.rechargeButton}
+              onClick={() => setShowRecharge(true)}
+            >
+              ➕ Recharge
+            </button>
+            <button
+              style={styles.rulesButton}
+              onClick={() => setShowRulesPopup(true)}
+            >
+              📖 Read Rules
+            </button>
+          </div>
         </div>
-        <div style={styles.buttonGroup}>
-          <button
-            style={styles.rechargeButton}
-            onClick={() => setShowRecharge(true)}
-          >
-            ➕ Recharge
-          </button>
-          <button
-            style={styles.rulesButton}
-            onClick={() => setShowRulesPopup(true)}
-          >
-            📖 Read Rules
-          </button>
+
+        {/* Game Info Section */}
+        <div style={styles.gameInfoSection}>
+          <div style={styles.gameInfoContent}>
+            <div style={styles.periodSection}>
+              <FaTrophy style={styles.trophyIcon} />
+              <span style={styles.periodText}>Period #{currentPeriod}</span>
+            </div>
+            <div style={styles.timerSection}>
+              <div style={styles.timerLabel}>Countdown</div>
+              <div style={styles.timer}>
+                {Math.floor(timeLeft / 60)
+                  .toString()
+                  .padStart(2, "0")}{" "}
+                :{(timeLeft % 60).toString().padStart(2, "0")}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       {showRecharge && (
@@ -659,43 +708,26 @@ const handlePrevHistory = () => {
 
       {showRulesPopup && renderRulesPopup()}
 
-      {/* Rest of the game UI remains same */}
-      <div style={styles.combinedBox}>
-        <FaSyncAlt
-          style={styles.refreshIcon}
-          onClick={handleRefresh}
-          title="Refresh Data"
-        />
-        <div style={styles.combinedContent}>
-          <div style={styles.periodSection}>
-            <FaTrophy style={styles.trophyIcon} />
-            <span style={styles.periodText}>Period #{currentPeriod}</span>
-          </div>
-          <div style={styles.timerSection}>
-            <div style={styles.timerLabel}>Countdown</div>
-            <div style={styles.timer}>
-              {Math.floor(timeLeft / 60)
-                .toString()
-                .padStart(2, "0")}{" "}
-              :{(timeLeft % 60).toString().padStart(2, "0")}
-            </div>
-          </div>
-        </div>
-      </div>
-
       <div
         style={{ justifyContent: "space-around" }}
-        className="flex justify-space-evenly"
+        className="flex justify-space-around"
       >
+        {/* <div className="flex justify-space-evenly"> */}
         <button
           style={{
             ...styles.gridTitle,
             backgroundColor: "#800080",
             color: "white",
-            padding: "8px",
+            padding: isMobile ? "4px 8px" : "8px",
             borderRadius: "4px",
-            opacity: (disabledButtons.joinViolet || timeLeft <= 20) ? 0.6 : 1,
-            cursor: (disabledButtons.joinViolet || timeLeft <= 20) ? "not-allowed" : "pointer",
+            minHeight: "40px",
+            opacity: disabledButtons.joinViolet || timeLeft <= 20 ? 0.6 : 1,
+            cursor:
+              disabledButtons.joinViolet || timeLeft <= 20
+                ? "not-allowed"
+                : "pointer",
+            minWidth: isMobile ? "80px" : "100px",
+            fontSize: isMobile ? "12px" : "14px",
           }}
           onClick={() => handleNumberClick("violet")}
           disabled={disabledButtons.joinViolet || timeLeft <= 20}
@@ -708,10 +740,17 @@ const handlePrevHistory = () => {
             ...styles.gridTitle,
             backgroundColor: "#4caf50",
             color: "white",
-            padding: "8px",
+            padding: isMobile ? "4px 8px" : "8px",
             borderRadius: "4px",
-            opacity: (disabledButtons.joinGreen || timeLeft <= 20) ? 0.6 : 1,
-    cursor: (disabledButtons.joinGreen || timeLeft <= 20) ? "not-allowed" : "pointer",
+            minHeight: "40px",
+
+            opacity: disabledButtons.joinGreen || timeLeft <= 20 ? 0.6 : 1,
+            cursor:
+              disabledButtons.joinGreen || timeLeft <= 20
+                ? "not-allowed"
+                : "pointer",
+            minWidth: isMobile ? "80px" : "100px",
+            fontSize: isMobile ? "12px" : "14px",
           }}
           onClick={() => handleNumberClick("green")}
           disabled={disabledButtons.joinGreen || timeLeft <= 20}
@@ -723,10 +762,17 @@ const handlePrevHistory = () => {
             ...styles.gridTitle,
             backgroundColor: "#FF0000",
             color: "white",
-            padding: "8px",
+            padding: isMobile ? "4px 8px" : "8px",
             borderRadius: "4px",
-            opacity: (disabledButtons.joinRed || timeLeft <= 20) ? 0.6 : 1,
-            cursor: (disabledButtons.joinRed || timeLeft <= 20) ? "not-allowed" : "pointer",
+            minHeight: "40px",
+
+            opacity: disabledButtons.joinRed || timeLeft <= 20 ? 0.6 : 1,
+            cursor:
+              disabledButtons.joinRed || timeLeft <= 20
+                ? "not-allowed"
+                : "pointer",
+            minWidth: isMobile ? "80px" : "100px",
+            fontSize: isMobile ? "12px" : "14px",
           }}
           onClick={() => handleNumberClick("red")}
           disabled={disabledButtons.joinRed || timeLeft <= 20}
@@ -734,7 +780,7 @@ const handlePrevHistory = () => {
           Join Red
         </button>
       </div>
-
+      {/* </div> */}
       <div style={styles.numberGrid}>
         <div style={styles.numberRow}>
           {[0, 1, 2, 3, 4].map((num) => (
@@ -749,38 +795,49 @@ const handlePrevHistory = () => {
                 border: [0, 5].includes(num)
                   ? "2px solid rgb(255, 0, 0)"
                   : "none",
-                 opacity: (disabledButtons.digits.includes(num) || timeLeft <= 20) ? 0.6 : 1,
-      cursor: (disabledButtons.digits.includes(num) || timeLeft <= 20) ? "not-allowed" : "pointer",
+                opacity:
+                  disabledButtons.digits.includes(num) || timeLeft <= 20
+                    ? 0.6
+                    : 1,
+                cursor:
+                  disabledButtons.digits.includes(num) || timeLeft <= 20
+                    ? "not-allowed"
+                    : "pointer",
               }}
               onClick={() => handleNumberClick(num)}
-             
             >
               {num}
             </button>
           ))}
         </div>
         <div style={styles.numberRow}>
-  {[5, 6, 7, 8, 9].map((num) => (
-    <button
-      key={num}
-      disabled={disabledButtons.digits.includes(num) || timeLeft <= 20}
-      style={{
-        ...styles.numberButton,
-        background: [0, 5].includes(num)
-          ? "linear-gradient(135deg, rgb(128, 0, 128) 50%, rgb(76, 175, 80) 50%)"
-          : getBackgroundColor(num),
-        border: [0, 5].includes(num)
-          ? "2px solid rgb(76, 175, 80)"
-          : "none",
-        opacity: (disabledButtons.digits.includes(num) || timeLeft <= 20) ? 0.6 : 1,
-        cursor: (disabledButtons.digits.includes(num) || timeLeft <= 20) ? "not-allowed" : "pointer",
-      }}
-      onClick={() => handleNumberClick(num)}
-    >
-      {num}
-    </button>
-  ))}
-</div>
+          {[5, 6, 7, 8, 9].map((num) => (
+            <button
+              key={num}
+              disabled={disabledButtons.digits.includes(num) || timeLeft <= 20}
+              style={{
+                ...styles.numberButton,
+                background: [0, 5].includes(num)
+                  ? "linear-gradient(135deg, rgb(128, 0, 128) 50%, rgb(76, 175, 80) 50%)"
+                  : getBackgroundColor(num),
+                border: [0, 5].includes(num)
+                  ? "2px solid rgb(76, 175, 80)"
+                  : "none",
+                opacity:
+                  disabledButtons.digits.includes(num) || timeLeft <= 20
+                    ? 0.6
+                    : 1,
+                cursor:
+                  disabledButtons.digits.includes(num) || timeLeft <= 20
+                    ? "not-allowed"
+                    : "pointer",
+              }}
+              onClick={() => handleNumberClick(num)}
+            >
+              {num}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Popup for selecting numbers */}
@@ -896,17 +953,17 @@ const handlePrevHistory = () => {
       </div>
 
       <div style={historyStyles.container}>
-  <span className="flex items-center justify-center mt-[5px] pb-[10px] [border-bottom:1px_solid_#0067CC]">
-    <FaTrophy /> &nbsp; User History
-  </span>
-  <div className="mt-[10px] " style={historyStyles.header}>
-    <span>Amount</span>
-    <span>Selection</span>
-    {/* <span>Result</span> */}
-    <span>P/L</span>
-  </div>
+        <span className="flex items-center justify-center mt-[5px] pb-[10px] [border-bottom:1px_solid_#0067CC]">
+          <FaTrophy /> &nbsp; User History
+        </span>
+        <div className="mt-[10px] " style={historyStyles.header}>
+          <span>Amount</span>
+          <span>Selection</span>
+          {/* <span>Result</span> */}
+          <span>P/L</span>
+        </div>
 
-   {/* {userHistory.slice((historyPage - 1) * 10, historyPage * 10)
+        {/* {userHistory.slice((historyPage - 1) * 10, historyPage * 10)
   .map((history, index) => {
     const betAmount = parseFloat(history.betAmount) || 0;
     const winnings = parseFloat(history.winnings) || 0
@@ -947,66 +1004,69 @@ const handlePrevHistory = () => {
     );
   })}  */}
 
-{userHistory.slice((historyPage - 1) * 10, historyPage * 10)
-  .map((history, index) => {
-    const betAmount = parseFloat(history.betAmount) || 0;
-    const winnings = parseFloat(history.winnings) || 0;
-    const profit = history.result === "WIN" ? winnings : -betAmount;
+        {userHistory
+          .slice((historyPage - 1) * 10, historyPage * 10)
+          .map((history, index) => {
+            const betAmount = parseFloat(history.betAmount) || 0;
+            const winnings = parseFloat(history.winnings) || 0;
+            const profit = history.result === "WIN" ? winnings : -betAmount;
 
-    return (
-      <div key={index} style={historyStyles.row}>
-        <span style={{ color: "#000" }}>₹{betAmount.toFixed(2)}</span>
+            return (
+              <div key={index} style={historyStyles.row}>
+                <span style={{ color: "#000" }}>₹{betAmount.toFixed(2)}</span>
 
-        <span>
-          {history.selectedColor === 'number' ? (
-            renderNumberCircle(history.randomNumber)
-          ) : (
-            <span
-              style={{
-                color: "#000",
-                backgroundColor: getBackgroundColor(history.randomNumber),
-                display: "inline-flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: "26px",
-                height: "26px",
-                fontWeight: "700",
-                borderRadius: "50%",
-                textAlign: "center",
-                lineHeight: "24px",
-              }}
-            >
-              C
-            </span>
-          )}
-        </span>
+                <span>
+                  {history.selectedColor === "number" ? (
+                    renderNumberCircle(history.randomNumber)
+                  ) : (
+                    <span
+                      style={{
+                        color: "#000",
+                        backgroundColor: getBackgroundColor(
+                          history.randomNumber
+                        ),
+                        display: "inline-flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: "26px",
+                        height: "26px",
+                        fontWeight: "700",
+                        borderRadius: "50%",
+                        textAlign: "center",
+                        lineHeight: "24px",
+                      }}
+                    >
+                      C
+                    </span>
+                  )}
+                </span>
 
-        <span style={{ color: profit >= 0 ? "green" : "red" }}>
-          ₹{profit.toFixed(2)}
-        </span>
+                <span style={{ color: profit >= 0 ? "green" : "red" }}>
+                  ₹{profit.toFixed(2)}
+                </span>
+              </div>
+            );
+          })}
+
+        <div style={historyStyles.pagination}>
+          <button
+            style={styles.paginationButton}
+            onClick={handlePrevHistory}
+            disabled={historyPage === 1}
+          >
+            Previous
+          </button>
+          <button
+            style={styles.paginationButton}
+            onClick={handleNextHistory}
+            disabled={userHistory.length <= historyPage * 10}
+          >
+            Next
+          </button>
+
+          <div className="mb-[20px]"></div>
+        </div>
       </div>
-    );
-  })}
-
-  <div style={historyStyles.pagination}>
-    <button
-      style={styles.paginationButton}
-      onClick={handlePrevHistory}
-      disabled={historyPage === 1}
-    >
-      Previous
-    </button>
-    <button
-      style={styles.paginationButton}
-      onClick={handleNextHistory}
-      disabled={userHistory.length <= historyPage * 10}
-    >
-      Next
-    </button>
-
-    <div className="mb-[20px]"></div>
-  </div>
-</div>
     </div>
   );
 }
@@ -1041,6 +1101,39 @@ const styles = {
     justifyContent: "space-between",
     alignItems: "center",
   },
+
+  combinedContainer: {
+    backgroundColor: "#ffffff",
+    padding: "20px",
+    borderRadius: "10px",
+    boxShadow: "0 2px 6px rgba(0,0,0,0.1)",
+    marginBottom: "25px",
+    display: "flex",
+    flexDirection: "column",
+    gap: "15px",
+    position: "relative",
+  },
+
+  topRow: {
+    display: "flex",
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    width: "100%",
+  },
+
+  buttonSection: {
+    flex: "2 1 250px",
+    display: "flex",
+    justifyContent: "center",
+  },
+
+  gameInfoSection: {
+    position: "relative",
+    width: "100%",
+    // marginTop: "15px",
+  },
+
   periodSection: {
     display: "flex",
     alignItems: "center",
@@ -1050,13 +1143,13 @@ const styles = {
   refreshIcon: {
     position: "absolute",
     top: "10px",
-    left: "10px",
+    right: "5px",
     color: "#3498db",
     fontSize: "20px",
     cursor: "pointer",
-    transition: "transform 0.3s ease",
+    transition: "all 0.3s ease",
     "&:hover": {
-      transform: "rotate(360deg)",
+      color: "#2980b9",
     },
   },
 
@@ -1066,16 +1159,17 @@ const styles = {
   },
   periodText: {
     fontSize: "18px",
-    fontWeight: "600",
+    fontWeight: "700",
     color: "#2c3e50",
   },
   timerSection: {
     textAlign: "center",
   },
   timerLabel: {
-    fontSize: "14px",
+    fontSize: "18px",
     color: "#666",
     marginBottom: "5px",
+    fontWeight: "700",
   },
 
   balanceContainer: {
@@ -1088,28 +1182,44 @@ const styles = {
     boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
     marginBottom: "25px",
   },
-  balanceGroup: {
+  buttonGroup: {
     display: "flex",
-    flexDirection: "column",
-    gap: "5px",
+    gap: "12px",
+    alignSelf: "flex-end", // बटन्स को दाईं ओर अलाइन करें
   },
+
   balanceLabel: {
     color: "#666",
-    fontSize: "14px",
+    fontSize: "20px",
+    fontWeight: "600",
+  },
+  balanceGroup: {
+    display: "inline-grid",
+    alignItems: "center",
+    gap: "10px",
+    marginTop: "4px",
   },
   balanceAmount: {
     color: "#2ecc71",
     fontSize: "22px",
     fontWeight: "bold",
+    paddingRight: "15px",
   },
-  buttonGroup: {
-    display: "flex",
-    gap: "12px",
+
+  gameInfoContent: {
+    display: "inline-flex",
+    justifyContent: "center",
+    alignItems: "center",
+    gap: "30px",
+    // flexWrap: "wrap",
+    width: "100%",
   },
   rechargeButton: {
+    minWidth: 65,
+    minHeight: 60,
     backgroundColor: "#27ae60",
     color: "white",
-    padding: "10px 20px",
+    padding: "6px 12px",
     borderRadius: "8px",
     border: "none",
     cursor: "pointer",
@@ -1117,18 +1227,20 @@ const styles = {
     alignItems: "center",
     gap: "8px",
     fontSize: "14px",
+    fontWeight: "600",
   },
   rulesButton: {
     backgroundColor: "#2980b9",
     color: "white",
-    padding: "10px 20px",
+    padding: "6px 12px",
     borderRadius: "8px",
     border: "none",
     cursor: "pointer",
     display: "flex",
     alignItems: "center",
     gap: "8px",
-    fontSize: "14px",
+    fontSize: "12px",
+    minWidth: 65,
   },
   rulesPopup: {
     backgroundColor: "#ffffff",
@@ -1238,7 +1350,7 @@ const styles = {
     gap: "10px",
   },
   timer: {
-    fontSize: "28px",
+    fontSize: "26px",
     fontWeight: "700",
     color: "#3498db",
     // marginTop: "10px",
@@ -1266,15 +1378,15 @@ const styles = {
   },
   numberButton: {
     flex: 1,
-    padding: "10px",
+    padding: "4px",
     borderRadius: "8px",
     cursor: "pointer",
-    fontSize: "20px",
+    fontSize: "16px",
     fontWeight: "bold",
     color: "#fff",
     textShadow: "1px 1px 2px rgba(0,0,0,0.5)",
-    minWidth: "50px",
-    minHeight: "40px",
+    minWidth: "40px",
+    minHeight: "30px",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -1285,24 +1397,25 @@ const styles = {
     padding: "16px",
     borderRadius: "8px",
     boxShadow: "0 2px 4px rgba(0,0,0,0.1)",
+    marginTop: "20px",
   },
- // Update the recordsHeader and recordRow styles in the 'styles' object
-recordsHeader: {
-  display: "grid",
-  gridTemplateColumns: "1fr 1fr 1fr", // Three equal columns
-  marginBottom: "12px",
-  fontWeight: "bold",
-  color: "#333",
-  textAlign: "center", // Center align header text
-},
-recordRow: {
-  display: "grid",
-  gridTemplateColumns: "1fr 1fr 1fr", // Three equal columns
-  marginBottom: "8px",
-  color: "#666",
-  alignItems: "center",
-  textAlign: "center", // Center align cell content
-},
+  // Update the recordsHeader and recordRow styles in the 'styles' object
+  recordsHeader: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr 1fr", // Three equal columns
+    marginBottom: "12px",
+    fontWeight: "bold",
+    color: "#333",
+    textAlign: "center", // Center align header text
+  },
+  recordRow: {
+    display: "grid",
+    gridTemplateColumns: "1fr 1fr 1fr", // Three equal columns
+    marginBottom: "8px",
+    color: "#666",
+    alignItems: "center",
+    textAlign: "center", // Center align cell content
+  },
   navContainer: {
     position: "fixed",
     bottom: "0",
@@ -1324,7 +1437,7 @@ recordRow: {
   gridTitle: {
     color: "#666",
     marginBottom: "12px",
-    fontWeight: "bold",
+    fontWeight: "600",
     minWidth: "100px",
     textAlign: "center",
   },
@@ -1454,7 +1567,7 @@ recordRow: {
     boxShadow: "0 4px 12px rgba(0,0,0,0.2)",
   },
   loginButton: {
-    backgroundColor: "#3498db",
+    backgroundColor: "#0f1010",
     color: "white",
     padding: "12px 24px",
     borderRadius: "8px",
@@ -1466,8 +1579,8 @@ recordRow: {
     width: "100%",
     transition: "background-color 0.3s ease",
     ":hover": {
-      backgroundColor: "#2980b9",
-    }
+      backgroundColor: "#0f1010",
+    },
   },
 };
 
