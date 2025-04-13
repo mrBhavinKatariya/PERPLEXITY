@@ -56,7 +56,7 @@ const createPayment = asyncHandler(async (req, res) => {
     }
 
     const paymentId = shortid();
-    const paymentLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/pay/${paymentId}`;
+    const paymentLink = `${process.env.FRONTEND_URL || 'https://wavelina.store'}/pay/${paymentId}`;
     
     // QR कोड डेटा (UPI पेमेंट के लिए)
     const upiPaymentUrl = `upi://pay?pa=${BANK_DETAILS.upiId}&pn=${encodeURIComponent(BANK_DETAILS.name)}&am=${amount}&cu=INR&tn=${encodeURIComponent(description || 'Payment')}`;
@@ -148,7 +148,7 @@ const getPaymentDetails = asyncHandler(async (req, res) => {
                 ifsc: payment.ifscCode,
                 upiId: BANK_DETAILS.upiId
             },
-            paymentLink: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/pay/${payment.paymentId}`,
+            paymentLink: `${process.env.FRONTEND_URL || 'https://wavelina.store'}/pay/${payment.paymentId}`,
             createdAt: payment.createdAt,
             utr: payment.utr
         }, "Payment details fetched successfully")
