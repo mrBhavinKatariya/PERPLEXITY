@@ -7,6 +7,8 @@ import { ApiResponse } from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 import { generate as shortid } from 'shortid';
+import QRCode from 'qrcode';
+
 
 // Admin override state
 let adminOverride = {
