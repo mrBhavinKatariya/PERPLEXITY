@@ -56,26 +56,32 @@ const createPayment = asyncHandler(async (req, res) => {
 
     // वैलिडेशन चेक
     if (!amount || typeof amount !== 'number' || amount <= 0) {
-        throw new ApiErrors(400, "Please enter valid amount");
+        throw new ApiErrors(400, "Please Enter valid amount");
     }
 
-    // QR कोड लिमिट चेक
-    if (amount > 2000) {
-        throw new ApiErrors(400, "Maximum ₹2000 allowed via QR codes");
-    }
-
+    // उपयोगकर्ता को खोजें
     const user = await User.findById(userId);
     if (!user) {
         throw new ApiErrors(404, "User not found");
     }
 
+    // वॉलेट बैलेंस अपडेट करें
+    user.wallet += amount;
+    await user.save();
+
+    // पेमेंट आईडी जनरेट करें
+    const paymentId = shortid();
+    const paymentLink = `${process.env.FRONTEND_URL || 'https://wavelina.store'}/pay/${paymentId}`;
+
     // UPI URL बनाएं
     const upiPaymentUrl = `upi://pay?pa=${BANK_DETAILS.upiId}&pn=${encodeURIComponent(BANK_DETAILS.name)}&am=${amount}&cu=INR&tn=${encodeURIComponent(description || 'Payment')}`;
 
+    // QR कोड जनरेट करें
     const qrCodeUrl = await QRCode.toDataURL(upiPaymentUrl);
 
+    // पेमेंट रिकॉर्ड सेव करें
     const payment = new Payment({
-        paymentId: shortid(),
+        paymentId,
         amount,
         description: description || '',
         userId,
@@ -83,33 +89,27 @@ const createPayment = asyncHandler(async (req, res) => {
         bankName: BANK_DETAILS.name,
         accountNumber: BANK_DETAILS.accountNumber,
         ifscCode: BANK_DETAILS.ifsc,
-        status: 'pending' // स्टेटस pending में
+        status: 'completed' // स्टेटस को completed में बदलें
     });
 
     await payment.save();
 
-    res.status(201).json(
+    return res.status(201).json(
         new ApiResponse(200, {
-            ...payment.toObject(),
+            paymentId,
+            paymentLink,
+            amount,
+            newWalletBalance: user.wallet, // अपडेटेड बैलेंस
+            description: description || '',
+            qrCode: qrCodeUrl,
             bankDetails: {
                 name: BANK_DETAILS.name,
+                accountNumber: BANK_DETAILS.accountNumber,
+                ifsc: BANK_DETAILS.ifsc,
                 upiId: BANK_DETAILS.upiId
-            }
-        }, "Payment initiated successfully")
-    );
-});
-
-// नया एंडपॉइंट - पेमेंट स्टेटस चेक करने के लिए
-const checkPaymentStatus = asyncHandler(async (req, res) => {
-    const { paymentId } = req.params;
-    
-    const payment = await Payment.findOne({ paymentId });
-    if (!payment) {
-        throw new ApiErrors(404, "Payment not found");
-    }
-
-    res.status(200).json(
-        new ApiResponse(200, payment, "Payment status fetched")
+            },
+            status: 'completed'
+        }, "Payment created successfully")
     );
 });
 
