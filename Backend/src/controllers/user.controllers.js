@@ -15,6 +15,7 @@ let adminOverride = {
     active: false,
     color: null,
     expiresAt: null
+    
   };
   
   const PaymentSchema = new mongoose.Schema({
