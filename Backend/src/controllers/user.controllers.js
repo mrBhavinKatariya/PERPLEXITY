@@ -15,6 +15,29 @@ let adminOverride = {
     expiresAt: null
   };
   
+  const PaymentSchema = new mongoose.Schema({
+    paymentId: String,
+    amount: Number,
+    description: String,
+    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    status: { type: String, default: 'pending' },
+    createdAt: { type: Date, default: Date.now },
+    utr: String,
+    qrCode: String,
+    bankName: String,
+    accountNumber: String,
+    ifscCode: String
+});
+
+const Payment = mongoose.model('Payment', PaymentSchema);
+
+const BANK_DETAILS = {
+    name: "KOTAK MAHINDRA BANK",
+    accountNumber: "8546373084",
+    ifsc: "KKBK0002866",
+    upiId: "hahir6610@okhdfcbank"
+};
+
 const generateAccessToken = async (userId) => {
     return jwt.sign({ _id: userId }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "30d" });
 };
@@ -23,6 +46,114 @@ const generateRefreshToken = async (userId) => {
     return jwt.sign({ _id: userId }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: "30d" });
 };
 
+
+const createPayment = asyncHandler(async (req, res) => {
+    const { amount, description } = req.body;
+    const userId = req.user._id;
+
+    if (!amount) {
+        throw new ApiErrors(400, "Amount is required");
+    }
+
+    const paymentId = shortid();
+    const paymentLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/pay/${paymentId}`;
+    
+    // QR कोड डेटा (UPI पेमेंट के लिए)
+    const upiPaymentUrl = `upi://pay?pa=${BANK_DETAILS.upiId}&pn=${encodeURIComponent(BANK_DETAILS.name)}&am=${amount}&cu=INR&tn=${encodeURIComponent(description || 'Payment')}`;
+    
+    // QR कोड जनरेट करें
+    const qrCodeUrl = await QRCode.toDataURL(upiPaymentUrl);
+
+    // पेमेंट डॉक्युमेंट बनाएं
+    const payment = new Payment({
+        paymentId,
+        amount,
+        description: description || '',
+        userId,
+        qrCode: qrCodeUrl,
+        bankName: BANK_DETAILS.name,
+        accountNumber: BANK_DETAILS.accountNumber,
+        ifscCode: BANK_DETAILS.ifsc
+    });
+
+    await payment.save();
+
+    return res.status(201).json(
+        new ApiResponse(200, {
+            paymentId,
+            paymentLink,
+            amount,
+            description: description || '',
+            qrCode: qrCodeUrl,
+            bankDetails: {
+                name: BANK_DETAILS.name,
+                accountNumber: BANK_DETAILS.accountNumber,
+                ifsc: BANK_DETAILS.ifsc,
+                upiId: BANK_DETAILS.upiId
+            },
+            status: 'pending'
+        }, "Payment created successfully")
+    );
+});
+
+const verifyPayment = asyncHandler(async (req, res) => {
+    const { paymentId, utrNumber } = req.body;
+    const userId = req.user._id;
+
+    if (!paymentId || !utrNumber) {
+        throw new ApiErrors(400, "Payment ID and UTR number are required");
+    }
+
+    const payment = await Payment.findOneAndUpdate(
+        { paymentId, userId },
+        { utr: utrNumber, status: 'completed', completedAt: Date.now() },
+        { new: true }
+    );
+    
+    if (!payment) {
+        throw new ApiErrors(404, "Payment not found");
+    }
+
+    return res.status(200).json(
+        new ApiResponse(200, {
+            id: payment.paymentId,
+            amount: payment.amount,
+            status: payment.status,
+            utr: utrNumber,
+            completedAt: payment.completedAt
+        }, "Payment verified successfully")
+    );
+});
+
+const getPaymentDetails = asyncHandler(async (req, res) => {
+    const paymentId = req.params.paymentId;
+    const userId = req.user._id;
+
+    const payment = await Payment.findOne({ paymentId, userId });
+    
+    if (!payment) {
+        throw new ApiErrors(404, "Payment not found");
+    }
+
+    return res.status(200).json(
+        new ApiResponse(200, {
+            id: payment.paymentId,
+            amount: payment.amount,
+            description: payment.description,
+            status: payment.status,
+            qrCode: payment.qrCode,
+            bankDetails: {
+                name: payment.bankName,
+                accountNumber: payment.accountNumber,
+                ifsc: payment.ifscCode,
+                upiId: BANK_DETAILS.upiId
+            },
+            paymentLink: `${process.env.FRONTEND_URL || 'http://localhost:3000'}/pay/${payment.paymentId}`,
+            createdAt: payment.createdAt,
+            utr: payment.utr
+        }, "Payment details fetched successfully")
+    );
+});
 
 
 const registerUser = asyncHandler(async (req, res) => {
@@ -177,6 +308,9 @@ export {
     loginUser,
     logOutUser,
     getCurrentUser,
+    createPayment,
+    verifyPayment,
+    getPaymentDetails
   
 };
 

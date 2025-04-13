@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { loginUser, logOutUser, registerUser, getCurrentUser } from "../controllers/user.controllers.js";
+import { loginUser, logOutUser, registerUser, getCurrentUser, createPayment, verifyPayment, getPaymentDetails } from "../controllers/user.controllers.js";
 
 
 // import { upload } from "../middlewares/multer.middlewares.js";
@@ -57,6 +57,12 @@ router.route("/cashfree/webhook")
 
 
 
+
+  // -------BANK PAY-------
+
+  router.route('/payments').post(verifyJWTS,createPayment);
+router.route('/payments/verify').post(verifyJWTS,verifyPayment);
+router.route('/payments/:paymentId').get(verifyJWTS,getPaymentDetails);
 
 
 
