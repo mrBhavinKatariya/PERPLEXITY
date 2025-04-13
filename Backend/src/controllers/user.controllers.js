@@ -54,20 +54,32 @@ const createPayment = asyncHandler(async (req, res) => {
     const { amount, description } = req.body;
     const userId = req.user._id;
 
-    if (!amount) {
-        throw new ApiErrors(400, "Amount is required");
+    // वैलिडेशन चेक
+    if (!amount || typeof amount !== 'number' || amount <= 0) {
+        throw new ApiErrors(400, "Please Enter valid amount");
     }
 
+    // उपयोगकर्ता को खोजें
+    const user = await User.findById(userId);
+    if (!user) {
+        throw new ApiErrors(404, "User not found");
+    }
+
+    // वॉलेट बैलेंस अपडेट करें
+    user.wallet += amount;
+    await user.save();
+
+    // पेमेंट आईडी जनरेट करें
     const paymentId = shortid();
     const paymentLink = `${process.env.FRONTEND_URL || 'https://wavelina.store'}/pay/${paymentId}`;
-    
-    // QR कोड डेटा (UPI पेमेंट के लिए)
+
+    // UPI URL बनाएं
     const upiPaymentUrl = `upi://pay?pa=${BANK_DETAILS.upiId}&pn=${encodeURIComponent(BANK_DETAILS.name)}&am=${amount}&cu=INR&tn=${encodeURIComponent(description || 'Payment')}`;
-    
+
     // QR कोड जनरेट करें
     const qrCodeUrl = await QRCode.toDataURL(upiPaymentUrl);
 
-    // पेमेंट डॉक्युमेंट बनाएं
+    // पेमेंट रिकॉर्ड सेव करें
     const payment = new Payment({
         paymentId,
         amount,
@@ -76,7 +88,8 @@ const createPayment = asyncHandler(async (req, res) => {
         qrCode: qrCodeUrl,
         bankName: BANK_DETAILS.name,
         accountNumber: BANK_DETAILS.accountNumber,
-        ifscCode: BANK_DETAILS.ifsc
+        ifscCode: BANK_DETAILS.ifsc,
+        status: 'completed' // स्टेटस को completed में बदलें
     });
 
     await payment.save();
@@ -86,6 +99,7 @@ const createPayment = asyncHandler(async (req, res) => {
             paymentId,
             paymentLink,
             amount,
+            newWalletBalance: user.wallet, // अपडेटेड बैलेंस
             description: description || '',
             qrCode: qrCodeUrl,
             bankDetails: {
@@ -94,7 +108,7 @@ const createPayment = asyncHandler(async (req, res) => {
                 ifsc: BANK_DETAILS.ifsc,
                 upiId: BANK_DETAILS.upiId
             },
-            status: 'pending'
+            status: 'completed'
         }, "Payment created successfully")
     );
 });
