@@ -20,6 +20,8 @@
     "fetch": "^1.1.0",
     "framer-motion": "^12.5.0",
     "jwt-decode": "^4.0.0",
+    "numeral": "^2.0.6",
+    "qrcode.react": "^4.2.0",
     "razorpay": "^2.9.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",

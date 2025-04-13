@@ -15,7 +15,7 @@ let adminOverride = {
     active: false,
     color: null,
     expiresAt: null
-    
+
   };
   
   const PaymentSchema = new mongoose.Schema({
@@ -107,9 +107,19 @@ const verifyPayment = asyncHandler(async (req, res) => {
         throw new ApiErrors(400, "Payment ID and UTR number are required");
     }
 
+    // Check if UTR already exists in database
+    const existingPaymentWithUTR = await Payment.findOne({ utr: utrNumber });
+    if (existingPaymentWithUTR) {
+        throw new ApiErrors(400, "UTR number already exists in our system");
+    }
+
     const payment = await Payment.findOneAndUpdate(
         { paymentId, userId },
-        { utr: utrNumber, status: 'completed', completedAt: Date.now() },
+        { 
+            utr: utrNumber, 
+            status: 'completed', 
+            completedAt: Date.now() 
+        },
         { new: true }
     );
     

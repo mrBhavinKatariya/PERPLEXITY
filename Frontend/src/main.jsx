@@ -71,7 +71,8 @@ const router = createBrowserRouter(
       <Route path="/refund-policy" element = {<RefundPolicyPage/>} />
       <Route path="/terms" element = {<TermsOfUse/>} />
       <Route path="/shipping-policy" element = {<ShippingPolicy/>} />
-    
+  
+
 
 
 

@@ -1,33 +1,29 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import axios from "axios";
-import Razorpay from "razorpay";
+import { QRCodeSVG } from "qrcode.react";
+import numeral from "numeral";
 
 const RechargePage = ({ user, onClose }) => {
   const [amount, setAmount] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
-  const predefinedAmounts = [100, 300, 500, 1000, 2000, 5000, 10000, 15000, 20000];
-  const [error, setError] = useState('');
-  const [phoneNo, setPhoneNo] = useState(user.phoneNo  || "");
+  const predefinedAmounts = [
+    100, 300, 500, 1000, 2000, 5000, 10000, 15000, 20000,
+  ];
+  const [error, setError] = useState("");
+  const [phoneNo, setPhoneNo] = useState(user.phoneNo || "");
   const [email, setEmail] = useState(user.email);
   const [userId, setUserId] = useState("");
   const [name, setName] = useState("");
   const [userName, setUserName] = useState("");
   const [countdown, setCountdown] = useState(900);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [payment, setPayment] = useState(null);
+  const [utr, setUtr] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const [errorMessage, setErrorMessage] = useState("");
 
-  const API_URL = import.meta.env.REACT_APP_API_URL || "https://perplexity-bd2d.onrender.com";
-
-  useEffect(() => {
-    // Load Razorpay script dynamically
-    const script = document.createElement('script');
-    script.src = "https://checkout.razorpay.com/v1/checkout.js";
-    script.async = true;
-    document.body.appendChild(script);
-    
-    return () => {
-      document.body.removeChild(script);
-    };
-  }, []);
+  const API_URL =
+    import.meta.env.REACT_APP_API_URL || "https://perplexity-bd2d.onrender.com";
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -85,16 +81,18 @@ const RechargePage = ({ user, onClose }) => {
   const formatTimer = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+    return `${mins.toString().padStart(2, "0")}:${secs
+      .toString()
+      .padStart(2, "0")}`;
   };
 
   const handleAmountSelect = (value) => {
     setAmount(value);
-    setError('');
+    setError("");
   };
 
   const handleProceedToPayment = () => {
-    if (amount <= 0 ||  amount <= 99) {
+    if (!amount || amount < 100) {
       setError("Minimum amount is 100");
       return;
     }
@@ -104,7 +102,7 @@ const RechargePage = ({ user, onClose }) => {
     }
   };
 
-  const handleRazorpayPayment = async () => {
+  const createPayment = async () => {
     try {
       setIsProcessingPayment(true);
       const token = localStorage.getItem("token");
@@ -113,77 +111,92 @@ const RechargePage = ({ user, onClose }) => {
         setIsProcessingPayment(false);
         return;
       }
-  
+
       const authConfig = {
         headers: {
-          Authorization: `Bearer ${token}`
-        }
+          Authorization: `Bearer ${token}`,
+        },
       };
-  
+
       const response = await axios.post(
-        `${API_URL}/api/v1/users/create-razorpay-order`,
-        { amount: amount },
+        `${API_URL}/api/v1/users/payments`,
+        {
+          amount: parseFloat(amount),
+          description: "Wallet Recharge",
+          userId: userId,
+        },
         authConfig
       );
-  
-      const options = {
-        key: response.data.keyId,
-        amount: response.data.amount,
-        currency: "INR",
-        order_id: response.data.orderId,
-        name: "Your Company Name",
-        description: "Wallet Recharge",
-        prefill: {
-          name: name,
-          email: email,
-          contact: phoneNo,
-        },
-        handler: async (response) => {
-          try {
-            const verificationResponse = await axios.post(
-              `${API_URL}/api/v1/users/verify-razorpay-payment`,
-              {
-                razorpayPaymentId: response.razorpay_payment_id,
-                razorpayOrderId: response.razorpay_order_id,
-                razorpaySignature: response.razorpay_signature,
-                amount: amount,
-                userId: userId,
-              },
-              authConfig
-            );
-  
-            if (verificationResponse.data.success) {
-              // alert("Payment successful!");
-              setShowPopup(false);
-              CloseButton();
-              window.location.reload();
-            }
-          } catch (error) {
-            console.error("Payment verification failed:", error);
-          } finally {
-            setIsProcessingPayment(false);
-            setShowPopup(false);
-            CloseButton();
-          }
-        },
-        theme: {
-          color: "#F37254",
+
+      setPayment(response.data.data);
+    } catch (error) {
+      alert(error.response?.data?.message || "Payment creation failed");
+    } finally {
+      setIsProcessingPayment(false);
+    }
+  };
+
+  const verifyPayment = async () => {
+    try {
+      setIsProcessingPayment(true);
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("Please login to continue");
+        setIsProcessingPayment(false);
+        return;
+      }
+
+      const authConfig = {
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
       };
-  
-      const rzp = new window.Razorpay(options);
-      rzp.open();
+
+      if (!utr || utr.trim() === "") {
+        alert("Please enter UTR number");
+        return;
+      }
+
+      if (!/^[a-zA-Z0-9]{10,20}$/.test(utr)) {
+        alert("Invalid UTR Number");
+        return;
+      }
+
+      const response = await axios.post(
+        `${API_URL}/api/v1/users/payments/verify`,
+        {
+          paymentId: payment.paymentId,
+          utrNumber: utr,
+        },
+        authConfig
+      );
+
+      setPayment((prev) => ({
+        ...prev,
+        ...response.data.payment,
+        status: "completed",
+      }));
+      setSuccessMessage("Payment verified successfully!");
+      setErrorMessage("");
+
+      setTimeout(() => {
+        setSuccessMessage("");
+        setShowPopup(false);
+        onClose();
+      }, 3000);
+
+      window.location.reload();
     } catch (error) {
-      console.error("Razorpay payment failed:", error);
-      alert(`Payment failed: ${error.response?.data?.message || error.message}`);
-      setIsProcessingPayment(false);
+      setErrorMessage(
+        error.response?.data?.message || "Payment verification failed"
+      );
     } finally {
-      setTimeout(() => setIsProcessingPayment(false), 3000);
+      setIsProcessingPayment(false);
     }
   };
 
   const paymentMethods = ["Pay Now"];
-  
+
   return (
     <div style={styles.container}>
       {!showPopup ? (
@@ -210,7 +223,7 @@ const RechargePage = ({ user, onClose }) => {
             type="number"
             placeholder="Custom Amount"
             style={styles.customInput}
-            value={amount || ''}
+            value={amount || ""}
             onChange={(e) => {
               const value = parseFloat(e.target.value);
               if (!isNaN(value)) {
@@ -221,7 +234,10 @@ const RechargePage = ({ user, onClose }) => {
             }}
           />
           {error && <div style={styles.errorMessage}>{error}</div>}
-          <button style={styles.rechargeButton} onClick={handleProceedToPayment}>
+          <button
+            style={styles.rechargeButton}
+            onClick={handleProceedToPayment}
+          >
             Recharge Now
           </button>
         </>
@@ -233,50 +249,312 @@ const RechargePage = ({ user, onClose }) => {
               <span style={styles.timerText}>{formatTimer(countdown)}</span>
             </h3>
             <div style={styles.scrollableContainer}>
-              <div style={styles.userDetails}>
-                <input
-                  style={styles.inputField}
-                  value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  placeholder="Name"
-                />
-                <input
-                  style={styles.inputField}
-                  value={phoneNo}
-                  onChange={(e) => setPhoneNo(e.target.value)}
-                  placeholder="Phone"
-                  type="tel"
-                />
-                <input
-                  style={styles.inputField}
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="Email"
-                  type="email"
-                />
-                <p style={styles.amountConfirm}>Amount: ₹{amount}</p>
-              </div>
-              <div style={styles.paymentMethods}>
-                {paymentMethods.map((method) => (
-                  <button
-                    key={method}
+              {!payment ? (
+                <>
+                  <div style={styles.userDetails}>
+                    <input
+                      style={styles.inputField}
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      placeholder="Name"
+                    />
+                    <input
+                      style={styles.inputField}
+                      value={phoneNo}
+                      onChange={(e) => setPhoneNo(e.target.value)}
+                      placeholder="Phone"
+                      type="tel"
+                    />
+                    <input
+                      style={styles.inputField}
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="Email"
+                      type="email"
+                    />
+                    <p style={styles.amountConfirm}>Amount: ₹{amount}</p>
+                  </div>
+                  <div style={styles.paymentMethods}>
+                    {paymentMethods.map((method) => (
+                      <button
+                        key={method}
+                        style={{
+                          ...styles.methodButton,
+                          backgroundColor: isProcessingPayment
+                            ? "#e2e8f0"
+                            : "#f7fafc",
+                          cursor: isProcessingPayment
+                            ? "not-allowed"
+                            : "pointer",
+                        }}
+                        onClick={() => {
+                          if (method === "Pay Now") {
+                            createPayment();
+                          }
+                        }}
+                        disabled={isProcessingPayment}
+                      >
+                        {isProcessingPayment ? "Processing..." : method}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div style={{ padding: "10px" }}>
+                  {successMessage && (
+                    <div style={{ color: "green", marginBottom: "10px" }}>
+                      {successMessage}
+                    </div>
+                  )}
+                  {errorMessage && (
+                    <div style={{ color: "red", marginBottom: "10px" }}>
+                      {errorMessage}
+                    </div>
+                  )}
+                  <h3 style={{ textAlign: "center", marginBottom: "15px" }}>
+                    Payment Details
+                  </h3>
+
+                  <div
                     style={{
-                      ...styles.methodButton,
-                      backgroundColor: isProcessingPayment ? "#e2e8f0" : "#f7fafc",
-                      cursor: isProcessingPayment ? "not-allowed" : "pointer"
+                      backgroundColor: "#f8f9fa",
+                      padding: "15px",
+                      borderRadius: "8px",
+                      marginBottom: "15px",
                     }}
-                    onClick={() => {
-                      if (method === "Pay Now") {
-                        handleRazorpayPayment();
-                        // setShowPopup(false);
-                      }
-                    }}
-                    disabled={isProcessingPayment}
                   >
-                    {isProcessingPayment ? "Paying Now..." : method}
-                  </button>
-                ))}
-              </div>
+                    <div
+                      style={{
+                        display: "grid",
+                        gridTemplateColumns: "1fr 1fr",
+                        gap: "10px",
+                      }}
+                    >
+                      <p style={{ fontWeight: "bold" }}>Amount:</p>
+                      <p>₹{numeral(payment.amount).format("0,0.00")}</p>
+
+                      <p style={{ fontWeight: "bold" }}>Status:</p>
+                      <p
+                        style={{
+                          color:
+                            payment.status === "completed" ? "green" : "orange",
+                          fontWeight: "bold",
+                        }}
+                      >
+                        {payment.status}
+                      </p>
+                    </div>
+                  </div>
+
+                  {payment?.bankDetails?.upiId && (
+                    <div style={{ textAlign: "center", marginBottom: "20px" }}>
+                      <h4 style={{ marginBottom: "10px" }}>
+                        Scan QR Code to Pay
+                      </h4>
+                      <QRCodeSVG
+                        value={`upi://pay?pa=${payment.bankDetails.upiId}&am=${payment.amount}`}
+                        size={180}
+                        bgColor="#ffffff"
+                        fgColor="#000000"
+                        style={{ margin: "0 auto" }}
+                      />
+                    </div>
+                  )}
+
+                  {payment?.bankDetails?.upiId && (
+                    <div style={{ marginBottom: "20px" }}>
+                      <h4 style={{ textAlign: "center", marginBottom: "10px" }}>
+                        Pay Using UPI Apps
+                      </h4>
+                      <div
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns: "1fr 1fr 1fr",
+                          gap: "8px",
+                          marginBottom: "10px",
+                        }}
+                      >
+                        <button
+                          onClick={() =>
+                            (window.location.href = `upi://pay?pa=${
+                              payment.bankDetails.upiId
+                            }&pn=${encodeURIComponent(
+                              payment.bankDetails.name
+                            )}&am=${payment.amount}&cu=INR`)
+                          }
+                          style={{
+                            backgroundColor: "#2563eb",
+                            color: "white",
+                            padding: "10px",
+                            borderRadius: "6px",
+                            border: "none",
+                            cursor: "pointer",
+                          }}
+                        >
+                          PhonePe
+                        </button>
+
+                        <button
+                          onClick={() =>
+                            (window.location.href = `tez://upi/pay?pa=${
+                              payment.bankDetails.upiId
+                            }&pn=${encodeURIComponent(
+                              payment.bankDetails.name
+                            )}&am=${payment.amount}&cu=INR`)
+                          }
+                          style={{
+                            backgroundColor: "#4285F4",
+                            color: "white",
+                            padding: "10px",
+                            borderRadius: "6px",
+                            border: "none",
+                            cursor: "pointer",
+                          }}
+                        >
+                          Google Pay
+                        </button>
+
+                        <button
+                          onClick={() =>
+                            (window.location.href = `paytmmp://pay?pa=${
+                              payment.bankDetails.upiId
+                            }&pn=${encodeURIComponent(
+                              payment.bankDetails.name
+                            )}&am=${payment.amount}&cu=INR`)
+                          }
+                          style={{
+                            backgroundColor: "#203F9E",
+                            color: "white",
+                            padding: "10px",
+                            borderRadius: "6px",
+                            border: "none",
+                            cursor: "pointer",
+                          }}
+                        >
+                          Paytm
+                        </button>
+                      </div>
+
+                      <p
+                        style={{
+                          fontSize: "12px",
+                          color: "#6b7280",
+                          textAlign: "center",
+                        }}
+                      >
+                        Don't have an app?
+                        <a
+                          href={`upi://pay?pa=${
+                            payment.bankDetails.upiId
+                          }&pn=${encodeURIComponent(
+                            payment.bankDetails.name
+                          )}&am=${payment.amount}&cu=INR`}
+                          style={{
+                            color: "#4f46e5",
+                            marginLeft: "4px",
+                          }}
+                        >
+                          Pay using any UPI app
+                        </a>
+                      </p>
+                    </div>
+                  )}
+
+                  {payment?.bankDetails && (
+                    <div style={{ marginBottom: "20px" }}>
+                      <h4 style={{ marginBottom: "10px" }}>
+                        Bank Transfer Details
+                      </h4>
+                      <div
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns: "1fr 1fr",
+                          gap: "10px",
+                          backgroundColor: "white",
+                          padding: "15px",
+                          borderRadius: "8px",
+                        }}
+                      >
+                        <p style={{ fontWeight: "bold" }}>Bank Name:</p>
+                        <p>{payment.bankDetails.name}</p>
+
+                        <p style={{ fontWeight: "bold" }}>Account Number:</p>
+                        <p>{payment.bankDetails.accountNumber}</p>
+
+                        <p style={{ fontWeight: "bold" }}>IFSC Code:</p>
+                        <p>{payment.bankDetails.ifsc}</p>
+
+                        <p style={{ fontWeight: "bold" }}>UPI ID:</p>
+                        <p>{payment.bankDetails.upiId}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {payment.status === "pending" && (
+                    <div
+                      style={{
+                        paddingTop: "15px",
+                        borderTop: "1px solid #e5e7eb",
+                      }}
+                    >
+                      <h4 style={{ marginBottom: "10px" }}>Verify Payment</h4>
+                      <input
+                        type="text"
+                        placeholder="Enter UTR Number"
+                        value={utr}
+                        onChange={(e) => {
+                          const value = e.target.value
+                            .toUpperCase()
+                            .replace(/[^A-Z0-9]/g, "");
+
+                          setUtr(value.slice(0, 20));
+                        }}
+                        className="w-full p-2 border border-gray-300 rounded-md mb-3 focus:ring-2 focus:ring-indigo-500"
+                        style={{ textTransform: "uppercase" }}
+                        pattern="[A-Z0-9]{10,20}"
+                        title="10-20 alphanumeric characters in uppercase"
+                        required
+                      />
+                      <button
+                        onClick={verifyPayment}
+                        disabled={isProcessingPayment || !utr}
+                        style={{
+                          width: "100%",
+                          padding: "10px",
+                          backgroundColor:
+                            isProcessingPayment || !utr ? "#9ca3af" : "#16a34a",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "6px",
+                          cursor:
+                            isProcessingPayment || !utr
+                              ? "not-allowed"
+                              : "pointer",
+                        }}
+                      >
+                        {isProcessingPayment
+                          ? "Verifying..."
+                          : "Verify Payment"}
+                      </button>
+
+                      <button
+                        onClick={() => setPayment(null)}
+                        style={{
+                          width: "100%",
+                          padding: "10px",
+                          marginTop: "10px",
+                          backgroundColor: "transparent",
+                          border: "1px solid #d1d5db",
+                          borderRadius: "6px",
+                          cursor: "pointer",
+                        }}
+                      >
+                        Create New Payment
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
             <div style={styles.popupFooter}>
               <div style={styles.popupActions}>
@@ -285,6 +563,7 @@ const RechargePage = ({ user, onClose }) => {
                   onClick={() => {
                     setShowPopup(false);
                     setCountdown(900);
+                    setPayment(null);
                   }}
                 >
                   Cancel
@@ -343,9 +622,9 @@ const styles = {
     borderRadius: "8px",
   },
   errorMessage: {
-    color: 'red',
-    textAlign: 'center',
-    marginBottom: '20px',
+    color: "red",
+    textAlign: "center",
+    marginBottom: "20px",
   },
   timerText: {
     color: "#e53e3e",
