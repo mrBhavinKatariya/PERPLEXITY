@@ -202,6 +202,7 @@ useEffect(() => {
         {
           paymentId: payment.paymentId,
           utrNumber: utr,
+          amount: parseFloat(amount),
         },
         authConfig
       );

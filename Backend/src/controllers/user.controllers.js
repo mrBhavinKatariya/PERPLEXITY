@@ -116,10 +116,11 @@ const createPayment = asyncHandler(async (req, res) => {
 });
 
 const verifyPayment = asyncHandler(async (req, res) => {
-    const { paymentId, utrNumber } = req.body;
+    const { paymentId, utrNumber,  amount } = req.body;
     const userId = req.user._id;
 
     console.log("req.body verify",req.body);
+    console.log("userId",userId);
     
     if (!paymentId || !utrNumber) {
         throw new ApiErrors(400, "Payment ID and UTR number are required");
