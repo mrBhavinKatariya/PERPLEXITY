@@ -663,8 +663,8 @@ const styles = {
     maxWidth: "90%",
     display: "flex",
     flexDirection: "column",
-    maxHeight: "90vh",
-    marginTop:"130px"
+    maxHeight: "80vh",
+    marginTop:"100px"
   },
   scrollableContainer: {
     overflowY: "auto",
