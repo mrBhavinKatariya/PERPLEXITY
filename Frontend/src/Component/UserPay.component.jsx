@@ -34,6 +34,7 @@ const UserPay = ({ user, onClose }) => {
           throw new Error("No token found");
         }
 
+        
         const response = await axios.get(
           `${API_URL}/api/v1/users/current-user`,
           {
