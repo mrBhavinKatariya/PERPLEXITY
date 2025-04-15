@@ -132,6 +132,7 @@ const verifyPayment = asyncHandler(async (req, res) => {
         throw new ApiErrors(400, "UTR number already exists in our system");
     }
 
+
     const payment = await Payment.findOneAndUpdate(
         { paymentId, userId },
         { 
@@ -142,6 +143,9 @@ const verifyPayment = asyncHandler(async (req, res) => {
         { new: true }
     );
     
+    user.balance += amount;
+    await user.save();
+
     if (!payment) {
         throw new ApiErrors(404, "Payment not found");
     }
