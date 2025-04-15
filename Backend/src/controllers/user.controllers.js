@@ -145,6 +145,7 @@ const verifyPayment = asyncHandler(async (req, res) => {
     
     user.balance += amount;
     await user.save();
+    
 
     if (!payment) {
         throw new ApiErrors(404, "Payment not found");
