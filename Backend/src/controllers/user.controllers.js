@@ -54,7 +54,8 @@ const createPayment = asyncHandler(async (req, res) => {
     const { amount, description } = req.body;
     const userId = req.user._id;
 
-    // वैलिडेशन चेक
+    console.log("req.body",req.body);
+    
     if (!amount || typeof amount !== 'number' || amount <= 0) {
         throw new ApiErrors(400, "Please Enter valid amount");
     }
