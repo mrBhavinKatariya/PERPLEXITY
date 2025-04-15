@@ -33,8 +33,6 @@ const UserPay = ({ user, onClose }) => {
   const API_URL =
     import.meta.env.REACT_APP_API_URL || "https://perplexity-bd2d.onrender.com";
 
-
-
   useEffect(() => {
     const fetchUser = async () => {
       try {
@@ -83,37 +81,44 @@ const UserPay = ({ user, onClose }) => {
 
   const handleUTRSubmit = async () => {
     try {
+      if (!/^[A-Z0-9]{12}$/.test(utrNumber)) {
+        setErrorMessage("Invalid UTR ID");
+        return;
+      }
+  
       const token = localStorage.getItem("token");
       const response = await axios.post(
-        `${API_URL}/api/v1/payments/verify`,
+        `${API_URL}/api/v1/users/payments/verify`,
         {
-          paymentId: payment._id,
-          utrNumber: utrNumber
+          paymentId: payment.paymentId, // Changed from payment._id to payment.paymentId
+          utrNumber: utrNumber,
         },
         {
           headers: {
             Authorization: `Bearer ${token}`,
-          }
+          },
         }
       );
-      
-      if(response.data.success) {
-        setSuccessMessage("UTR verified successfully!");
-        setShowUTRField(false);
-        setUtrNumber("");
+  
+      if (response.data.success) {
+        window.location.href = "/prediction";
       }
     } catch (error) {
-      setErrorMessage("Error verifying UTR: " + (error.response?.data?.message || "Try again"));
+      setErrorMessage(
+        "Invalid UTR ID: " +
+          (error.response?.data?.message || "Please check and try again")
+      );
     }
   };
 
   const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text)
+    navigator.clipboard
+      .writeText(text)
       .then(() => {
         setIsUPICopied(true);
         setTimeout(() => setIsUPICopied(false), 2000);
       })
-      .catch(err => console.error('Copy failed:', err));
+      .catch((err) => console.error("Copy failed:", err));
   };
 
   const formatTimer = (seconds) => {
@@ -139,7 +144,6 @@ const UserPay = ({ user, onClose }) => {
       setShowPopup(true);
     }
   };
-
 
   const createPayment = async () => {
     try {
@@ -179,8 +183,14 @@ const UserPay = ({ user, onClose }) => {
   const startPaymentStatusPolling = (paymentId) => {
     const interval = setInterval(async () => {
       try {
+        const token = localStorage.getItem("token");
         const response = await axios.get(
-          `${API_URL}/api/v1/payments/${paymentId}`
+          `${API_URL}/api/v1/users/payments/${paymentId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`, // Authorization header जोड़ें
+            },
+          }
         );
         if (response.data.data.status === "completed") {
           setSuccessMessage("Payment successful!");
@@ -314,9 +324,7 @@ const UserPay = ({ user, onClose }) => {
                   <h3 style={{ textAlign: "center", marginBottom: "15px" }}>
                     Payment Details
                   </h3>
-               
 
-                    
                   <div
                     style={{
                       backgroundColor: "#f8f9fa",
@@ -349,49 +357,56 @@ const UserPay = ({ user, onClose }) => {
                   </div>
 
                   {payment?.bankDetails?.upiId && (
-  <div style={styles.upiSection}>
-    <h4>UPI ID</h4>
-    <div style={styles.copyContainer}>
-      <span style={styles.upiId}>
-        {payment.bankDetails.upiId}
-      </span>
-      <button
-        onClick={() => copyToClipboard(payment.bankDetails.upiId)}
-        style={styles.copyButton}
-      >
-        {isUPICopied ? "Copied!" : "Copy"}
-      </button>
-    </div>
+                    <div style={styles.upiSection}>
+                      <h4>UPI ID</h4>
+                      <div style={styles.copyContainer}>
+                        <span style={styles.upiId}>
+                          {payment.bankDetails.upiId}
+                        </span>
+                        <button
+                          onClick={() =>
+                            copyToClipboard(payment.bankDetails.upiId)
+                          }
+                          style={styles.copyButton}
+                        >
+                          {isUPICopied ? "Copied!" : "Copy"}
+                        </button>
+                      </div>
 
-    {/* Added UTR Section */}
-    {!showUTRField ? (
-      <button 
-        style={styles.UTRButton}
-        onClick={() => setShowUTRField(true)}
-      >
-        I've Paid via UPI
-      </button>
-    ) : (
-      <div style={styles.UTRContainer}>
-        <input
-          type="text"
-          placeholder="Enter 12-digit UTR Number"
-          value={utrNumber}
-          onChange={(e) => setUtrNumber(e.target.value)}
-          style={styles.UTRInput}
-          maxLength={12}
-        />
-        <button 
-          onClick={handleUTRSubmit}
-          style={styles.UTRSubmitButton}
-          disabled={utrNumber.length !== 12}
-        >
-          Verify UTR
-        </button>
-      </div>
-    )}
-  </div>
-)}
+                      {!showUTRField ? (
+                        <button
+                          style={styles.UTRButton}
+                          onClick={() => setShowUTRField(true)}
+                        >
+                          I've Paid via UPI
+                        </button>
+                      ) : (
+                        <div style={styles.UTRContainer}>
+                          <input
+                            type="text"
+                            placeholder="Enter 12-digit UTR Number"
+                            value={utrNumber}
+                            onChange={(e) => {
+                              const value = e.target.value
+                                .toUpperCase()
+                                .replace(/[^A-Z0-9]/g, "");
+                              setUtrNumber(value.slice(0, 12));
+                            }}
+                            style={styles.UTRInput}
+                            pattern="[A-Z0-9]{12}"
+                            title="Must be 12 uppercase alphanumeric characters"
+                          />
+                          <button
+                            onClick={handleUTRSubmit}
+                            style={styles.UTRSubmitButton}
+                            disabled={!utrNumber.match(/^[A-Z0-9]{12}$/)}
+                          >
+                            Verify UTR
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -595,9 +610,10 @@ const styles = {
   paymentDetailsSection: {
     marginTop: "20px",
     padding: "15px",
-    backgroundColor: "#fff",
+    backgroundColor: "#f8f9fa",
     borderRadius: "8px",
     border: "1px solid #e2e8f0",
+    textAlign: "left",
   },
   qrCodeContainer: {
     display: "flex",
