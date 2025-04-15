@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import axios from "axios";
 import numeral from "numeral";
 
+
 const UserPay = ({ user, onClose }) => {
   const [amount, setAmount] = useState(null);
   const [showPopup, setShowPopup] = useState(false);
