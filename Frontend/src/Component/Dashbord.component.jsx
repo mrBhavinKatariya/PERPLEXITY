@@ -121,7 +121,7 @@ export default function Dashboard() {
   <div className="lg:hidden absolute top-16 left-0 w-full bg-black text-white px-6 py-4 space-y-4">
     <ul className="space-y-4">
       {[ 
-        { to: "/", label: "Home" },
+        // { to: "/", label: "Home" },
         // { to: "/jewellery", label: "Jewellery" },
         // { to: "/home", label: "Home" },
         { to: "/prediction", label: "prediction" }, //----------ACTIVE KRVANU CHE

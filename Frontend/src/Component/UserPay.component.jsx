@@ -17,10 +17,12 @@ const UserPay = ({ user, onClose }) => {
   const [userName, setUserName] = useState("");
   const [countdown, setCountdown] = useState(900);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [paymentProcessing, setPaymentProcessing] = useState(false);
   const [payment, setPayment] = useState(null);
   const [utr, setUtr] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [verifyCooldown, setVerifyCooldown] = useState(0);
 
   const API_URL =
     import.meta.env.REACT_APP_API_URL || "https://perplexity-bd2d.onrender.com";
@@ -54,6 +56,39 @@ const UserPay = ({ user, onClose }) => {
 
     fetchUser();
   }, []);
+
+  useEffect(() => {
+    if (verifyCooldown === 0 && isProcessingPayment) {
+      verifyPayment();
+    }
+  }, [verifyCooldown, isProcessingPayment]);
+
+
+  // Remove this problematic useEffect
+useEffect(() => {
+    if (setPaymentProcessing) {
+      createPayment();
+    }
+  }, [setPaymentProcessing]);
+
+
+  const handleVerifyClick = () => {
+    if (isProcessingPayment || !utr) return;
+
+    // Start 5-second cooldown
+    setIsProcessingPayment(true);
+    setVerifyCooldown(5);
+
+    const interval = setInterval(() => {
+      setVerifyCooldown((prev) => {
+        if (prev <= 1) {
+          clearInterval(interval);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
 
   useEffect(() => {
     if (showPopup) {
@@ -104,11 +139,11 @@ const UserPay = ({ user, onClose }) => {
 
   const createPayment = async () => {
     try {
-      setIsProcessingPayment(true);
+      setPaymentProcessing(true);
       const token = localStorage.getItem("token");
       if (!token) {
-        alert("Please login to continue");
-        setIsProcessingPayment(false);
+        setErrorMessage("Please login to continue");
+        setPaymentProcessing(false);
         return;
       }
 
@@ -130,9 +165,9 @@ const UserPay = ({ user, onClose }) => {
 
       setPayment(response.data.data);
     } catch (error) {
-      alert(error.response?.data?.message || "Payment creation failed");
+      error.response?.data?.message || "Payment creation failed"
     } finally {
-      setIsProcessingPayment(false);
+        setPaymentProcessing(false);
     }
   };
 
@@ -153,12 +188,12 @@ const UserPay = ({ user, onClose }) => {
       };
 
       if (!utr || utr.trim() === "") {
-        alert("Please enter UTR number");
+        setErrorMessage("Please enter UTR number"); 
         return;
       }
 
       if (!/^[a-zA-Z0-9]{10,20}$/.test(utr)) {
-        alert("Invalid UTR Number");
+        setErrorMessage("Invalid UTR Number");
         return;
       }
 
@@ -275,28 +310,28 @@ const UserPay = ({ user, onClose }) => {
                     <p style={styles.amountConfirm}>Amount: ₹{amount}</p>
                   </div>
                   <div style={styles.paymentMethods}>
-                    {paymentMethods.map((method) => (
-                      <button
-                        key={method}
-                        style={{
-                          ...styles.methodButton,
-                          backgroundColor: isProcessingPayment
-                            ? "#e2e8f0"
-                            : "#f7fafc",
-                          cursor: isProcessingPayment
-                            ? "not-allowed"
-                            : "pointer",
-                        }}
-                        onClick={() => {
-                          if (method === "Pay Now") {
-                            createPayment();
-                          }
-                        }}
-                        disabled={isProcessingPayment}
-                      >
-                        {isProcessingPayment ? "Processing..." : method}
-                      </button>
-                    ))}
+                  {paymentMethods.map((method) => (
+  <button
+    key={method}
+    style={{
+      ...styles.methodButton,
+      backgroundColor: paymentProcessing 
+        ? "#e2e8f0" 
+        : "#f7fafc",
+      cursor: paymentProcessing 
+        ? "not-allowed" 
+        : "pointer",
+    }}
+    onClick={() => {
+      if (method === "Pay Now") {
+        createPayment();
+      }
+    }}
+    disabled={paymentProcessing}  // Corrected
+  >
+    {paymentProcessing ? "Processing..." : method}  
+  </button>
+))}
                   </div>
                 </>
               ) : (
@@ -434,59 +469,6 @@ const UserPay = ({ user, onClose }) => {
                           Paytm
                         </button>
                       </div>
-
-                      <p
-                        style={{
-                          fontSize: "12px",
-                          color: "#6b7280",
-                          textAlign: "center",
-                        }}
-                      >
-                        Don't have an app?
-                        <a
-                          href={`upi://pay?pa=${
-                            payment.bankDetails.upiId
-                          }&pn=${encodeURIComponent(
-                            payment.bankDetails.name
-                          )}&am=${payment.amount}&cu=INR`}
-                          style={{
-                            color: "#4f46e5",
-                            marginLeft: "4px",
-                          }}
-                        >
-                          Pay using any UPI app
-                        </a>
-                      </p>
-                    </div>
-                  )}
-
-                  {payment?.bankDetails && (
-                    <div style={{ marginBottom: "20px" }}>
-                      <h4 style={{ marginBottom: "10px" }}>
-                        Bank Transfer Details
-                      </h4>
-                      <div
-                        style={{
-                          display: "grid",
-                          gridTemplateColumns: "1fr 1fr",
-                          gap: "10px",
-                          backgroundColor: "white",
-                          padding: "15px",
-                          borderRadius: "8px",
-                        }}
-                      >
-                        <p style={{ fontWeight: "bold" }}>Bank Name:</p>
-                        <p>{payment.bankDetails.name}</p>
-
-                        <p style={{ fontWeight: "bold" }}>Account Number:</p>
-                        <p>{payment.bankDetails.accountNumber}</p>
-
-                        <p style={{ fontWeight: "bold" }}>IFSC Code:</p>
-                        <p>{payment.bankDetails.ifsc}</p>
-
-                        <p style={{ fontWeight: "bold" }}>UPI ID:</p>
-                        <p>{payment.bankDetails.upiId}</p>
-                      </div>
                     </div>
                   )}
 
@@ -516,7 +498,7 @@ const UserPay = ({ user, onClose }) => {
                         required
                       />
                       <button
-                        onClick={verifyPayment}
+                        onClick={handleVerifyClick}
                         disabled={isProcessingPayment || !utr}
                         style={{
                           width: "100%",
@@ -533,23 +515,8 @@ const UserPay = ({ user, onClose }) => {
                         }}
                       >
                         {isProcessingPayment
-                          ? "Verifying..."
+                          ? `Verifying... `
                           : "Verify Payment"}
-                      </button>
-
-                      <button
-                        onClick={() => setPayment(null)}
-                        style={{
-                          width: "100%",
-                          padding: "10px",
-                          marginTop: "10px",
-                          backgroundColor: "transparent",
-                          border: "1px solid #d1d5db",
-                          borderRadius: "6px",
-                          cursor: "pointer",
-                        }}
-                      >
-                        Create New Payment
                       </button>
                     </div>
                   )}
@@ -573,6 +540,18 @@ const UserPay = ({ user, onClose }) => {
           </div>
         </div>
       )}
+      {errorMessage && (
+  <div style={{ 
+    color: "red", 
+    margin: "10px 0",
+    padding: "10px",
+    borderRadius: "8px",
+    backgroundColor: "#ffe5e5",
+    border: "1px solid #ffcccc"
+  }}>
+    ⚠️ {errorMessage}
+  </div>
+)}
     </div>
   );
 };
