@@ -89,7 +89,7 @@ const createPayment = asyncHandler(async (req, res) => {
         bankName: BANK_DETAILS.name,
         accountNumber: BANK_DETAILS.accountNumber,
         ifscCode: BANK_DETAILS.ifsc,
-        status: 'completed' // स्टेटस को completed में बदलें
+        status: 'pending' // स्टेटस को completed में बदलें
     });
 
     await payment.save();

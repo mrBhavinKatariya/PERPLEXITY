@@ -1,9 +1,7 @@
-// 13-4-25 -------QR COde ----------
-
 import { useState, useEffect } from "react";
 import axios from "axios";
 import numeral from "numeral";
-
+// import QRCode from "qrcode.react";
 
 const UserPay = ({ user, onClose }) => {
   const [amount, setAmount] = useState(null);
@@ -12,8 +10,8 @@ const UserPay = ({ user, onClose }) => {
     100, 300, 500, 1000, 2000, 5000, 10000, 15000, 20000,
   ];
   const [error, setError] = useState("");
-  const [phoneNo, setPhoneNo] = useState(user.phoneNo || "");
-  const [email, setEmail] = useState(user.email);
+  const [phoneNo, setPhoneNo] = useState(user?.phoneNo || "");
+  const [email, setEmail] = useState(user?.email);
   const [userId, setUserId] = useState("");
   const [name, setName] = useState("");
   const [userName, setUserName] = useState("");
@@ -22,9 +20,20 @@ const UserPay = ({ user, onClose }) => {
   const [payment, setPayment] = useState(null);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [isUPICopied, setIsUPICopied] = useState(false);
+  const [utrNumber, setUtrNumber] = useState("");
+  const [showUTRField, setShowUTRField] = useState(false);
+
+  // Replace these with your actual details
+  const UPI_ID = "your_upi_id@example";
+  const PHONEPE_QR = "/images/phonepe-qr.png";
+  const GOOGLE_PAY_QR = "/images/gpay-qr.png";
+  const PAYTM_QR = "/images/paytm-qr.png";
 
   const API_URL =
     import.meta.env.REACT_APP_API_URL || "https://perplexity-bd2d.onrender.com";
+
+
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -34,7 +43,6 @@ const UserPay = ({ user, onClose }) => {
           throw new Error("No token found");
         }
 
-        
         const response = await axios.get(
           `${API_URL}/api/v1/users/current-user`,
           {
@@ -73,6 +81,41 @@ const UserPay = ({ user, onClose }) => {
     }
   }, [showPopup]);
 
+  const handleUTRSubmit = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.post(
+        `${API_URL}/api/v1/payments/verify-utr`,
+        {
+          paymentId: payment._id,
+          utrNumber: utrNumber
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          }
+        }
+      );
+      
+      if(response.data.success) {
+        setSuccessMessage("UTR verified successfully!");
+        setShowUTRField(false);
+        setUtrNumber("");
+      }
+    } catch (error) {
+      setErrorMessage("Error verifying UTR: " + (error.response?.data?.message || "Try again"));
+    }
+  };
+
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text)
+      .then(() => {
+        setIsUPICopied(true);
+        setTimeout(() => setIsUPICopied(false), 2000);
+      })
+      .catch(err => console.error('Copy failed:', err));
+  };
+
   const formatTimer = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
@@ -96,6 +139,7 @@ const UserPay = ({ user, onClose }) => {
       setShowPopup(true);
     }
   };
+
 
   const createPayment = async () => {
     try {
@@ -124,8 +168,6 @@ const UserPay = ({ user, onClose }) => {
       );
 
       setPayment(response.data.data);
-      console.log("Payment response:", response.data.data);
-      
       startPaymentStatusPolling(response.data.data.paymentId);
     } catch (error) {
       alert(error.response?.data?.message || "Payment creation failed");
@@ -150,8 +192,9 @@ const UserPay = ({ user, onClose }) => {
       } catch (error) {
         console.error("Error checking payment status:", error);
       }
-    }, 5000); // हर 5 सेकंड में चेक करें
+    }, 5000);
   };
+
   const paymentMethods = ["Pay Now"];
 
   return (
@@ -271,7 +314,34 @@ const UserPay = ({ user, onClose }) => {
                   <h3 style={{ textAlign: "center", marginBottom: "15px" }}>
                     Payment Details
                   </h3>
+               
 
+                    {!showUTRField ? (
+                      <button 
+                        style={styles.UTRButton}
+                        onClick={() => setShowUTRField(true)}
+                      >
+                        I've Paid via UPI
+                      </button>
+                    ) : (
+                      <div style={styles.UTRContainer}>
+                        <input
+                          type="text"
+                          placeholder="Enter 12-digit UTR Number"
+                          value={utrNumber}
+                          onChange={(e) => setUtrNumber(e.target.value)}
+                          style={styles.UTRInput}
+                          maxLength={12}
+                        />
+                        <button 
+                          onClick={handleUTRSubmit}
+                          style={styles.UTRSubmitButton}
+                          disabled={utrNumber.length !== 12}
+                        >
+                          Verify UTR
+                        </button>
+                      </div>
+                    )}
                   <div
                     style={{
                       backgroundColor: "#f8f9fa",
@@ -304,90 +374,49 @@ const UserPay = ({ user, onClose }) => {
                   </div>
 
                   {payment?.bankDetails?.upiId && (
-                    <div style={{ marginBottom: "20px" }}>
-                      <h4 style={{ textAlign: "center", marginBottom: "10px" }}>
-                        Pay Using UPI Apps
-                      </h4>
-                      <div
-                        style={{
-                          display: "grid",
-                          gridTemplateColumns: "1fr 1fr 1fr",
-                          gap: "8px",
-                          marginBottom: "10px",
-                        }}
-                      >
-                        <button
-                          onClick={() =>
-                            (window.location.href = `upi://pay?pa=${
-                              payment.bankDetails.upiId
-                            }&pn=${encodeURIComponent(
-                              payment.bankDetails.name
-                            )}&am=${payment.amount}&cu=INR`)
-                          }
-                          style={{
-                            backgroundColor: "#2563eb",
-                            color: "white",
-                            padding: "10px",
-                            borderRadius: "6px",
-                            border: "none",
-                            cursor: "pointer",
-                          }}
-                        >
-                          PhonePe
-                        </button>
+  <div style={styles.upiSection}>
+    <h4>UPI ID</h4>
+    <div style={styles.copyContainer}>
+      <span style={styles.upiId}>
+        {payment.bankDetails.upiId}
+      </span>
+      <button
+        onClick={() => copyToClipboard(payment.bankDetails.upiId)}
+        style={styles.copyButton}
+      >
+        {isUPICopied ? "Copied!" : "Copy"}
+      </button>
+    </div>
 
-                        <button
-                          onClick={() =>
-                            (window.location.href = `tez://upi/pay?pa=${
-                              payment.bankDetails.upiId
-                            }&pn=${encodeURIComponent(
-                              payment.bankDetails.name
-                            )}&am=${payment.amount}&cu=INR`)
-                          }
-                          style={{
-                            backgroundColor: "#4285F4",
-                            color: "white",
-                            padding: "10px",
-                            borderRadius: "6px",
-                            border: "none",
-                            cursor: "pointer",
-                          }}
-                        >
-                          Google Pay
-                        </button>
-
-                        <button
-                          onClick={() =>
-                            (window.location.href = `paytmmp://pay?pa=${
-                              payment.bankDetails.upiId
-                            }&pn=${encodeURIComponent(
-                              payment.bankDetails.name
-                            )}&am=${payment.amount}&cu=INR`)
-                          }
-                          style={{
-                            backgroundColor: "#203F9E",
-                            color: "white",
-                            padding: "10px",
-                            borderRadius: "6px",
-                            border: "none",
-                            cursor: "pointer",
-                          }}
-                        >
-                          Paytm
-                        </button>
-                      </div>
-
-                      <p
-                        style={{
-                          fontSize: "12px",
-                          color: "#6b7280",
-                          textAlign: "center",
-                        }}
-                      >
-                       
-                      </p>
-                    </div>
-                  )}
+    {/* Added UTR Section */}
+    {!showUTRField ? (
+      <button 
+        style={styles.UTRButton}
+        onClick={() => setShowUTRField(true)}
+      >
+        I've Paid via UPI
+      </button>
+    ) : (
+      <div style={styles.UTRContainer}>
+        <input
+          type="text"
+          placeholder="Enter 12-digit UTR Number"
+          value={utrNumber}
+          onChange={(e) => setUtrNumber(e.target.value)}
+          style={styles.UTRInput}
+          maxLength={12}
+        />
+        <button 
+          onClick={handleUTRSubmit}
+          style={styles.UTRSubmitButton}
+          disabled={utrNumber.length !== 12}
+        >
+          Verify UTR
+        </button>
+      </div>
+    )}
+  </div>
+)}
                 </div>
               )}
             </div>
@@ -542,6 +571,108 @@ const styles = {
     color: "#4a5568",
     cursor: "pointer",
     marginTop: "1.5rem",
+  },
+  copySection: {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#f8f9fa",
+    padding: "10px",
+    borderRadius: "6px",
+    margin: "10px 0",
+  },
+  copyContainer: {
+    display: "flex",
+    alignItems: "center",
+    gap: "10px",
+    backgroundColor: "#f8f9fa",
+    padding: "10px",
+    borderRadius: "6px",
+    margin: "10px 0",
+  },
+  UTRSubmitButton: {
+    padding: "12px 16px",
+    backgroundColor: "#4299e1",
+    color: "white",
+    border: "none",
+    borderRadius: "6px",
+    cursor: "pointer",
+    fontSize: "14px",
+  },
+  UTRButton: {
+    width: "100%",
+    padding: "12px 16px",
+    backgroundColor: "#48bb78",
+    color: "white",
+    border: "none",
+    borderRadius: "6px",
+    cursor: "pointer",
+    fontSize: "14px",
+    marginTop: "15px",
+  },
+  UTRInput: {
+    flex: 1,
+    padding: "8px 12px",
+    border: "1px solid #e2e8f0",
+    borderRadius: "6px",
+    fontSize: "14px",
+  },
+  paymentDetailsSection: {
+    marginTop: "20px",
+    padding: "15px",
+    backgroundColor: "#fff",
+    borderRadius: "8px",
+    border: "1px solid #e2e8f0",
+  },
+  qrCodeContainer: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    gap: "20px",
+    marginBottom: "20px",
+  },
+  appQRCodes: {
+    display: "flex",
+    gap: "20px",
+    flexWrap: "wrap",
+    justifyContent: "center",
+  },
+  qrCodeWrapper: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    gap: "8px",
+    padding: "10px",
+    backgroundColor: "#f8f9fa",
+    borderRadius: "8px",
+  },
+  qrImage: {
+    width: "128px",
+    height: "128px",
+    border: "1px solid #e2e8f0",
+    borderRadius: "8px",
+  },
+  qrLabel: {
+    fontSize: "0.9rem",
+    color: "#4a5568",
+    fontWeight: "500",
+  },
+  UTRContainer: {
+    display: "flex",
+    gap: "10px",
+    marginTop: "15px",
+  },
+  copyButton: {
+    backgroundColor: "#4a5568",
+    color: "white",
+    border: "none",
+    borderRadius: "4px",
+    padding: "6px 12px",
+    cursor: "pointer",
+    transition: "background-color 0.2s",
+    ":hover": {
+      backgroundColor: "#2d3748",
+    },
   },
 };
 
