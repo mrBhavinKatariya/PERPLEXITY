@@ -85,7 +85,7 @@ const UserPay = ({ user, onClose }) => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.post(
-        `${API_URL}/api/v1/payments/verify-utr`,
+        `${API_URL}/api/v1/payments/verify`,
         {
           paymentId: payment._id,
           utrNumber: utrNumber
