@@ -664,6 +664,7 @@ const styles = {
     display: "flex",
     flexDirection: "column",
     maxHeight: "90vh",
+    marginTop:"130px"
   },
   scrollableContainer: {
     overflowY: "auto",
