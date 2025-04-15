@@ -33,7 +33,7 @@ import RefundPolicyPage from "./Component/RefundPolicy.component";
 import TermsOfUse from "./Component/terms.component";
 import ShippingPolicy from "./Component/Shipping.component";
 import ReferralEarnings from "./Component/ReferralEarnings.component";
-
+import UserPay from "./Component/userpay.component";
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -62,7 +62,6 @@ const router = createBrowserRouter(
       <Route path="/Transaction-history" element={<TransactionHistory/>} />
       <Route path="/referral-earnings" element={<ReferralEarnings/>} />
 
-
       {/*------------------ Aaya thi  remove thase -------------- */}
       <Route path="/jewellery" element = {<Jewellery/>} />
       <Route path="/aboutus" element = {<AboutUs/>} />
@@ -71,8 +70,8 @@ const router = createBrowserRouter(
       <Route path="/refund-policy" element = {<RefundPolicyPage/>} />
       <Route path="/terms" element = {<TermsOfUse/>} />
       <Route path="/shipping-policy" element = {<ShippingPolicy/>} />
-  
-
+        
+        <Route path="userpay" element={<UserPay/>} />
 
 
 
