@@ -35,7 +35,7 @@ import ShippingPolicy from "./Component/Shipping.component";
 import ReferralEarnings from "./Component/ReferralEarnings.component";
 // import UserPay from "./Component/userpay.component.jsx";
 import UserPay from "./Component/UserPay.component.jsx";
-
+// import UserPay from "./Component/UserPay.component.jsx";
  
 const router = createBrowserRouter(
   createRoutesFromElements(
