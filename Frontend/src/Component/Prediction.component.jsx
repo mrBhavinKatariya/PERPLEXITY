@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import axios from "axios";
 // import { FaTrophy } from "react-icons/fa";
 import RechargePage from "./Recharge.component";
+import UserPay from "./UserPay.component";
 import { FaTrophy, FaSyncAlt } from "react-icons/fa";
 import "../App.css";
 
@@ -703,6 +704,12 @@ export default function ColorPredictionGame() {
             currentPeriod={currentPeriod}
             timeLeft={timeLeft}
           />
+           {/* <UserPay
+            user={user}
+            onClose={() => setShowRecharge(false)}
+            currentPeriod={currentPeriod}
+            timeLeft={timeLeft}
+          /> */}
         </div>
       )}
 
