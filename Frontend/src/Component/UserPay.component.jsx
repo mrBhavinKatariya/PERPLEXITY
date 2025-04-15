@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import axios from "axios";
+import { QRCodeSVG } from "qrcode.react";
 import numeral from "numeral";
-// import QRCode from "qrcode.react";
 
 const UserPay = ({ user, onClose }) => {
   const [amount, setAmount] = useState(null);
@@ -18,17 +18,9 @@ const UserPay = ({ user, onClose }) => {
   const [countdown, setCountdown] = useState(900);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const [payment, setPayment] = useState(null);
+  const [utr, setUtr] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
-  const [isUPICopied, setIsUPICopied] = useState(false);
-  const [utrNumber, setUtrNumber] = useState("");
-  const [showUTRField, setShowUTRField] = useState(false);
-
-  // Replace these with your actual details
-  const UPI_ID = "your_upi_id@example";
-  const PHONEPE_QR = "/images/phonepe-qr.png";
-  const GOOGLE_PAY_QR = "/images/gpay-qr.png";
-  const PAYTM_QR = "/images/paytm-qr.png";
 
   const API_URL =
     import.meta.env.REACT_APP_API_URL || "https://perplexity-bd2d.onrender.com";
@@ -50,6 +42,7 @@ const UserPay = ({ user, onClose }) => {
           }
         );
 
+        console.log("Current user:", response.data);
         setUserId(response.data.data._id);
         setUserName(response.data.data.username);
         setPhoneNo(response.data.data.phoneNo);
@@ -79,47 +72,11 @@ const UserPay = ({ user, onClose }) => {
     }
   }, [showPopup]);
 
-  const handleUTRSubmit = async () => {
-    try {
-      if (!/^[A-Z0-9]{12}$/.test(utrNumber)) {
-        setErrorMessage("Invalid UTR ID");
-        return;
-      }
-  
-      const token = localStorage.getItem("token");
-      const response = await axios.post(
-        `${API_URL}/api/v1/users/payments/verify`,
-        {
-          paymentId: payment.paymentId, // Changed from payment._id to payment.paymentId
-          utrNumber: utrNumber,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-  
-      if (response.data.success) {
-        window.location.href = "/prediction";
-      }
-    } catch (error) {
-      setErrorMessage(
-        "Invalid UTR ID: " +
-          (error.response?.data?.message || "Please check and try again")
-      );
-    }
-  };
-
-  const copyToClipboard = (text) => {
-    navigator.clipboard
-      .writeText(text)
-      .then(() => {
-        setIsUPICopied(true);
-        setTimeout(() => setIsUPICopied(false), 2000);
-      })
-      .catch((err) => console.error("Copy failed:", err));
-  };
+  const CloseButton = () => (
+    <button style={styles.closeButton} onClick={onClose}>
+      ×
+    </button>
+  );
 
   const formatTimer = (seconds) => {
     const mins = Math.floor(seconds / 60);
@@ -135,7 +92,7 @@ const UserPay = ({ user, onClose }) => {
   };
 
   const handleProceedToPayment = () => {
-    if (!amount || amount < 0) {
+    if (!amount || amount < 100) {
       setError("Minimum amount is 100");
       return;
     }
@@ -172,7 +129,6 @@ const UserPay = ({ user, onClose }) => {
       );
 
       setPayment(response.data.data);
-      startPaymentStatusPolling(response.data.data.paymentId);
     } catch (error) {
       alert(error.response?.data?.message || "Payment creation failed");
     } finally {
@@ -180,29 +136,63 @@ const UserPay = ({ user, onClose }) => {
     }
   };
 
-  const startPaymentStatusPolling = (paymentId) => {
-    const interval = setInterval(async () => {
-      try {
-        const token = localStorage.getItem("token");
-        const response = await axios.get(
-          `${API_URL}/api/v1/users/payments/${paymentId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`, // Authorization header जोड़ें
-            },
-          }
-        );
-        if (response.data.data.status === "completed") {
-          setSuccessMessage("Payment successful!");
-          clearInterval(interval);
-        } else if (response.data.data.status === "failed") {
-          setErrorMessage("Payment failed. Please try again.");
-          clearInterval(interval);
-        }
-      } catch (error) {
-        console.error("Error checking payment status:", error);
+  const verifyPayment = async () => {
+    try {
+      setIsProcessingPayment(true);
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("Please login to continue");
+        setIsProcessingPayment(false);
+        return;
       }
-    }, 5000);
+
+      const authConfig = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
+
+      if (!utr || utr.trim() === "") {
+        alert("Please enter UTR number");
+        return;
+      }
+
+      if (!/^[a-zA-Z0-9]{10,20}$/.test(utr)) {
+        alert("Invalid UTR Number");
+        return;
+      }
+
+      const response = await axios.post(
+        `${API_URL}/api/v1/users/payments/verify`,
+        {
+          paymentId: payment.paymentId,
+          utrNumber: utr,
+        },
+        authConfig
+      );
+
+      setPayment((prev) => ({
+        ...prev,
+        ...response.data.payment,
+        status: "completed",
+      }));
+      setSuccessMessage("Payment verified successfully!");
+      setErrorMessage("");
+
+      setTimeout(() => {
+        setSuccessMessage("");
+        setShowPopup(false);
+        onClose();
+      }, 3000);
+
+      window.location.reload();
+    } catch (error) {
+      setErrorMessage(
+        error.response?.data?.message || "Payment verification failed"
+      );
+    } finally {
+      setIsProcessingPayment(false);
+    }
   };
 
   const paymentMethods = ["Pay Now"];
@@ -357,54 +347,210 @@ const UserPay = ({ user, onClose }) => {
                   </div>
 
                   {payment?.bankDetails?.upiId && (
-                    <div style={styles.upiSection}>
-                      <h4>UPI ID</h4>
-                      <div style={styles.copyContainer}>
-                        <span style={styles.upiId}>
-                          {payment.bankDetails.upiId}
-                        </span>
+                    <div style={{ textAlign: "center", marginBottom: "20px" }}>
+                      <h4 style={{ marginBottom: "10px" }}>
+                        Scan QR Code to Pay
+                      </h4>
+                      <QRCodeSVG
+                        value={`upi://pay?pa=${payment.bankDetails.upiId}&am=${payment.amount}`}
+                        size={180}
+                        bgColor="#ffffff"
+                        fgColor="#000000"
+                        style={{ margin: "0 auto" }}
+                      />
+                    </div>
+                  )}
+
+                  {payment?.bankDetails?.upiId && (
+                    <div style={{ marginBottom: "20px" }}>
+                      <h4 style={{ textAlign: "center", marginBottom: "10px" }}>
+                        Pay Using UPI Apps
+                      </h4>
+                      <div
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns: "1fr 1fr 1fr",
+                          gap: "8px",
+                          marginBottom: "10px",
+                        }}
+                      >
                         <button
                           onClick={() =>
-                            copyToClipboard(payment.bankDetails.upiId)
+                            (window.location.href = `upi://pay?pa=${
+                              payment.bankDetails.upiId
+                            }&pn=${encodeURIComponent(
+                              payment.bankDetails.name
+                            )}&am=${payment.amount}&cu=INR`)
                           }
-                          style={styles.copyButton}
+                          style={{
+                            backgroundColor: "#2563eb",
+                            color: "white",
+                            padding: "10px",
+                            borderRadius: "6px",
+                            border: "none",
+                            cursor: "pointer",
+                          }}
                         >
-                          {isUPICopied ? "Copied!" : "Copy"}
+                          PhonePe
+                        </button>
+
+                        <button
+                          onClick={() =>
+                            (window.location.href = `tez://upi/pay?pa=${
+                              payment.bankDetails.upiId
+                            }&pn=${encodeURIComponent(
+                              payment.bankDetails.name
+                            )}&am=${payment.amount}&cu=INR`)
+                          }
+                          style={{
+                            backgroundColor: "#4285F4",
+                            color: "white",
+                            padding: "10px",
+                            borderRadius: "6px",
+                            border: "none",
+                            cursor: "pointer",
+                          }}
+                        >
+                          Google Pay
+                        </button>
+
+                        <button
+                          onClick={() =>
+                            (window.location.href = `paytmmp://pay?pa=${
+                              payment.bankDetails.upiId
+                            }&pn=${encodeURIComponent(
+                              payment.bankDetails.name
+                            )}&am=${payment.amount}&cu=INR`)
+                          }
+                          style={{
+                            backgroundColor: "#203F9E",
+                            color: "white",
+                            padding: "10px",
+                            borderRadius: "6px",
+                            border: "none",
+                            cursor: "pointer",
+                          }}
+                        >
+                          Paytm
                         </button>
                       </div>
 
-                      {!showUTRField ? (
-                        <button
-                          style={styles.UTRButton}
-                          onClick={() => setShowUTRField(true)}
+                      <p
+                        style={{
+                          fontSize: "12px",
+                          color: "#6b7280",
+                          textAlign: "center",
+                        }}
+                      >
+                        Don't have an app?
+                        <a
+                          href={`upi://pay?pa=${
+                            payment.bankDetails.upiId
+                          }&pn=${encodeURIComponent(
+                            payment.bankDetails.name
+                          )}&am=${payment.amount}&cu=INR`}
+                          style={{
+                            color: "#4f46e5",
+                            marginLeft: "4px",
+                          }}
                         >
-                          I've Paid via UPI
-                        </button>
-                      ) : (
-                        <div style={styles.UTRContainer}>
-                          <input
-                            type="text"
-                            placeholder="Enter 12-digit UTR Number"
-                            value={utrNumber}
-                            onChange={(e) => {
-                              const value = e.target.value
-                                .toUpperCase()
-                                .replace(/[^A-Z0-9]/g, "");
-                              setUtrNumber(value.slice(0, 12));
-                            }}
-                            style={styles.UTRInput}
-                            pattern="[A-Z0-9]{12}"
-                            title="Must be 12 uppercase alphanumeric characters"
-                          />
-                          <button
-                            onClick={handleUTRSubmit}
-                            style={styles.UTRSubmitButton}
-                            disabled={!utrNumber.match(/^[A-Z0-9]{12}$/)}
-                          >
-                            Verify UTR
-                          </button>
-                        </div>
-                      )}
+                          Pay using any UPI app
+                        </a>
+                      </p>
+                    </div>
+                  )}
+
+                  {payment?.bankDetails && (
+                    <div style={{ marginBottom: "20px" }}>
+                      <h4 style={{ marginBottom: "10px" }}>
+                        Bank Transfer Details
+                      </h4>
+                      <div
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns: "1fr 1fr",
+                          gap: "10px",
+                          backgroundColor: "white",
+                          padding: "15px",
+                          borderRadius: "8px",
+                        }}
+                      >
+                        <p style={{ fontWeight: "bold" }}>Bank Name:</p>
+                        <p>{payment.bankDetails.name}</p>
+
+                        <p style={{ fontWeight: "bold" }}>Account Number:</p>
+                        <p>{payment.bankDetails.accountNumber}</p>
+
+                        <p style={{ fontWeight: "bold" }}>IFSC Code:</p>
+                        <p>{payment.bankDetails.ifsc}</p>
+
+                        <p style={{ fontWeight: "bold" }}>UPI ID:</p>
+                        <p>{payment.bankDetails.upiId}</p>
+                      </div>
+                    </div>
+                  )}
+
+                  {payment.status === "pending" && (
+                    <div
+                      style={{
+                        paddingTop: "15px",
+                        borderTop: "1px solid #e5e7eb",
+                      }}
+                    >
+                      <h4 style={{ marginBottom: "10px" }}>Verify Payment</h4>
+                      <input
+                        type="text"
+                        placeholder="Enter UTR Number"
+                        value={utr}
+                        onChange={(e) => {
+                          const value = e.target.value
+                            .toUpperCase()
+                            .replace(/[^A-Z0-9]/g, "");
+
+                          setUtr(value.slice(0, 20));
+                        }}
+                        className="w-full p-2 border border-gray-300 rounded-md mb-3 focus:ring-2 focus:ring-indigo-500"
+                        style={{ textTransform: "uppercase" }}
+                        pattern="[A-Z0-9]{10,20}"
+                        title="10-20 alphanumeric characters in uppercase"
+                        required
+                      />
+                      <button
+                        onClick={verifyPayment}
+                        disabled={isProcessingPayment || !utr}
+                        style={{
+                          width: "100%",
+                          padding: "10px",
+                          backgroundColor:
+                            isProcessingPayment || !utr ? "#9ca3af" : "#16a34a",
+                          color: "white",
+                          border: "none",
+                          borderRadius: "6px",
+                          cursor:
+                            isProcessingPayment || !utr
+                              ? "not-allowed"
+                              : "pointer",
+                        }}
+                      >
+                        {isProcessingPayment
+                          ? "Verifying..."
+                          : "Verify Payment"}
+                      </button>
+
+                      <button
+                        onClick={() => setPayment(null)}
+                        style={{
+                          width: "100%",
+                          padding: "10px",
+                          marginTop: "10px",
+                          backgroundColor: "transparent",
+                          border: "1px solid #d1d5db",
+                          borderRadius: "6px",
+                          cursor: "pointer",
+                        }}
+                      >
+                        Create New Payment
+                      </button>
                     </div>
                   )}
                 </div>
@@ -544,6 +690,20 @@ const styles = {
     overflowY: "auto",
     paddingRight: "10px",
     maxHeight: "70vh",
+    "&::-webkit-scrollbar": {
+      width: "6px",
+    },
+    "&::-webkit-scrollbar-track": {
+      background: "#f1f1f1",
+      borderRadius: "10px",
+    },
+    "&::-webkit-scrollbar-thumb": {
+      background: "#888",
+      borderRadius: "10px",
+    },
+    "&::-webkit-scrollbar-thumb:hover": {
+      background: "#555",
+    },
   },
   methodButton: {
     width: "100%",
@@ -561,109 +721,6 @@ const styles = {
     color: "#4a5568",
     cursor: "pointer",
     marginTop: "1.5rem",
-  },
-  copySection: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "space-between",
-    backgroundColor: "#f8f9fa",
-    padding: "10px",
-    borderRadius: "6px",
-    margin: "10px 0",
-  },
-  copyContainer: {
-    display: "flex",
-    alignItems: "center",
-    gap: "10px",
-    backgroundColor: "#f8f9fa",
-    padding: "10px",
-    borderRadius: "6px",
-    margin: "10px 0",
-  },
-  UTRSubmitButton: {
-    padding: "12px 16px",
-    backgroundColor: "#4299e1",
-    color: "white",
-    border: "none",
-    borderRadius: "6px",
-    cursor: "pointer",
-    fontSize: "14px",
-  },
-  UTRButton: {
-    width: "100%",
-    padding: "12px 16px",
-    backgroundColor: "#48bb78",
-    color: "white",
-    border: "none",
-    borderRadius: "6px",
-    cursor: "pointer",
-    fontSize: "14px",
-    marginTop: "15px",
-  },
-  UTRInput: {
-    flex: 1,
-    padding: "8px 12px",
-    border: "1px solid #e2e8f0",
-    borderRadius: "6px",
-    fontSize: "14px",
-  },
-  paymentDetailsSection: {
-    marginTop: "20px",
-    padding: "15px",
-    backgroundColor: "#f8f9fa",
-    borderRadius: "8px",
-    border: "1px solid #e2e8f0",
-    textAlign: "left",
-  },
-  qrCodeContainer: {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    gap: "20px",
-    marginBottom: "20px",
-  },
-  appQRCodes: {
-    display: "flex",
-    gap: "20px",
-    flexWrap: "wrap",
-    justifyContent: "center",
-  },
-  qrCodeWrapper: {
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    gap: "8px",
-    padding: "10px",
-    backgroundColor: "#f8f9fa",
-    borderRadius: "8px",
-  },
-  qrImage: {
-    width: "128px",
-    height: "128px",
-    border: "1px solid #e2e8f0",
-    borderRadius: "8px",
-  },
-  qrLabel: {
-    fontSize: "0.9rem",
-    color: "#4a5568",
-    fontWeight: "500",
-  },
-  UTRContainer: {
-    display: "flex",
-    gap: "10px",
-    marginTop: "15px",
-  },
-  copyButton: {
-    backgroundColor: "#4a5568",
-    color: "white",
-    border: "none",
-    borderRadius: "4px",
-    padding: "6px 12px",
-    cursor: "pointer",
-    transition: "background-color 0.2s",
-    ":hover": {
-      backgroundColor: "#2d3748",
-    },
   },
 };
 

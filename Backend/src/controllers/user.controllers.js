@@ -108,7 +108,7 @@ const createPayment = asyncHandler(async (req, res) => {
                 ifsc: BANK_DETAILS.ifsc,
                 upiId: BANK_DETAILS.upiId
             },
-            status: 'panding'
+            status: 'pending'
         }, "Payment created successfully")
     );
 });
