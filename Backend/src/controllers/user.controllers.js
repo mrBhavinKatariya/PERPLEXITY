@@ -66,9 +66,9 @@ const createPayment = asyncHandler(async (req, res) => {
         throw new ApiErrors(404, "User not found");
     }
 
-    // वॉलेट बैलेंस अपडेट करें
-    user.wallet += amount;
-    await user.save();
+    // // वॉलेट बैलेंस अपडेट करें
+    // user.wallet += amount;
+    // await user.save();
 
     // पेमेंट आईडी जनरेट करें
     const paymentId = shortid();
@@ -119,6 +119,8 @@ const verifyPayment = asyncHandler(async (req, res) => {
     const { paymentId, utrNumber } = req.body;
     const userId = req.user._id;
 
+    console.log("req.body verify",req.body);
+    
     if (!paymentId || !utrNumber) {
         throw new ApiErrors(400, "Payment ID and UTR number are required");
     }

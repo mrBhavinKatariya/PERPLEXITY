@@ -663,7 +663,7 @@ const styles = {
     maxWidth: "90%",
     display: "flex",
     flexDirection: "column",
-    maxHeight: "80vh",
+    maxHeight: "75vh",
     marginTop:"100px"
   },
   scrollableContainer: {
