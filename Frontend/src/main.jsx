@@ -33,8 +33,10 @@ import RefundPolicyPage from "./Component/RefundPolicy.component";
 import TermsOfUse from "./Component/terms.component";
 import ShippingPolicy from "./Component/Shipping.component";
 import ReferralEarnings from "./Component/ReferralEarnings.component";
-import UserPay from "./Component/userpay.component.jsx";
+// import UserPay from "./Component/userpay.component.jsx";
+import UserPay from "./Component/UserPay.component.jsx";
 
+ 
 const router = createBrowserRouter(
   createRoutesFromElements(
     <Route path="/" element={<Layout />}>
