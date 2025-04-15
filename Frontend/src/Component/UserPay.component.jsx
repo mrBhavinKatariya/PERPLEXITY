@@ -316,32 +316,7 @@ const UserPay = ({ user, onClose }) => {
                   </h3>
                
 
-                    {!showUTRField ? (
-                      <button 
-                        style={styles.UTRButton}
-                        onClick={() => setShowUTRField(true)}
-                      >
-                        I've Paid via UPI
-                      </button>
-                    ) : (
-                      <div style={styles.UTRContainer}>
-                        <input
-                          type="text"
-                          placeholder="Enter 12-digit UTR Number"
-                          value={utrNumber}
-                          onChange={(e) => setUtrNumber(e.target.value)}
-                          style={styles.UTRInput}
-                          maxLength={12}
-                        />
-                        <button 
-                          onClick={handleUTRSubmit}
-                          style={styles.UTRSubmitButton}
-                          disabled={utrNumber.length !== 12}
-                        >
-                          Verify UTR
-                        </button>
-                      </div>
-                    )}
+                    
                   <div
                     style={{
                       backgroundColor: "#f8f9fa",
