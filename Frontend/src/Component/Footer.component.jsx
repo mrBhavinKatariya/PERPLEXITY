@@ -15,7 +15,7 @@ const Footer = () => {
       <div className="max-w-6xl mx-auto">
         {/* Newsletter Section - Compact Version */}
         <div className="mb-6 text-center">
-          <h3 className="text-lg font-semibold mb-2">BBazaar Jewellery</h3>
+          <h3 className="text-lg font-semibold mb-2">Wavelina Jewellery</h3>
           <p className="mb-3 text-sm text-gray-300">Get updates & offers straight to your inbox</p>
           <form onSubmit={handleSubmit} className="flex flex-col md:flex-row gap-2 justify-center max-w-xs mx-auto">
             <input
