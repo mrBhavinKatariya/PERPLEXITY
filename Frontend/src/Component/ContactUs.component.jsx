@@ -38,7 +38,7 @@ const ContactPage = () => {
                   <PhoneIcon className="h-8 w-8 text-gold-700 mr-4" />
                   <div>
                     <h3 className="text-2xl font-cinzel font-bold text-gray-800">Call & WhatsApp</h3>
-                    <p className="text-gray-600">+91 6355268737</p>
+                    <p className="text-gray-600">+91 73832 06760</p>
                   </div>
                 </div>
                 <div className="flex items-center mb-4">
@@ -61,7 +61,7 @@ const ContactPage = () => {
         href="mailto:care.bbazaar.shops@gmail.com" 
         className="text-gold-700 hover:text-gold-800 transition-colors"
       >
-        care.bbazaar.shops@gmail.com
+        care.wavelinastore@gmail.com
       </a>
     </div>
   </div>
@@ -78,9 +78,9 @@ const ContactPage = () => {
                   <div>
                     <h3 className="text-2xl font-cinzel font-bold text-gray-800">Visit Us</h3>
                     <p className="text-gray-600">
-                      92,first floor Radhika Park soc,<br />
-                      Near Polaris Mall,<br />
-                      Puna gam, Surat - 395010,<br />
+                      87, chandralok soc,<br />
+                      parvat patiya,<br />
+                       Surat - 395010,<br />
                       Gujarat, India
                     </p>
                   </div>

@@ -11,7 +11,7 @@ const Footer = () => {
   };
 
   return (
-    <footer className="bg-gray-900 text-white h-[336px] px-4 py-6 mt-8">
+    <footer className="bg-gray-900 text-white h-[336px] px-4 py-6 mt-8 hidden md:block">
       <div className="max-w-6xl mx-auto">
         {/* Newsletter Section - Compact Version */}
         <div className="mb-6 text-center">
@@ -39,46 +39,46 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 text-sm">
           {/* Policies */}
           <div>
-  <h4 className="font-medium mb-2">Our Policies</h4>
-  <ul className="space-y-1">
-    {[
-      { title: 'Privacy Policy', path: '/privacypolicy' },
-      { title: 'Refund Policy', path: '/refund-policy' },
-      { title: 'Terms', path: '/terms' },
-      { title: 'Shipping', path: '/shipping-policy' }
-    ].map((item) => (
-      <li key={item.title}>
-        <Link 
-          to={item.path} 
-          className="hover:text-amber-400 transition-colors text-gray-300"
-        >
-          {item.title}
-        </Link>
-      </li>
-    ))}
-  </ul>
-</div>
+            <h4 className="font-medium mb-2">Our Policies</h4>
+            <ul className="space-y-1">
+              {[
+                { title: 'Privacy Policy', path: '/privacypolicy' },
+                { title: 'Refund Policy', path: '/refund-policy' },
+                { title: 'Terms', path: '/terms' },
+                { title: 'Shipping', path: '/shipping-policy' }
+              ].map((item) => (
+                <li key={item.title}>
+                  <Link 
+                    to={item.path} 
+                    className="hover:text-amber-400 transition-colors text-gray-300"
+                  >
+                    {item.title}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
 
           {/* Useful Links */}
           <div>
-  <h4 className="font-medium mb-2">Quick Links</h4>
-  <ul className="space-y-1">
-    {[
-      { title: 'About', path: '/aboutus' },
-      { title: 'Contact', path: '/contactus' },
-      { title: 'Sitemap', path: '/' }
-    ].map((item) => (
-      <li key={item.title}>
-        <Link 
-          to={item.path} 
-          className="hover:text-amber-400 transition-colors text-gray-300"
-        >
-          {item.title}
-        </Link>
-      </li>
-    ))}
-  </ul>
-</div>
+            <h4 className="font-medium mb-2">Quick Links</h4>
+            <ul className="space-y-1">
+              {[
+                { title: 'About', path: '/aboutus' },
+                { title: 'Contact', path: '/contactus' },
+                { title: 'Sitemap', path: '/' }
+              ].map((item) => (
+                <li key={item.title}>
+                  <Link 
+                    to={item.path} 
+                    className="hover:text-amber-400 transition-colors text-gray-300"
+                  >
+                    {item.title}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
 
           {/* Compact Contact Info */}
           <div>

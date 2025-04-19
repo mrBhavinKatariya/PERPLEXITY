@@ -60,7 +60,7 @@ const RefundPolicyPage = () => {
             className="mb-12 text-gray-600 leading-relaxed"
           >
             <p className="mb-6 text-xl">
-              Thank you for shopping at BBazaar Jewellery. If, for any reason, You are not completely 
+              Thank you for shopping at Wavelina Jewellery. If, for any reason, You are not completely 
               satisfied with a purchase We invite You to review our policy on refunds and returns.
             </p>
             <p className="text-lg">
@@ -86,11 +86,11 @@ const RefundPolicyPage = () => {
                 <div className="grid md:grid-cols-2 gap-4">
                   <DefinitionItem 
                     term="Company" 
-                    definition="BBazaar Jewellery, 301, 3rd Floor Ganesh Bhuvan Apartment, Near Ganesh Colony, Opp Arihant Jewelers, Main Road Varachha, Surat, Gujarat, India - 395006" 
+                    definition="Wavelina Jewellery, 301, 3rd Floor Ganesh Bhuvan Apartment, Near Ganesh Colony, Opp Arihant Jewelers, Main Road Varachha, Surat, Gujarat, India - 395006" 
                   />
                   <DefinitionItem term="Goods" definition="Items offered for sale" />
                   <DefinitionItem term="Orders" definition="A request to purchase Goods from Us" />
-                  <DefinitionItem term="Website" definition="www.bbazaar.shop" />
+                  <DefinitionItem term="Website" definition="www.wavelina.store" />
                   <DefinitionItem term="You" definition="The individual or entity accessing our Service" />
                 </div>
               </div>
@@ -205,9 +205,9 @@ const RefundPolicyPage = () => {
               </h2>
             </div>
             <address className="text-gray-600 not-italic leading-relaxed">
-            92, Radhika Park soc,<br />
-                      Near Polaris Mall,<br />
-                      Puna gam, Surat - 395010,<br />
+            87, chandralok soc,<br />
+                      parvat patiya,<br />
+                       Surat - 395010,<br />
                       Gujarat, India
             </address>
           </motion.div>
@@ -227,15 +227,15 @@ const RefundPolicyPage = () => {
                 className="text-gold-700 hover:text-gold-800 flex items-center justify-center"
               >
                 <EnvelopeIcon className="h-5 w-5 mr-2" />
-                care.bbazaar.shops@gmail.com
+                care.wavelinastore.shops@gmail.com
               </a>
               <a 
-                href="https://www.bbazaar.shop" 
+                href="https://www.wavelina.store" 
                 target="_blank" 
                 rel="noopener noreferrer" 
                 className="text-gold-700 hover:text-gold-800"
               >
-                www.bbazaar.shop
+                www.wavelina.store
               </a>
             </div>
           </motion.div>

@@ -32,7 +32,7 @@ const TermsOfUse = () => {
             <section>
               <h2 className="text-xl font-semibold text-gray-800 mb-4">Use License</h2>
               <p className="mb-4 leading-relaxed">
-                BBazaar Jewellery grant you permission to view and use this Site and to print individual pages...
+              Wavelina Jewellery grant you permission to view and use this Site and to print individual pages...
               </p>
               <ul className="list-disc pl-6 space-y-2 mb-4">
                 <li>Non-commercial personal use only</li>
@@ -60,7 +60,7 @@ const TermsOfUse = () => {
               </p>
               <div className="bg-amber-50 p-4 rounded-lg border-l-4 border-amber-400">
                 <p className="text-sm italic">
-                  In no event shall BBazaar Jewellery be liable for any damages arising from site use
+                  In no event shall Wavelina Jewellery be liable for any damages arising from site use
                 </p>
               </div>
             </section>
@@ -71,20 +71,21 @@ const TermsOfUse = () => {
               <div className="bg-gray-50 p-6 rounded-lg space-y-4">
                 <div className="flex items-center gap-3">
                   <FiPhone className="text-amber-600 text-xl" />
-                  <span>+91 6355268737</span>
+                  <span>+91 73832 06760</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <FiGlobe className="text-amber-600 text-xl" />
-                  <a href="https://www.bbazaar.shop" className="hover:text-amber-700">
-                    www.bbazaar.shop
+                  <a href="https://www.wavelina.store" className="hover:text-amber-700">
+                    www.wavelina.store
                   </a>
                 </div>
                 <div className="flex gap-3">
                   <FiMapPin className="text-amber-600 text-xl mt-1 flex-shrink-0" />
                   <address className="not-italic">
-                  92, Radhika Park soc,<br />
-                  Near Polaris Mall,<br />
-                  Puna gam, Surat - 395010, Gujarat - 395010
+                  87, chandralok soc,<br />
+                      parvat patiya,<br />
+                       Surat - 395010,<br />
+                      Gujarat, India
                   </address>
                 </div>
               </div>
@@ -101,7 +102,7 @@ const TermsOfUse = () => {
                   <li>No viruses or malicious code</li>
                 </ul>
                 <p className="text-sm bg-red-50 p-3 rounded border-l-4 border-red-400">
-                BBazaar Jewellery reserves right to modify/delete any user content
+                Wavelina Jewellery reserves right to modify/delete any user content
                 </p>
               </div>
             </section>

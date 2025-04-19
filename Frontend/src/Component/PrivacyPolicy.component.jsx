@@ -61,10 +61,10 @@ const PrivacyPolicyPage = () => {
             className="mb-12 text-gray-600 leading-relaxed"
           >
             <p className="mb-6 mt-[-20px]">
-              At BBazaar Jewellery, accessible from www.bbazzar.shop, one of our main priorities is the privacy of our visitors. This Privacy Policy document contains types of information that is collected and recorded by BBazaar Jewellery and how we use it.
+              At Wavelina Jewellery, accessible from www.bbazzar.shop, one of our main priorities is the privacy of our visitors. This Privacy Policy document contains types of information that is collected and recorded by Wavelina Jewellery and how we use it.
             </p>
             <p className="mb-6">
-              If you have additional questions or require more information about our Privacy Policy, do not hesitate to contact us. This Privacy Policy applies only to our online activities and is valid for visitors to our website with regards to the information that they shared and/or collect in BBazaar Jewellery. This policy is not applicable to any information collected offline or via channels other than this website.
+              If you have additional questions or require more information about our Privacy Policy, do not hesitate to contact us. This Privacy Policy applies only to our online activities and is valid for visitors to our website with regards to the information that they shared and/or collect in Wavelina Jewellery. This policy is not applicable to any information collected offline or via channels other than this website.
             </p>
           </motion.div>
 
@@ -154,7 +154,7 @@ const PrivacyPolicyPage = () => {
               title="Log Files"
               content={
                 <div className="space-y-4">
-                  <p>BBazaar Jewellery follows standard log file procedures. Information collected includes:</p>
+                  <p>Wavelina Jewellery follows standard log file procedures. Information collected includes:</p>
                   <ul className="list-disc pl-6">
                     <li>IP addresses</li>
                     <li>Browser type and version</li>
@@ -195,9 +195,9 @@ const PrivacyPolicyPage = () => {
                   </h3>
                   <div className="space-y-6">
                     <p className="text-gray-600">
-                      At BBazaar Jewellery, we are committed to ensuring your privacy and providing control over your personal data. To comply with app store policies and enhance transparency:
+                      At Wavelina Jewellery, we are committed to ensuring your privacy and providing control over your personal data. To comply with app store policies and enhance transparency:
                     </p>
-                    <StepItem number="1" title="Open BBazaar Jewellery App" detail="Launch the application on your device"/>
+                    <StepItem number="1" title="Open Wavelina Jewellery App" detail="Launch the application on your device"/>
                     <StepItem number="2" title="Navigate to Profile" detail="Find profile section via top-left menu icon"/>
                     <StepItem number="3" title="Find Delete Data Option" detail="Located at bottom of profile screen"/>
                     <StepItem number="4" title="Confirm Deletion" detail="Follow on-screen prompts to complete"/>
@@ -220,7 +220,7 @@ const PrivacyPolicyPage = () => {
               href="mailto:care.bbazaar.shops@gmail.com" 
               className="text-gold-700 hover:text-gold-800 transition-colors text-lg"
             >
-              care.bbazaar.shops@gmail.com
+              care.wavelinestore@gmail.com
             </a>
           </motion.div>
         </div>
