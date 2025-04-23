@@ -388,8 +388,7 @@ useEffect(() => {
                         Scan QR Code to Pay
                       </h4>
                       <QRCodeSVG
-                        value={`upi://pay?pa=${payment.bankDetails.upiId}&am=${payment.amount.toFixed(2)}`}
-                        size={180}
+                       value={`upi://pay?pa=${payment.bankDetails.upiId}&pn=${encodeURIComponent(payment.bankDetails.name)}&am=${payment.amount.toFixed(2)}&cu=INR&tn=${encodeURIComponent('Wallet Recharge')}`}
                         bgColor="#ffffff"
                         fgColor="#000000"
                         style={{ margin: "0 auto" }}
