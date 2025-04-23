@@ -36,9 +36,9 @@ const Payment = mongoose.model('Payment', PaymentSchema);
 
 const BANK_DETAILS = {
     name: "KOTAK MAHINDRA BANK",
-    accountNumber: "8745579201",
-    ifsc: "KKBK0000883",
-    upiId: "bhavinkatariya@kotak"
+    accountNumber: "8546373084",
+    ifsc: "KKBK0002866",
+    upiId: "hahir6610@okhdfcbank"
 };
 
 const generateAccessToken = async (userId) => {
@@ -75,10 +75,7 @@ const createPayment = asyncHandler(async (req, res) => {
     const paymentLink = `${process.env.FRONTEND_URL || 'https://wavelina.store'}/pay/${paymentId}`;
 
     // UPI URL बनाएं
-    // const upiPaymentUrl = `upi://pay?pa=${BANK_DETAILS.upiId}&pn=${encodeURIComponent(BANK_DETAILS.name)}&am=${amount}&cu=INR&tn=${encodeURIComponent(description || 'Payment')}`;
-
-    // In createPayment controller
-const upiPaymentUrl = `upi://pay?pa=${encodeURIComponent(BANK_DETAILS.upiId)}&pn=${encodeURIComponent(BANK_DETAILS.name)}&am=${amount.toFixed(2)}&cu=INR&tn=${encodeURIComponent(description || 'Payment')}`;
+    const upiPaymentUrl = `upi://pay?pa=${BANK_DETAILS.upiId}&pn=${encodeURIComponent(BANK_DETAILS.name)}&am=${amount}&cu=INR&tn=${encodeURIComponent(description || 'Payment')}`;
 
     // QR कोड जनरेट करें
     const qrCodeUrl = await QRCode.toDataURL(upiPaymentUrl);
