@@ -63,14 +63,12 @@ const UserPay = ({ user, onClose }) => {
     }
   }, [verifyCooldown, isProcessingPayment]);
 
-
   // Remove this problematic useEffect
-useEffect(() => {
+  useEffect(() => {
     if (setPaymentProcessing) {
       createPayment();
     }
   }, [setPaymentProcessing]);
-
 
   const handleVerifyClick = () => {
     if (isProcessingPayment || !utr) return;
@@ -165,9 +163,9 @@ useEffect(() => {
 
       setPayment(response.data.data);
     } catch (error) {
-      error.response?.data?.message || "Payment creation failed"
+      error.response?.data?.message || "Payment creation failed";
     } finally {
-        setPaymentProcessing(false);
+      setPaymentProcessing(false);
     }
   };
 
@@ -188,7 +186,7 @@ useEffect(() => {
       };
 
       if (!utr || utr.trim() === "") {
-        setErrorMessage("Please enter UTR number"); 
+        setErrorMessage("Please enter UTR number");
         return;
       }
 
@@ -311,28 +309,26 @@ useEffect(() => {
                     <p style={styles.amountConfirm}>Amount: ₹{amount}</p>
                   </div>
                   <div style={styles.paymentMethods}>
-                  {paymentMethods.map((method) => (
-  <button
-    key={method}
-    style={{
-      ...styles.methodButton,
-      backgroundColor: paymentProcessing 
-        ? "#e2e8f0" 
-        : "#f7fafc",
-      cursor: paymentProcessing 
-        ? "not-allowed" 
-        : "pointer",
-    }}
-    onClick={() => {
-      if (method === "Pay Now") {
-        createPayment();
-      }
-    }}
-    disabled={paymentProcessing}  // Corrected
-  >
-    {paymentProcessing ? "Processing..." : method}  
-  </button>
-))}
+                    {paymentMethods.map((method) => (
+                      <button
+                        key={method}
+                        style={{
+                          ...styles.methodButton,
+                          backgroundColor: paymentProcessing
+                            ? "#e2e8f0"
+                            : "#f7fafc",
+                          cursor: paymentProcessing ? "not-allowed" : "pointer",
+                        }}
+                        onClick={() => {
+                          if (method === "Pay Now") {
+                            createPayment();
+                          }
+                        }}
+                        disabled={paymentProcessing} // Corrected
+                      >
+                        {paymentProcessing ? "Processing..." : method}
+                      </button>
+                    ))}
                   </div>
                 </>
               ) : (
@@ -353,33 +349,54 @@ useEffect(() => {
 
                   <div
                     style={{
-                      backgroundColor: "#f8f9fa",
-                      padding: "15px",
-                      borderRadius: "8px",
-                      marginBottom: "15px",
+                      display: "grid",
+                      gridTemplateColumns: "1fr 1fr 1fr",
+                      gap: "8px",
                     }}
                   >
-                    <div
-                      style={{
-                        display: "grid",
-                        gridTemplateColumns: "1fr 1fr",
-                        gap: "10px",
+                    <button
+                      onClick={() => {
+                        const upiLink = `upi://pay?pa=${
+                          payment.bankDetails.upiId
+                        }&pn=${encodeURIComponent(
+                          payment.bankDetails.name
+                        )}&am=${payment.amount.toFixed(2)}&cu=INR`;
+                        window.location.href = `phonepe://pay?pa=${
+                          payment.bankDetails.upiId
+                        }&pn=${encodeURIComponent(
+                          payment.bankDetails.name
+                        )}&am=${payment.amount.toFixed(2)}&cu=INR`;
                       }}
+                      style={styles.paymentButton}
                     >
-                      <p style={{ fontWeight: "bold" }}>Amount:</p>
-                      <p>₹{numeral(payment.amount).format("0,0.00")}</p>
+                      PhonePe
+                    </button>
 
-                      <p style={{ fontWeight: "bold" }}>Status:</p>
-                      <p
-                        style={{
-                          color:
-                            payment.status === "completed" ? "green" : "orange",
-                          fontWeight: "bold",
-                        }}
-                      >
-                        {payment.status}
-                      </p>
-                    </div>
+                    <button
+                      onClick={() => {
+                        window.location.href = `gpay://upi/pay?pa=${
+                          payment.bankDetails.upiId
+                        }&pn=${encodeURIComponent(
+                          payment.bankDetails.name
+                        )}&am=${payment.amount.toFixed(2)}&cu=INR`;
+                      }}
+                      style={styles.paymentButton}
+                    >
+                      Google Pay
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        window.location.href = `paytmmp://pay?pa=${
+                          payment.bankDetails.upiId
+                        }&pn=${encodeURIComponent(
+                          payment.bankDetails.name
+                        )}&am=${payment.amount.toFixed(2)}&cu=INR`;
+                      }}
+                      style={styles.paymentButton}
+                    >
+                      Paytm
+                    </button>
                   </div>
 
                   {payment?.bankDetails?.upiId && (
@@ -432,11 +449,12 @@ useEffect(() => {
 
                         <button
                           onClick={() =>
-                            (window.location.href = `tez://upi/pay?pa=${
+                            (window.location.href = `gpay://upi/pay?pa=${
                               payment.bankDetails.upiId
-                            }&pn=${encodeURIComponent(
-                              payment.bankDetails.name
-                            )}&am=${payment.amount}&cu=INR`)
+                            }
+                              &pn=${encodeURIComponent(
+                                payment.bankDetails.name
+                              )}&am=${payment.amount.toFixed(2)}&cu=INR`)
                           }
                           style={{
                             backgroundColor: "#4285F4",
@@ -542,17 +560,19 @@ useEffect(() => {
         </div>
       )}
       {errorMessage && (
-  <div style={{ 
-    color: "red", 
-    margin: "10px 0",
-    padding: "10px",
-    borderRadius: "8px",
-    backgroundColor: "#ffe5e5",
-    border: "1px solid #ffcccc"
-  }}>
-    ⚠️ {errorMessage}
-  </div>
-)}
+        <div
+          style={{
+            color: "red",
+            margin: "10px 0",
+            padding: "10px",
+            borderRadius: "8px",
+            backgroundColor: "#ffe5e5",
+            border: "1px solid #ffcccc",
+          }}
+        >
+          ⚠️ {errorMessage}
+        </div>
+      )}
     </div>
   );
 };
@@ -665,7 +685,7 @@ const styles = {
     display: "flex",
     flexDirection: "column",
     maxHeight: "75vh",
-    marginTop:"100px"
+    marginTop: "100px",
   },
   scrollableContainer: {
     overflowY: "auto",
