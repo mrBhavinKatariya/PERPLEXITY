@@ -388,7 +388,7 @@ useEffect(() => {
                         Scan QR Code to Pay
                       </h4>
                       <QRCodeSVG
-                        value={`upi://pay?pa=${payment.bankDetails.upiId}&am=${payment.amount}`}
+                        value={`upi://pay?pa=${payment.bankDetails.upiId}&am=${payment.amount.toFixed(2)}`}
                         size={180}
                         bgColor="#ffffff"
                         fgColor="#000000"

@@ -35,7 +35,7 @@ let adminOverride = {
 const Payment = mongoose.model('Payment', PaymentSchema);
 
 const BANK_DETAILS = {
-    name: "KOTAK MAHINDRA BANK",
+    name: "HDFC Bank",
     accountNumber: "8546373084",
     ifsc: "KKBK0002866",
     upiId: "hahir6610@okhdfcbank"
