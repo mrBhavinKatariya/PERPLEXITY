@@ -127,7 +127,7 @@ useEffect(() => {
   };
 
   const handleProceedToPayment = () => {
-    if (!amount || amount < 100) {
+    if (!amount || amount < 0) {
       setError("Minimum amount is 100");
       return;
     }
