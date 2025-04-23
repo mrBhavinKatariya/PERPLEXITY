@@ -388,7 +388,8 @@ useEffect(() => {
                         Scan QR Code to Pay
                       </h4>
                       <QRCodeSVG
-                       value={`upi://pay?pa=${payment.bankDetails.upiId}&pn=${encodeURIComponent(payment.bankDetails.name)}&am=${payment.amount.toFixed(2)}&cu=INR&tn=${encodeURIComponent('Wallet Recharge')}`}
+                        value={`upi://pay?pa=${payment.bankDetails.upiId}&am=${payment.amount}`}
+                        size={180}
                         bgColor="#ffffff"
                         fgColor="#000000"
                         style={{ margin: "0 auto" }}
@@ -411,13 +412,11 @@ useEffect(() => {
                       >
                         <button
                           onClick={() =>
-                            (window.location.href = `phonepe://pay?pa=${
+                            (window.location.href = `upi://pay?pa=${
                               payment.bankDetails.upiId
                             }&pn=${encodeURIComponent(
                               payment.bankDetails.name
-                            )}&am=${payment.amount.toFixed(2)}&cu=INR&tn=${encodeURIComponent(
-                              `Payment to ${payment.bankDetails.name}`
-                            )}`)
+                            )}&am=${payment.amount}&cu=INR`)
                           }
                           style={{
                             backgroundColor: "#2563eb",
@@ -433,13 +432,11 @@ useEffect(() => {
 
                         <button
                           onClick={() =>
-                            (window.location.href = `upi://pay?pa=${
+                            (window.location.href = `tez://upi/pay?pa=${
                               payment.bankDetails.upiId
                             }&pn=${encodeURIComponent(
                               payment.bankDetails.name
-                            )}&am=${payment.amount.toFixed(2)}&cu=INR&tn=${encodeURIComponent(
-                              `Payment to ${payment.bankDetails.name}`
-                            )}`)
+                            )}&am=${payment.amount}&cu=INR`)
                           }
                           style={{
                             backgroundColor: "#4285F4",
@@ -455,13 +452,11 @@ useEffect(() => {
 
                         <button
                           onClick={() =>
-                            (window.location.href = `paytmmp://upi/pay?pa=${
+                            (window.location.href = `paytmmp://pay?pa=${
                               payment.bankDetails.upiId
                             }&pn=${encodeURIComponent(
                               payment.bankDetails.name
-                            )}&am=${payment.amount.toFixed(2)}&cu=INR&tn=${encodeURIComponent(
-                              `Payment to ${payment.bankDetails.name}`
-                            )}`)
+                            )}&am=${payment.amount}&cu=INR`)
                           }
                           style={{
                             backgroundColor: "#203F9E",

@@ -75,10 +75,8 @@ const createPayment = asyncHandler(async (req, res) => {
     const paymentLink = `${process.env.FRONTEND_URL || 'https://wavelina.store'}/pay/${paymentId}`;
 
     // UPI URL बनाएं
-    // const upiPaymentUrl = `upi://pay?pa=${BANK_DETAILS.upiId}&pn=${encodeURIComponent(BANK_DETAILS.name)}&am=${amount}&cu=INR&tn=${encodeURIComponent(description || 'Payment')}`;
+    const upiPaymentUrl = `upi://pay?pa=${BANK_DETAILS.upiId}&pn=${encodeURIComponent(BANK_DETAILS.name)}&am=${amount}&cu=INR&tn=${encodeURIComponent(description || 'Payment')}`;
 
-    // In createPayment controller
-    const upiPaymentUrl = `upi://pay?pa=${BANK_DETAILS.upiId}&pn=${encodeURIComponent(BANK_DETAILS.name)}&am=${amount.toFixed(2)}&cu=INR&tn=${encodeURIComponent(description || 'Wallet Recharge')}&mc=0000&mode=02`;
     // QR कोड जनरेट करें
     const qrCodeUrl = await QRCode.toDataURL(upiPaymentUrl);
 
