@@ -36,9 +36,9 @@ const Payment = mongoose.model('Payment', PaymentSchema);
 
 const BANK_DETAILS = {
     name: "KOTAK MAHINDRA BANK",
-    accountNumber: "8546373084",
-    ifsc: "KKBK0002866",
-    upiId: "hahir6610@okhdfcbank"
+    accountNumber: "8745579201",
+    ifsc: "KKBK0000883",
+    upiId: "bhavinkatariya@kotak"
 };
 
 const generateAccessToken = async (userId) => {
