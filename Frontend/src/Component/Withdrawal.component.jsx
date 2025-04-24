@@ -509,7 +509,7 @@ const Withdrawal = () => {
                              (transaction.createdAt ? new Date(transaction.createdAt).toLocaleDateString("en-IN") : 'N/A')}
                           </td>
                           <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                            ₹{transaction.amount?.toFixed(2) || '0.00'}
+                            ₹{transaction.amount?.toLocaleString('en-IN', { maximumFractionDigits: 2 })  || '0.00'}
                           </td>
                           <td className="px-6 py-4">
                             <span
