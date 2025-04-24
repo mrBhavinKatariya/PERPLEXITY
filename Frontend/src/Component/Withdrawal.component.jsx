@@ -232,7 +232,7 @@ const Withdrawal = () => {
                 <FaChartLine className="w-5 h-5" /> Available Balance
               </h2>
               <div className="text-4xl font-bold text-white">
-                ₹{balance ? balance.toFixed(2) : "0.00"}
+                ₹{balance ? balance.toLocaleString('en-IN', { maximumFractionDigits: 2 }) : "0.00"}
               </div>
             </div>
             <div className="bg-white/10 p-4 rounded-xl">
@@ -492,6 +492,9 @@ const Withdrawal = () => {
                       <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
                         Transaction ID
                       </th>
+                      <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
+                    Type
+                  </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
@@ -524,6 +527,11 @@ const Withdrawal = () => {
                           <td className="px-6 py-4 text-sm text-gray-700 font-mono">
                             {transaction.transactionId || transaction._id?.slice(-8) || 'N/A'}
                           </td>
+                          <td className="px-6 py-4 text-sm text-gray-700 font-mono">
+                     
+                        {transaction.type ||  "N/A"}
+                     
+                      </td>
                         </tr>
                       ))
                     ) : (

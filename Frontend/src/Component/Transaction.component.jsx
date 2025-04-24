@@ -184,9 +184,9 @@ const TransactionHistory = () => {
                           "N/A"}
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-700 font-mono">
-                      {/* <span className="capitalize"> */}
+                     
                         {transaction.type ||  "N/A"}
-                      {/* </span> */}
+                     
                       </td>
                     </motion.tr>
                   ))

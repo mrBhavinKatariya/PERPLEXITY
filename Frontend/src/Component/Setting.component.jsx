@@ -105,7 +105,7 @@ const SettingsPage = () => {
             <HiCurrencyRupee className="w-6 h-6 text-green-500 mr-2" />
             <h2 className="text-xl font-semibold">Available Balance</h2>
           </div>
-          <div className="text-3xl font-bold">₹{balance.toFixed(2)}</div>
+          <div className="text-3xl font-bold">₹{balance.toLocaleString('en-IN', { maximumFractionDigits: 2 }) }</div>
         </div>
 
         {/* Read Section - Modified Button */}

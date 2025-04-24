@@ -659,7 +659,7 @@ export default function ColorPredictionGame() {
           />
           <div style={styles.balanceGroup}>
             <span style={styles.balanceLabel}> Balance:</span>
-            <span style={styles.balanceAmount}>₹{userBalance.toFixed(2)}</span>
+            <span style={styles.balanceAmount}>₹{userBalance.toLocaleString('en-IN', { maximumFractionDigits: 2 }) }</span>
           </div>
           <div style={styles.buttonGroup}>
             <button
@@ -1020,7 +1020,7 @@ export default function ColorPredictionGame() {
 
             return (
               <div key={index} style={historyStyles.row}>
-                <span style={{ color: "#000" }}>₹{betAmount.toFixed(2)}</span>
+                <span style={{ color: "#000" }}>₹{betAmount.toLocaleString('en-IN', { maximumFractionDigits: 2 }) }</span>
 
                 <span>
                   {history.selectedColor === "number" ? (
@@ -1049,7 +1049,7 @@ export default function ColorPredictionGame() {
                 </span>
 
                 <span style={{ color: profit >= 0 ? "green" : "red" }}>
-                  ₹{profit.toFixed(2)}
+                  ₹{profit.toLocaleString('en-IN', { maximumFractionDigits: 2 }) }
                 </span>
               </div>
             );
