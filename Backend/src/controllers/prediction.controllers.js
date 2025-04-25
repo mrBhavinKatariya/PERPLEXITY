@@ -914,7 +914,7 @@ const initiateWithdrawal = asyncHandler(async (req, res) => {
 
     // Calculate GST and total deduction
     const gstAmount = parseFloat((originalAmount * 0.18).toFixed(2));
-    totalAmountWithGST = originalAmount + gstAmount;
+    totalAmountWithGST = originalAmount - gstAmount;
 
     // Basic validations
     if (!userId || !fundAccountId) {
