@@ -895,18 +895,23 @@ const RazorpayPaymentAndUpdateBalance = asyncHandler(async (req, res) => {
 
 // Initiate Withdrawal Request
 
-
 const initiateWithdrawal = asyncHandler(async (req, res) => {
+
   let user;
   let transaction;
   let originalAmount;
   let totalAmountWithGST;
 
   try {
-    const { userId, fundAccountId, UPIId, ifsc, accountNumber } = req.body;
-    let { amount } = req.body;
+    const { userId, amount, fundAccountId,UPIId,ifsc,accountNumber } = req.body;
 
-    // Validate and parse amount
+
+    console.log("req.body",req.body);
+    // console.log("userId",userId); 
+    // console.log("amount",amount);
+    // console.log("fundAccountId",fundAccountId);
+    
+
     originalAmount = parseFloat(amount);
     if (isNaN(originalAmount) || originalAmount <= 0) {
       return res.status(400).json({ message: "Invalid withdrawal amount" });
@@ -915,14 +920,14 @@ const initiateWithdrawal = asyncHandler(async (req, res) => {
     // Calculate GST and total deduction
     const gstAmount = parseFloat((originalAmount * 0.18).toFixed(2));
     totalAmountWithGST = originalAmount - gstAmount;
-
-    // Basic validations
-    if (!userId || !fundAccountId) {
+    
+    // Validate input
+    if (!userId || !amount || !fundAccountId) {
       return res.status(400).json({ message: "Missing required fields" });
     }
 
-    // Find user with bank account
-    user = await User.findOne({
+    // Find user and check balance
+    const user = await User.findOne({
       _id: userId,
       'bankAccounts.fundAccountId': fundAccountId
     });
@@ -931,215 +936,102 @@ const initiateWithdrawal = asyncHandler(async (req, res) => {
       return res.status(404).json({ message: "User or bank account not found" });
     }
 
-    // Check balance with GST
-    if (user.balance < totalAmountWithGST) {
-      return res.status(400).json({ 
-        message: `Insufficient balance. Required: ₹${totalAmountWithGST.toFixed(2)} (Including 18% GST)`,
-        requiredAmount: totalAmountWithGST,
-        currentBalance: user.balance
-      });
+
+      
+    if (user.balance < amount) {
+      return res.status(400).json({ message: "Insufficient balance" });
     }
 
-    // Deduct amount with GST
-    user.balance -= totalAmountWithGST;
+    // Get bank account details
+    const bankAccount = user.bankAccounts.find(
+      acc => acc.fundAccountId === fundAccountId
+    );
+
+    console.log("bankAccount",bankAccount);
+    // console.log("user",user);
+    
+    if (!bankAccount?.ifsc) {
+      return res.status(400).json({ message: "Invalid bank account details" });
+    }
+  
+
+    // Deduct balance immediately
+    user.balance -= amount;
     await user.save();
 
+    console.log("user.balance",user.balance);
     // Create transaction record
-    transaction = new Transaction({
+    const transaction = new Transaction({
       userId,
-      netAmount: originalAmount,
-      gstAmount,
-      totalAmount: totalAmountWithGST,
-      type: "withdrawal",
+      totalAmountWithGST,
+      type: "debit", // withdrawal
       paymentMethod: "Razorpay Payout",
       status: "processing",
-      taxBreakdown: {
-        gstRate: 18,
-        taxableAmount: originalAmount,
-        gstAmount
-      },
-      transactionId: `WIN-${Date.now()}`,
-      ifsc,
-      accountNumber,
-      UPIId
+      transactionId: `WIN-${Date.now()}` ,
+      ifsc: ifsc,
+      accountNumber: accountNumber,
+      UPIId: UPIId,
+
     });
     await transaction.save();
 
-    // Initiate Razorpay payout (net amount only)
+    console.log("transaction",transaction);
+
+    // Create Razorpay payout
     const payoutOptions = {
-      account_number: process.env.RAZORPAY_ACCOUNT_NUMBER,
+      account_number: process.env.RAZORPAY_ACCOUNT_NUMBER, // Merchant's account
       fund_account_id: fundAccountId,
-      amount: originalAmount * 100, // Convert to paise
+      amount: amount , // Convert to paise
       currency: "INR",
       mode: "IMPS",
       purpose: "payout",
       reference_id: `WITHDRAWAL_${transaction._id}`,
+
     };
 
-    const payout = await razorpay.payouts.create(payoutOptions);
+
+    console.log("Razorpay Client Status:", {
+      initialized: !!razorpay,
+      hasPayoutsAPI: !!razorpay.payouts
+    });
+    console.log("payoutOptions",payoutOptions);
     
-    // Update transaction with payout details
+    const payout = await razorpay.payouts.create(payoutOptions);
+    console.log("payout",payout);
+    // Update transaction with payout ID
     transaction.transactionId = payout.id;
-    transaction.razorpayDetails = {
-      payoutId: payout.id,
-      status: payout.status,
-      utr: payout.utr
-    };
+    console.log("payout.id",payout.id);
+    
+    transaction.status = "processing";
     await transaction.save();
+
+   
 
     res.status(200).json({
       success: true,
-      message: "Withdrawal initiated successfully",
-      transactionId: payout.id,
-      netAmount: originalAmount,
-      gstAmount,
-      totalDeducted: totalAmountWithGST
+      message: "Withdrawal initiated",
+      payoutId: payout.id,
     });
 
   } catch (error) {
     console.error("Withdrawal error:", error);
     
-    // Revert balance if deduction occurred
-    if (user && user.balance !== undefined && totalAmountWithGST) {
-      user.balance += totalAmountWithGST;
-      await user.save();
-    }
-
-    // Update transaction status if created
+    // Revert balance deduction on error
+    // Update transaction status on error
     if (transaction) {
       transaction.status = "failed";
-      transaction.error = error.message;
       await transaction.save();
     }
+
+    // Revert balance if deducted
+    if (user && user.balance !== undefined) {
+      user.balance += amount;
+      await user.save();
+    }
     
-    res.status(500).json({ 
-      success: false, 
-      message: "Withdrawal failed",
-      error: error.message 
-    });
+    res.status(500).json({ success: false, message: "Withdrawal failed" });
   }
 });
-
-// const initiateWithdrawal = asyncHandler(async (req, res) => {
-//   try {
-//     const { userId, amount, fundAccountId,UPIId,ifsc,accountNumber } = req.body;
-
-//     console.log("req.body",req.body);
-//     // console.log("userId",userId); 
-//     // console.log("amount",amount);
-//     // console.log("fundAccountId",fundAccountId);
-    
-//     // Validate input
-//     if (!userId || !amount || !fundAccountId) {
-//       return res.status(400).json({ message: "Missing required fields" });
-//     }
-
-//     // Find user and check balance
-//     const user = await User.findOne({
-//       _id: userId,
-//       'bankAccounts.fundAccountId': fundAccountId
-//     });
-
-//     if (!user) {
-//       return res.status(404).json({ message: "User or bank account not found" });
-//     }
-
-
-      
-//     if (user.balance < amount) {
-//       return res.status(400).json({ message: "Insufficient balance" });
-//     }
-
-//     // Get bank account details
-//     const bankAccount = user.bankAccounts.find(
-//       acc => acc.fundAccountId === fundAccountId
-//     );
-
-//     console.log("bankAccount",bankAccount);
-//     // console.log("user",user);
-    
-//     if (!bankAccount?.ifsc) {
-//       return res.status(400).json({ message: "Invalid bank account details" });
-//     }
-  
-
-//     // Deduct balance immediately
-//     user.balance -= amount;
-//     await user.save();
-
-//     console.log("user.balance",user.balance);
-//     // Create transaction record
-//     const transaction = new Transaction({
-//       userId,
-//       amount,
-//       type: "debit", // withdrawal
-//       paymentMethod: "Razorpay Payout",
-//       status: "processing",
-//       transactionId: `WIN-${Date.now()}` ,
-//       ifsc: ifsc,
-//       accountNumber: accountNumber,
-//       UPIId: UPIId,
-
-//     });
-//     await transaction.save();
-
-//     console.log("transaction",transaction);
-
-//     // Create Razorpay payout
-//     const payoutOptions = {
-//       account_number: process.env.RAZORPAY_ACCOUNT_NUMBER, // Merchant's account
-//       fund_account_id: fundAccountId,
-//       amount: amount , // Convert to paise
-//       currency: "INR",
-//       mode: "IMPS",
-//       purpose: "payout",
-//       reference_id: `WITHDRAWAL_${transaction._id}`,
-
-//     };
-
-
-//     console.log("Razorpay Client Status:", {
-//       initialized: !!razorpay,
-//       hasPayoutsAPI: !!razorpay.payouts
-//     });
-//     console.log("payoutOptions",payoutOptions);
-    
-//     const payout = await razorpay.payouts.create(payoutOptions);
-//     console.log("payout",payout);
-//     // Update transaction with payout ID
-//     transaction.transactionId = payout.id;
-//     console.log("payout.id",payout.id);
-    
-//     transaction.status = "processing";
-//     await transaction.save();
-
-   
-
-//     res.status(200).json({
-//       success: true,
-//       message: "Withdrawal initiated",
-//       payoutId: payout.id,
-//     });
-
-//   } catch (error) {
-//     console.error("Withdrawal error:", error);
-    
-//     // Revert balance deduction on error
-//     // Update transaction status on error
-//     if (transaction) {
-//       transaction.status = "failed";
-//       await transaction.save();
-//     }
-
-//     // Revert balance if deducted
-//     if (user && user.balance !== undefined) {
-//       user.balance += amount;
-//       await user.save();
-//     }
-    
-//     res.status(500).json({ success: false, message: "Withdrawal failed" });
-//   }
-// });
 
 
 // const initiateWithdrawal = asyncHandler(async (req, res) => {
