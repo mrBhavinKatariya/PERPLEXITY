@@ -97,10 +97,30 @@ const Withdrawal = () => {
   const handleWithdrawal = async (e) => {
     e.preventDefault();
 
-    if (parseFloat(amount) < 1000) {
-      toast.error("Minimum withdrawal amount is ₹1000");
+    const withdrawalAmount = parseFloat(amount);
+    if (isNaN(withdrawalAmount)) {
+      toast.error("Invalid amount");
       return;
     }
+
+    
+      // New validation checks
+  if (withdrawalAmount <= 0) {
+    toast.error("Withdrawal amount must be greater than 0");
+    return;
+  }
+
+  if (balance - withdrawalAmount < 300) {
+    const maxAllowed = balance - 300;
+    if (maxAllowed <= 0) {
+      toast.error("You need at least ₹300 balance to withdraw funds");
+    } else {
+      toast.error(`Maximum withdrawal amount is ₹${maxAllowed.toFixed(2)}`);
+    }
+    return;
+  }
+
+   
 
     setIsLoading(true);
     try {
@@ -266,8 +286,10 @@ const Withdrawal = () => {
                   <span className="absolute left-3 top-3 text-gray-400">₹</span>
                 </div>
                 <div className="text-sm text-gray-500 mt-1">
-              Minimum withdrawal amount: ₹1000
-            </div>
+  {balance >= 300 
+    ? `Maximum withdrawal: ₹${(balance - 300).toLocaleString('en-IN', { maximumFractionDigits: 2 })} (₹300 minimum balance)`
+    : "Minimum ₹300 balance required to withdraw funds"}
+</div>
               </div>
 
               <div>
