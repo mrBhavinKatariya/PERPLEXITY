@@ -963,7 +963,7 @@ const initiateWithdrawal = asyncHandler(async (req, res) => {
     // Create transaction record
     const transaction = new Transaction({
       userId,
-      totalAmountWithGST,
+      amount: totalAmountWithGST,
       type: "debit", // withdrawal
       paymentMethod: "Razorpay Payout",
       status: "processing",
