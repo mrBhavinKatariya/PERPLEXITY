@@ -310,7 +310,7 @@ const loginUser = asyncHandler(async (req, res) => {
     const options = {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
-        maxAge: 60 * 1000 // 1 minute
+        maxAge:  24 * 60 * 60 * 1000 // 24 Hours
     };
 
     return res.status(201)
