@@ -104,15 +104,15 @@ export default function ColorPredictionGame() {
   }, []);
 
   // Client-side (React example)
-useEffect(() => {
-  const logoutTimer = setTimeout(() => {
-      // Force logout after 1 minute
+  useEffect(() => {
+    const logoutTimer = setTimeout(() => {
       localStorage.removeItem('user');
       window.location.href = '/login';
-  }, 60 * 1000);
-
-  return () => clearTimeout(logoutTimer);
-}, []);
+    }, 24 * 60 * 60 * 1000); // 24 hours = 86400000 ms
+  
+    return () => clearTimeout(logoutTimer);
+  }, []);
+  
 
   // Fetch user balance
 
