@@ -42,7 +42,7 @@ const Withdrawal = () => {
         if (!token) return;
 
         setTransactionsLoading(true);
-        
+
         // Fetch user data
         const userResponse = await axios.get(
           `${API_URL}/api/v1/users/current-user`,
@@ -60,13 +60,13 @@ const Withdrawal = () => {
             headers: { Authorization: `Bearer ${token}` },
             params: {
               page: currentPage,
-              limit: 10
-            }
+              limit: 10,
+            },
           }
         );
 
         console.log("Transactions Response:", transactionsResponse.data);
-        
+
         setTransactions(transactionsResponse.data.transactions || []);
         setTotalPages(transactionsResponse.data.totalPages || 1);
 
@@ -75,11 +75,11 @@ const Withdrawal = () => {
           setBankAccounts(
             userResponse.data.data.bankAccounts.map((account) => ({
               fundAccountId: account.fundAccountId,
-              last4: account.accountNumber?.slice(-4) || '****',
+              last4: account.accountNumber?.slice(-4) || "****",
               bankName: account.bankName || "Bank",
               accountNumber: account.accountNumber,
               UPIId: account.UPIId,
-              ifsc: account.ifsc
+              ifsc: account.ifsc,
             }))
           );
         }
@@ -103,24 +103,21 @@ const Withdrawal = () => {
       return;
     }
 
-    
-      // New validation checks
-  if (withdrawalAmount <= 0) {
-    toast.error("Withdrawal amount must be greater than 0");
-    return;
-  }
-
-  if (balance - withdrawalAmount < 300) {
-    const maxAllowed = balance - 300;
-    if (maxAllowed <= 0) {
-      toast.error("You need at least ₹300 balance to withdraw funds");
-    } else {
-      toast.error(`Maximum withdrawal amount is ₹${maxAllowed.toFixed(2)}`);
+    // New validation checks
+    if (withdrawalAmount <= 0) {
+      toast.error("Withdrawal amount must be greater than 0");
+      return;
     }
-    return;
-  }
 
-   
+    if (balance - withdrawalAmount < 300) {
+      const maxAllowed = balance - 300;
+      if (maxAllowed <= 0) {
+        toast.error("You need at least ₹300 balance to withdraw funds");
+      } else {
+        toast.error(`Maximum withdrawal amount is ₹${maxAllowed.toFixed(2)}`);
+      }
+      return;
+    }
 
     setIsLoading(true);
     try {
@@ -144,7 +141,7 @@ const Withdrawal = () => {
           fundAccountId: selectedAccount,
         },
         {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         }
       );
 
@@ -156,8 +153,10 @@ const Withdrawal = () => {
         const transactionsResponse = await axios.get(
           `${API_URL}/api/v1/users/transactions-history/${currentUserId}`,
           {
-            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
-            params: { page: 1, limit: 10 }
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem("token")}`,
+            },
+            params: { page: 1, limit: 10 },
           }
         );
         setTransactions(transactionsResponse.data.transactions || []);
@@ -171,8 +170,6 @@ const Withdrawal = () => {
     }
   };
 
-  
-
   const handleAddAccount = async (e) => {
     e.preventDefault();
     setIsLoading(true);
@@ -183,8 +180,11 @@ const Withdrawal = () => {
       if (!/^[6-9]\d{9}$/.test(newAccount.phone)) {
         return toast.error("Invalid Indian phone number");
       }
-      if (newAccount.UPIId && !/^[a-zA-Z0-9.-]+@[a-zA-Z]+$/.test(newAccount.UPIId)) {
-        setError('Invalid UPI ID format (e.g., name@bank)');
+      if (
+        newAccount.UPIId &&
+        !/^[a-zA-Z0-9.-]+@[a-zA-Z]+$/.test(newAccount.UPIId)
+      ) {
+        setError("Invalid UPI ID format (e.g., name@bank)");
         return;
       }
 
@@ -197,7 +197,7 @@ const Withdrawal = () => {
           ...newAccount,
         },
         {
-          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
         }
       );
 
@@ -211,8 +211,8 @@ const Withdrawal = () => {
             bankName: response.data.bankName || "Bank",
             accountNumber: newAccount.accountNumber,
             UPIId: newAccount.UPIId,
-            ifsc: newAccount.ifscCode
-          }
+            ifsc: newAccount.ifscCode,
+          },
         ]);
         setNewAccount({
           name: "",
@@ -252,7 +252,12 @@ const Withdrawal = () => {
                 <FaChartLine className="w-5 h-5" /> Available Balance
               </h2>
               <div className="text-4xl font-bold text-white">
-                ₹{balance ? balance.toLocaleString('en-IN', { maximumFractionDigits: 2 }) : "0.00"}
+                ₹
+                {balance
+                  ? balance.toLocaleString("en-IN", {
+                      maximumFractionDigits: 2,
+                    })
+                  : "0.00"}
               </div>
             </div>
             <div className="bg-white/10 p-4 rounded-xl">
@@ -266,12 +271,14 @@ const Withdrawal = () => {
           {/* Withdrawal Form */}
           <div className="bg-white rounded-2xl shadow-lg p-6">
             <h3 className="text-xl font-semibold text-gray-800 mb-6 flex items-center gap-2">
-              <FiArrowUpRight className="w-6 h-6 text-green-600" /> Withdraw Funds
+              <FiArrowUpRight className="w-6 h-6 text-green-600" /> Withdraw
+              Funds
             </h3>
             <form onSubmit={handleWithdrawal} className="space-y-6">
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-2 flex items-center gap-2">
-                  <FiDollarSign className="w-4 h-4 text-gray-500" /> Amount (INR)
+                  <FiDollarSign className="w-4 h-4 text-gray-500" /> Amount
+                  (INR)
                 </label>
                 <div className="relative">
                   <input
@@ -286,15 +293,19 @@ const Withdrawal = () => {
                   <span className="absolute left-3 top-3 text-gray-400">₹</span>
                 </div>
                 <div className="text-sm text-gray-500 mt-1">
-  {balance >= 300 
-    ? `Maximum withdrawal: ₹${(balance - 300).toLocaleString('en-IN', { maximumFractionDigits: 2 })} (₹300 minimum balance)`
-    : "Minimum ₹300 balance required to withdraw funds"}
-</div>
+                  {balance >= 300
+                    ? `Maximum withdrawal: ₹${(balance - 300).toLocaleString(
+                        "en-IN",
+                        { maximumFractionDigits: 2 }
+                      )} (₹300 minimum balance)`
+                    : "Minimum ₹300 balance required to withdraw funds"}
+                </div>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-600 mb-2 flex items-center gap-2">
-                  <FiCreditCard className="w-4 h-4 text-gray-500" /> Select Bank Account
+                  <FiCreditCard className="w-4 h-4 text-gray-500" /> Select Bank
+                  Account
                 </label>
                 <select
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 outline-none transition-all appearance-none bg-white"
@@ -327,7 +338,8 @@ const Withdrawal = () => {
           {/* Add Bank Account Form */}
           <div className="bg-white rounded-2xl shadow-lg p-6">
             <h3 className="text-xl font-semibold text-gray-800 mb-6 flex items-center gap-2">
-              <FiCreditCard className="w-6 h-6 text-blue-600" /> Add Bank Account
+              <FiCreditCard className="w-6 h-6 text-blue-600" /> Add Bank
+              Account
             </h3>
 
             <form onSubmit={handleAddAccount} className="space-y-6">
@@ -490,7 +502,8 @@ const Withdrawal = () => {
         {/* Transaction History */}
         <div className="bg-white rounded-2xl shadow-lg p-6">
           <h3 className="text-xl font-semibold text-gray-800 mb-6 flex items-center gap-2">
-            <FiCheckCircle className="w-6 h-6 text-purple-600" /> Transaction History
+            <FiCheckCircle className="w-6 h-6 text-purple-600" /> Transaction
+            History
           </h3>
           {transactionsLoading ? (
             <div className="flex justify-center items-center py-12">
@@ -515,8 +528,8 @@ const Withdrawal = () => {
                         Transaction ID
                       </th>
                       <th className="px-6 py-4 text-left text-sm font-semibold text-gray-600">
-                    Type
-                  </th>
+                        Type
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-100">
@@ -527,11 +540,18 @@ const Withdrawal = () => {
                           className="hover:bg-gray-50 transition-colors"
                         >
                           <td className="px-6 py-4 text-sm text-gray-700">
-                            {transaction.date || 
-                             (transaction.createdAt ? new Date(transaction.createdAt).toLocaleDateString("en-IN") : 'N/A')}
+                            {transaction.date ||
+                              (transaction.createdAt
+                                ? new Date(
+                                    transaction.createdAt
+                                  ).toLocaleDateString("en-IN")
+                                : "N/A")}
                           </td>
                           <td className="px-6 py-4 text-sm font-medium text-gray-900">
-                            ₹{transaction.amount?.toLocaleString('en-IN', { maximumFractionDigits: 2 })  || '0.00'}
+                            ₹
+                            {transaction.amount?.toLocaleString("en-IN", {
+                              maximumFractionDigits: 2,
+                            }) || "0.00"}
                           </td>
                           <td className="px-6 py-4">
                             <span
@@ -547,13 +567,13 @@ const Withdrawal = () => {
                             </span>
                           </td>
                           <td className="px-6 py-4 text-sm text-gray-700 font-mono">
-                            {transaction.transactionId || transaction._id?.slice(-8) || 'N/A'}
+                            {transaction.transactionId ||
+                              transaction._id?.slice(-8) ||
+                              "N/A"}
                           </td>
                           <td className="px-6 py-4 text-sm text-gray-700 font-mono">
-                     
-                        {transaction.type ||  "N/A"}
-                     
-                      </td>
+                            {transaction.type || "N/A"}
+                          </td>
                         </tr>
                       ))
                     ) : (
@@ -577,22 +597,34 @@ const Withdrawal = () => {
               {totalPages > 1 && (
                 <div className="flex items-center justify-between mt-6">
                   <button
-                    onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.max(prev - 1, 1))
+                    }
                     disabled={currentPage === 1}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg border ${currentPage === 1 ? 'border-gray-200 text-gray-400 cursor-not-allowed' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg border ${
+                      currentPage === 1
+                        ? "border-gray-200 text-gray-400 cursor-not-allowed"
+                        : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                    }`}
                   >
                     <FiChevronLeft className="w-5 h-5" />
                     Previous
                   </button>
-                  
+
                   <div className="text-sm text-gray-600">
                     Page {currentPage} of {totalPages}
                   </div>
-                  
+
                   <button
-                    onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                    onClick={() =>
+                      setCurrentPage((prev) => Math.min(prev + 1, totalPages))
+                    }
                     disabled={currentPage === totalPages}
-                    className={`flex items-center gap-2 px-4 py-2 rounded-lg border ${currentPage === totalPages ? 'border-gray-200 text-gray-400 cursor-not-allowed' : 'border-gray-300 text-gray-700 hover:bg-gray-50'}`}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg border ${
+                      currentPage === totalPages
+                        ? "border-gray-200 text-gray-400 cursor-not-allowed"
+                        : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                    }`}
                   >
                     Next
                     <FiChevronRight className="w-5 h-5" />

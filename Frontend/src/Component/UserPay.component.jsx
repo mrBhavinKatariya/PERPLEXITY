@@ -63,14 +63,12 @@ const UserPay = ({ user, onClose }) => {
     }
   }, [verifyCooldown, isProcessingPayment]);
 
-
   // Remove this problematic useEffect
-useEffect(() => {
+  useEffect(() => {
     if (setPaymentProcessing) {
       createPayment();
     }
   }, [setPaymentProcessing]);
-
 
   const handleVerifyClick = () => {
     if (isProcessingPayment || !utr) return;
@@ -165,9 +163,9 @@ useEffect(() => {
 
       setPayment(response.data.data);
     } catch (error) {
-      error.response?.data?.message || "Payment creation failed"
+      error.response?.data?.message || "Payment creation failed";
     } finally {
-        setPaymentProcessing(false);
+      setPaymentProcessing(false);
     }
   };
 
@@ -188,7 +186,7 @@ useEffect(() => {
       };
 
       if (!utr || utr.trim() === "") {
-        setErrorMessage("Please enter UTR number"); 
+        setErrorMessage("Please enter UTR number");
         return;
       }
 
@@ -311,28 +309,26 @@ useEffect(() => {
                     <p style={styles.amountConfirm}>Amount: ₹{amount}</p>
                   </div>
                   <div style={styles.paymentMethods}>
-                  {paymentMethods.map((method) => (
-  <button
-    key={method}
-    style={{
-      ...styles.methodButton,
-      backgroundColor: paymentProcessing 
-        ? "#e2e8f0" 
-        : "#f7fafc",
-      cursor: paymentProcessing 
-        ? "not-allowed" 
-        : "pointer",
-    }}
-    onClick={() => {
-      if (method === "Pay Now") {
-        createPayment();
-      }
-    }}
-    disabled={paymentProcessing}  // Corrected
-  >
-    {paymentProcessing ? "Processing..." : method}  
-  </button>
-))}
+                    {paymentMethods.map((method) => (
+                      <button
+                        key={method}
+                        style={{
+                          ...styles.methodButton,
+                          backgroundColor: paymentProcessing
+                            ? "#e2e8f0"
+                            : "#f7fafc",
+                          cursor: paymentProcessing ? "not-allowed" : "pointer",
+                        }}
+                        onClick={() => {
+                          if (method === "Pay Now") {
+                            createPayment();
+                          }
+                        }}
+                        disabled={paymentProcessing} // Corrected
+                      >
+                        {paymentProcessing ? "Processing..." : method}
+                      </button>
+                    ))}
                   </div>
                 </>
               ) : (
@@ -542,17 +538,19 @@ useEffect(() => {
         </div>
       )}
       {errorMessage && (
-  <div style={{ 
-    color: "red", 
-    margin: "10px 0",
-    padding: "10px",
-    borderRadius: "8px",
-    backgroundColor: "#ffe5e5",
-    border: "1px solid #ffcccc"
-  }}>
-    ⚠️ {errorMessage}
-  </div>
-)}
+        <div
+          style={{
+            color: "red",
+            margin: "10px 0",
+            padding: "10px",
+            borderRadius: "8px",
+            backgroundColor: "#ffe5e5",
+            border: "1px solid #ffcccc",
+          }}
+        >
+          ⚠️ {errorMessage}
+        </div>
+      )}
     </div>
   );
 };
@@ -665,7 +663,7 @@ const styles = {
     display: "flex",
     flexDirection: "column",
     maxHeight: "75vh",
-    marginTop:"100px"
+    marginTop: "100px",
   },
   scrollableContainer: {
     overflowY: "auto",

@@ -698,18 +698,18 @@ export default function ColorPredictionGame() {
       </div>
       {showRecharge && (
         <div style={styles.popupOverlay}>
-          <RechargePage
-            user={user}
-            onClose={() => setShowRecharge(false)}
-            currentPeriod={currentPeriod}
-            timeLeft={timeLeft}
-          />
-           {/* <UserPay
+          {/* <RechargePage                 //-------------razorpay payment------------------
             user={user}
             onClose={() => setShowRecharge(false)}
             currentPeriod={currentPeriod}
             timeLeft={timeLeft}
           /> */}
+           <UserPay          //--------------- custome payment page-----------
+            user={user}
+            onClose={() => setShowRecharge(false)}
+            currentPeriod={currentPeriod}
+            timeLeft={timeLeft}
+          />
         </div>
       )}
 
