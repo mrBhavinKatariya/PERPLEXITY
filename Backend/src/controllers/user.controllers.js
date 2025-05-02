@@ -36,9 +36,9 @@ const Payment = mongoose.model('Payment', PaymentSchema);
 
 const BANK_DETAILS = {
     name: "HDFC Bank",
-    accountNumber: "8546373084",
-    ifsc: "KKBK0002866",
-    upiId: "hahir6610@okhdfcbank"
+    accountNumber: "245611010000202",
+    ifsc: "UBIN0824569",
+    upiId: "wavelina@uboi",
 
     // name: "HDFC Bank",
     // accountNumber: "8745579201",
