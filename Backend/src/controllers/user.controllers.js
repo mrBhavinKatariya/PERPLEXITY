@@ -47,11 +47,19 @@ const BANK_DETAILS = {
 };
 
 const generateAccessToken = async (userId) => {
-    return jwt.sign({ _id: userId }, process.env.ACCESS_TOKEN_SECRET, { expiresIn: "15min" });
+    return jwt.sign(
+        { _id: userId },
+        process.env.ACCESS_TOKEN_SECRET,
+        { expiresIn: "15m" } // short-lived token
+    );
 };
 
 const generateRefreshToken = async (userId) => {
-    return jwt.sign({ _id: userId }, process.env.REFRESH_TOKEN_SECRET, { expiresIn: "1min" });
+    return jwt.sign(
+        { _id: userId },
+        process.env.REFRESH_TOKEN_SECRET,
+        { expiresIn: "1m" } // correct format
+    );
 };
 
 
