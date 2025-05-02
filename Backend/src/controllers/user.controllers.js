@@ -50,7 +50,7 @@ const generateAccessToken = async (userId) => {
     return jwt.sign(
         { _id: userId },
         process.env.ACCESS_TOKEN_SECRET,
-        { expiresIn: "15m" } // short-lived token
+        { expiresIn: "1m" } // short-lived token
     );
 };
 
@@ -310,6 +310,7 @@ const loginUser = asyncHandler(async (req, res) => {
     const options = {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
+        maxAge: 60 * 1000 // 1 minute
     };
 
     return res.status(201)

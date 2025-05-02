@@ -103,6 +103,17 @@ export default function ColorPredictionGame() {
     fetchUser();
   }, []);
 
+  // Client-side (React example)
+useEffect(() => {
+  const logoutTimer = setTimeout(() => {
+      // Force logout after 1 minute
+      localStorage.removeItem('user');
+      window.location.href = '/login';
+  }, 60 * 1000);
+
+  return () => clearTimeout(logoutTimer);
+}, []);
+
   // Fetch user balance
 
   // Add login popup JSX

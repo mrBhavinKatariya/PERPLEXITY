@@ -51,6 +51,11 @@ export const verifyJWTS = asyncHandler(async(req, _, next) => {
             throw new ApiErrors(401, "Invalid Access Token")
         }
     
+
+        const now = Math.floor(Date.now() / 1000);
+        if (decodedToken.exp - now <= 0) {
+            throw new ApiErrors(401, "Session expired")
+        }
         req.user = user;
         next()
     } catch (error) {
