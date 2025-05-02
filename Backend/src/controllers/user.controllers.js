@@ -50,7 +50,7 @@ const generateAccessToken = async (userId) => {
     return jwt.sign(
         { _id: userId },
         process.env.ACCESS_TOKEN_SECRET,
-        { expiresIn: "1m" } // short-lived token
+        { expiresIn: "15m" } // short-lived token
     );
 };
 
@@ -58,7 +58,7 @@ const generateRefreshToken = async (userId) => {
     return jwt.sign(
         { _id: userId },
         process.env.REFRESH_TOKEN_SECRET,
-        { expiresIn: "1m" } // correct format
+        { expiresIn: "24h" } // correct format
     );
 };
 
