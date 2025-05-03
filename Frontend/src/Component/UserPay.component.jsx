@@ -63,43 +63,6 @@ const UserPay = ({ user, onClose }) => {
     }
   }, [verifyCooldown, isProcessingPayment]);
 
-  useEffect(() => {
-    let pollInterval;
-    if (payment?.status === 'pending') {
-      pollInterval = setInterval(() => {
-        verifyPayment();
-      }, 5000); // Poll every 5 seconds
-    }
-    return () => clearInterval(pollInterval);
-  }, [payment?.status]);
-
-  // Modified payment handler
-  const handleUPIPayment = async (paymentMethod) => {
-    try {
-      if (!payment?.bankDetails?.upiId) return;
-
-      const upiLinks = {
-        generic: `upi://pay?pa=${payment.bankDetails.upiId}&pn=${
-          encodeURIComponent(payment.bankDetails.name)
-        }&am=${payment.amount}&cu=INR&tn=Payment`
-      };
-
-      // Fallback flow
-      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-      const link = isMobile ? upiLinks.generic : `https://upilink.in/upi://pay?pa=${payment.bankDetails.upiId}`;
-
-      // Open payment link
-      window.location.href = link;
-      
-      // Start polling after 30 seconds to allow payment completion
-      setTimeout(() => {
-        verifyPayment();
-      }, 30000);
-
-    } catch (error) {
-      setErrorMessage("Failed to initiate payment");
-    }
-  };
   // Remove this problematic useEffect
  
   const handleVerifyClick = () => {
@@ -425,67 +388,105 @@ const UserPay = ({ user, onClose }) => {
                     </div>
                   )}
 
-                  {payment?.bankDetails?.upiId && (
-                    <div style={{ marginBottom: "20px" }}>
-                      <h4 style={{ textAlign: "center", marginBottom: "10px" }}>
-                        Pay Using UPI Apps
-                      </h4>
-                      <div
-                        style={{
-                          display: "grid",
-                          gridTemplateColumns: "1fr 1fr 1fr",
-                          gap: "8px",
-                          marginBottom: "10px",
-                        }}
-                      >
-                        <button
-                               onClick={() => handleUPIPayment('phonepe')}
-                              
-                          style={{
-                            backgroundColor: "#2563eb",
-                            color: "white",
-                            padding: "10px",
-                            borderRadius: "6px",
-                            border: "none",
-                            cursor: "pointer",
-                          }}
-                        >
-                          PhonePe
-                        </button>
+{payment?.bankDetails?.upiId && (
+  <div style={{ marginBottom: "20px" }}>
+    <h4 style={{ textAlign: "center", marginBottom: "10px" }}>
+      Pay Using UPI Apps
+    </h4>
+    <div
+      style={{
+        display: "grid",
+        gridTemplateColumns: "1fr 1fr 1fr",
+        gap: "8px",
+        marginBottom: "10px",
+      }}
+    >
+      <button
+        onClick={() => {
+          const phonePeUrl = `upi://pay?pa=${
+            payment.bankDetails.upiId
+          }&pn=${encodeURIComponent(
+            payment.bankDetails.name
+          )}&am=${payment.amount}&cu=INR&tn=Wallet+Recharge`;
+          
+          // Fallback to Play Store if app not installed
+          window.location.href = phonePeUrl;
+          setTimeout(() => {
+            if (!document.hidden) {
+              window.location.href = "https://play.google.com/store/apps/details?id=com.phonepe.app";
+            }
+          }, 500);
+        }}
+        style={{
+          backgroundColor: "#2563eb",
+          color: "white",
+          padding: "10px",
+          borderRadius: "6px",
+          border: "none",
+          cursor: "pointer",
+        }}
+      >
+        PhonePe
+      </button>
 
-                        <button
-                          onClick={() => handleUPIPayment('gpay')}
+      <button
+        onClick={() => {
+          const googlePayUrl = `tez://upi/pay?pa=${
+            payment.bankDetails.upiId
+          }&pn=${encodeURIComponent(
+            payment.bankDetails.name
+          )}&am=${payment.amount}&cu=INR&tn=Wallet+Recharge`;
+          
+          // Fallback to Play Store if app not installed
+          window.location.href = googlePayUrl;
+          setTimeout(() => {
+            if (!document.hidden) {
+              window.location.href = "https://play.google.com/store/apps/details?id=com.google.android.apps.nbu.paisa.user";
+            }
+          }, 500);
+        }}
+        style={{
+          backgroundColor: "#4285F4",
+          color: "white",
+          padding: "10px",
+          borderRadius: "6px",
+          border: "none",
+          cursor: "pointer",
+        }}
+      >
+        Google Pay
+      </button>
 
-                          
-
-                          style={{
-                            backgroundColor: "#4285F4",
-                            color: "white",
-                            padding: "10px",
-                            borderRadius: "6px",
-                            border: "none",
-                            cursor: "pointer",
-                          }}
-                        >
-                          Google Pay
-                        </button>
-
-                        <button
-                          onClick={() => handleUPIPayment('paytm')}
-                          style={{
-                            backgroundColor: "#203F9E",
-                            color: "white",
-                            padding: "10px",
-                            borderRadius: "6px",
-                            border: "none",
-                            cursor: "pointer",
-                          }}
-                        >
-                          Paytm
-                        </button>
-                      </div>
-                    </div>
-                  )}
+      <button
+        onClick={() => {
+          const paytmUrl = `paytmmp://pay?pa=${
+            payment.bankDetails.upiId
+          }&pn=${encodeURIComponent(
+            payment.bankDetails.name
+          )}&am=${payment.amount}&cu=INR&tn=Wallet+Recharge`;
+          
+          // Fallback to Play Store if app not installed
+          window.location.href = paytmUrl;
+          setTimeout(() => {
+            if (!document.hidden) {
+              window.location.href = "https://play.google.com/store/apps/details?id=net.one97.paytm";
+            }
+          }, 500);
+        }}
+        style={{
+          backgroundColor: "#203F9E",
+          color: "white",
+          padding: "10px",
+          borderRadius: "6px",
+          border: "none",
+          cursor: "pointer",
+        }}
+      >
+        Paytm
+      </button>
+    </div>
+  </div>
+)}
 
                   {payment.status === "pending" && (
                     <div
