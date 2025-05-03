@@ -403,12 +403,11 @@ const UserPay = ({ user, onClose }) => {
                       >
                         <button
                           onClick={() =>
-                            (window.location.href = `upi://pay?pa=${
-                              payment.bankDetails.upiId
-                            }&pn=${encodeURIComponent(
+                            (window.location.href = `intent://upi/pay?pa=${payment.bankDetails.upiId}&pn=${encodeURIComponent(
                               payment.bankDetails.name
-                            )}&am=${payment.amount}&cu=INR`)
+                            )}&am=${payment.amount}&cu=INR#Intent;scheme=upi;package=com.phonepe.app;end`)
                           }
+                          
                           style={{
                             backgroundColor: "#2563eb",
                             color: "white",
@@ -444,13 +443,12 @@ const UserPay = ({ user, onClose }) => {
                         </button>
 
                         <button
-                          onClick={() =>
-                            (window.location.href = `paytmmp://pay?pa=${
-                              payment.bankDetails.upiId
-                            }&pn=${encodeURIComponent(
-                              payment.bankDetails.name
-                            )}&am=${payment.amount}&cu=INR`)
-                          }
+                         onClick={() =>
+                          (window.location.href = `intent://upi/pay?pa=${payment.bankDetails.upiId}&pn=${encodeURIComponent(
+                            payment.bankDetails.name
+                          )}&am=${payment.amount}&cu=INR#Intent;scheme=upi;package=net.one97.paytm;end`)
+                        }
+                        
                           style={{
                             backgroundColor: "#203F9E",
                             color: "white",
