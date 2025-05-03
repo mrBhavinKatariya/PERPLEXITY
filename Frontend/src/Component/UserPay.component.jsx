@@ -63,8 +63,45 @@ const UserPay = ({ user, onClose }) => {
     }
   }, [verifyCooldown, isProcessingPayment]);
 
-  // Remove this problematic useEffect
+  useEffect(() => {
+    let pollInterval;
+    if (payment?.status === 'pending') {
+      pollInterval = setInterval(() => {
+        verifyPayment();
+      }, 5000); // Poll every 5 seconds
+    }
+    return () => clearInterval(pollInterval);
+  }, [payment?.status]);
 
+  // Modified payment handler
+  const handleUPIPayment = async (paymentMethod) => {
+    try {
+      if (!payment?.bankDetails?.upiId) return;
+
+      const upiLinks = {
+        generic: `upi://pay?pa=${payment.bankDetails.upiId}&pn=${
+          encodeURIComponent(payment.bankDetails.name)
+        }&am=${payment.amount}&cu=INR&tn=Payment`
+      };
+
+      // Fallback flow
+      const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      const link = isMobile ? upiLinks.generic : `https://upilink.in/upi://pay?pa=${payment.bankDetails.upiId}`;
+
+      // Open payment link
+      window.location.href = link;
+      
+      // Start polling after 30 seconds to allow payment completion
+      setTimeout(() => {
+        verifyPayment();
+      }, 30000);
+
+    } catch (error) {
+      setErrorMessage("Failed to initiate payment");
+    }
+  };
+  // Remove this problematic useEffect
+ 
   const handleVerifyClick = () => {
     if (isProcessingPayment || !utr) return;
 
@@ -402,12 +439,8 @@ const UserPay = ({ user, onClose }) => {
                         }}
                       >
                         <button
-                          onClick={() =>
-                            (window.location.href = `intent://upi/pay?pa=${payment.bankDetails.upiId}&pn=${encodeURIComponent(
-                              payment.bankDetails.name
-                            )}&am=${payment.amount}&cu=INR#Intent;scheme=upi;package=com.phonepe.app;end`)
-                          }
-                          
+                               onClick={() => handleUPIPayment('phonepe')}
+                              
                           style={{
                             backgroundColor: "#2563eb",
                             color: "white",
@@ -421,15 +454,10 @@ const UserPay = ({ user, onClose }) => {
                         </button>
 
                         <button
-                          onClick={() =>
-                            (window.location.href = `intent://upi/pay?pa=${
-                              payment.bankDetails.upiId
-                            }&pn=${encodeURIComponent(
-                              payment.bankDetails.name
-                            )}&am=${
-                              payment.amount
-                            }&cu=INR#Intent;scheme=upi;package=com.google.android.apps.nbu.paisa.user;end`)
-                          }
+                          onClick={() => handleUPIPayment('gpay')}
+
+                          
+
                           style={{
                             backgroundColor: "#4285F4",
                             color: "white",
@@ -443,12 +471,7 @@ const UserPay = ({ user, onClose }) => {
                         </button>
 
                         <button
-                         onClick={() =>
-                          (window.location.href = `intent://upi/pay?pa=${payment.bankDetails.upiId}&pn=${encodeURIComponent(
-                            payment.bankDetails.name
-                          )}&am=${payment.amount}&cu=INR#Intent;scheme=upi;package=net.one97.paytm;end`)
-                        }
-                        
+                          onClick={() => handleUPIPayment('paytm')}
                           style={{
                             backgroundColor: "#203F9E",
                             color: "white",
