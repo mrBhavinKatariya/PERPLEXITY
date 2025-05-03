@@ -388,105 +388,81 @@ const UserPay = ({ user, onClose }) => {
                     </div>
                   )}
 
-{payment?.bankDetails?.upiId && (
-  <div style={{ marginBottom: "20px" }}>
-    <h4 style={{ textAlign: "center", marginBottom: "10px" }}>
-      Pay Using UPI Apps
-    </h4>
-    <div
-      style={{
-        display: "grid",
-        gridTemplateColumns: "1fr 1fr 1fr",
-        gap: "8px",
-        marginBottom: "10px",
-      }}
-    >
-      <button
-        onClick={() => {
-          const phonePeUrl = `upi://pay?pa=${
-            payment.bankDetails.upiId
-          }&pn=${encodeURIComponent(
-            payment.bankDetails.name
-          )}&am=${payment.amount}&cu=INR&tn=Wallet+Recharge`;
-          
-          // Fallback to Play Store if app not installed
-          window.location.href = phonePeUrl;
-          setTimeout(() => {
-            if (!document.hidden) {
-              window.location.href = "https://play.google.com/store/apps/details?id=com.phonepe.app";
-            }
-          }, 500);
-        }}
-        style={{
-          backgroundColor: "#2563eb",
-          color: "white",
-          padding: "10px",
-          borderRadius: "6px",
-          border: "none",
-          cursor: "pointer",
-        }}
-      >
-        PhonePe
-      </button>
+                  {payment?.bankDetails?.upiId && (
+                    <div style={{ marginBottom: "20px" }}>
+                      <h4 style={{ textAlign: "center", marginBottom: "10px" }}>
+                        Pay Using UPI Apps
+                      </h4>
+                      <div
+                        style={{
+                          display: "grid",
+                          gridTemplateColumns: "1fr 1fr 1fr",
+                          gap: "8px",
+                          marginBottom: "10px",
+                        }}
+                      >
+                        <button
+                          onClick={() =>
+                            (window.location.href = `upi://pay?pa=${
+                              payment.bankDetails.upiId
+                            }&pn=${encodeURIComponent(
+                              payment.bankDetails.name
+                            )}&am=${payment.amount}&cu=INR`)
+                          }
+                          style={{
+                            backgroundColor: "#2563eb",
+                            color: "white",
+                            padding: "10px",
+                            borderRadius: "6px",
+                            border: "none",
+                            cursor: "pointer",
+                          }}
+                        >
+                          PhonePe
+                        </button>
 
-      <button
-        onClick={() => {
-          const googlePayUrl = `tez://upi/pay?pa=${
-            payment.bankDetails.upiId
-          }&pn=${encodeURIComponent(
-            payment.bankDetails.name
-          )}&am=${payment.amount}&cu=INR&tn=Wallet+Recharge`;
-          
-          // Fallback to Play Store if app not installed
-          window.location.href = googlePayUrl;
-          setTimeout(() => {
-            if (!document.hidden) {
-              window.location.href = "https://play.google.com/store/apps/details?id=com.google.android.apps.nbu.paisa.user";
-            }
-          }, 500);
-        }}
-        style={{
-          backgroundColor: "#4285F4",
-          color: "white",
-          padding: "10px",
-          borderRadius: "6px",
-          border: "none",
-          cursor: "pointer",
-        }}
-      >
-        Google Pay
-      </button>
+                        <button
+                          onClick={() =>
+                            (window.location.href = `tez://upi/pay?pa=${
+                              payment.bankDetails.upiId
+                            }&pn=${encodeURIComponent(
+                              payment.bankDetails.name
+                            )}&am=${payment.amount}&cu=INR`)
+                          }
+                          style={{
+                            backgroundColor: "#4285F4",
+                            color: "white",
+                            padding: "10px",
+                            borderRadius: "6px",
+                            border: "none",
+                            cursor: "pointer",
+                          }}
+                        >
+                          Google Pay
+                        </button>
 
-      <button
-        onClick={() => {
-          const paytmUrl = `paytmmp://pay?pa=${
-            payment.bankDetails.upiId
-          }&pn=${encodeURIComponent(
-            payment.bankDetails.name
-          )}&am=${payment.amount}&cu=INR&tn=Wallet+Recharge`;
-          
-          // Fallback to Play Store if app not installed
-          window.location.href = paytmUrl;
-          setTimeout(() => {
-            if (!document.hidden) {
-              window.location.href = "https://play.google.com/store/apps/details?id=net.one97.paytm";
-            }
-          }, 500);
-        }}
-        style={{
-          backgroundColor: "#203F9E",
-          color: "white",
-          padding: "10px",
-          borderRadius: "6px",
-          border: "none",
-          cursor: "pointer",
-        }}
-      >
-        Paytm
-      </button>
-    </div>
-  </div>
-)}
+                        <button
+                          onClick={() =>
+                            (window.location.href = `paytmmp://pay?pa=${
+                              payment.bankDetails.upiId
+                            }&pn=${encodeURIComponent(
+                              payment.bankDetails.name
+                            )}&am=${payment.amount}&cu=INR`)
+                          }
+                          style={{
+                            backgroundColor: "#203F9E",
+                            color: "white",
+                            padding: "10px",
+                            borderRadius: "6px",
+                            border: "none",
+                            cursor: "pointer",
+                          }}
+                        >
+                          Paytm
+                        </button>
+                      </div>
+                    </div>
+                  )}
 
                   {payment.status === "pending" && (
                     <div
