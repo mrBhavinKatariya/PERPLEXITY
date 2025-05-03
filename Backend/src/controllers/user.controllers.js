@@ -149,15 +149,13 @@ const verifyPayment = asyncHandler(async (req, res) => {
     const payment = await Payment.findOneAndUpdate(
         { paymentId, userId },
         { 
-            utrnumbers: utrNumber, 
+            utr: utrNumber, 
             status: 'completed', 
             completedAt: Date.now() 
         },
         { new: true }
     );
-
-    console.log("payment",payment);
-    
+   
     const user = await User.findById(userId);
     if (!user) {
         throw new ApiErrors(404, "User not found");
