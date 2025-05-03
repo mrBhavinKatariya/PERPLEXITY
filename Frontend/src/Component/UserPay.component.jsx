@@ -63,18 +63,7 @@ const UserPay = ({ user, onClose }) => {
     }
   }, [verifyCooldown, isProcessingPayment]);
 
-  useEffect(() => {
-    if (paymentProcessing) {
-      createPayment();
-    }
-  }, [paymentProcessing]);
-  
   // Remove this problematic useEffect
-  useEffect(() => {
-    if (setPaymentProcessing) {
-      createPayment();
-    }
-  }, [setPaymentProcessing]);
 
   const handleVerifyClick = () => {
     if (isProcessingPayment || !utr) return;
@@ -434,11 +423,13 @@ const UserPay = ({ user, onClose }) => {
 
                         <button
                           onClick={() =>
-                            (window.location.href = `tez://upi/pay?pa=${
+                            (window.location.href = `intent://upi/pay?pa=${
                               payment.bankDetails.upiId
                             }&pn=${encodeURIComponent(
                               payment.bankDetails.name
-                            )}&am=${payment.amount}&cu=INR`)
+                            )}&am=${
+                              payment.amount
+                            }&cu=INR#Intent;scheme=upi;package=com.google.android.apps.nbu.paisa.user;end`)
                           }
                           style={{
                             backgroundColor: "#4285F4",
