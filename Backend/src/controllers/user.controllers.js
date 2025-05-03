@@ -149,7 +149,7 @@ const verifyPayment = asyncHandler(async (req, res) => {
     const payment = await Payment.findOneAndUpdate(
         { paymentId, userId },
         { 
-            utr: utrNumber, 
+            utrnumbers: utrNumber, 
             status: 'completed', 
             completedAt: Date.now() 
         },
