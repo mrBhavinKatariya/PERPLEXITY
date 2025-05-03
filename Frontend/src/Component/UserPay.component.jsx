@@ -63,6 +63,12 @@ const UserPay = ({ user, onClose }) => {
     }
   }, [verifyCooldown, isProcessingPayment]);
 
+  useEffect(() => {
+    if (paymentProcessing) {
+      createPayment();
+    }
+  }, [paymentProcessing]);
+  
   // Remove this problematic useEffect
   useEffect(() => {
     if (setPaymentProcessing) {
