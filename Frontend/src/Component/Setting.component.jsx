@@ -497,6 +497,7 @@ const SettingsPage = () => {
             user={user}
             onClose={() => setShowRechargeModal(false)}
           /> */}
+          
 
           <UserPay
             user={user}
