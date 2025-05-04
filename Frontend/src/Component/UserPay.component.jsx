@@ -120,7 +120,7 @@ const UserPay = ({ user, onClose }) => {
   };
 
   const handleProceedToPayment = () => {
-    if (!amount || amount < 0) {
+    if (!amount || amount < 100) {
       setError("Minimum amount is 100");
       return;
     }
