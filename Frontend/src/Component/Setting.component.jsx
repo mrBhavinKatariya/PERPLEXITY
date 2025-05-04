@@ -15,7 +15,7 @@ import {
 } from "react-icons/hi";
 import axios from "axios";
 import RechargePage from "./Recharge.component";
-import UserPay from "./userpay.component";
+import UserPay from "./UserPay.component.jsx";
 
 const API_URL =
   import.meta.env.REACT_APP_API_URL || "https://perplexity-bd2d.onrender.com";
@@ -497,7 +497,7 @@ const SettingsPage = () => {
             user={user}
             onClose={() => setShowRechargeModal(false)}
           /> */}
-          
+
 
           <UserPay
             user={user}
