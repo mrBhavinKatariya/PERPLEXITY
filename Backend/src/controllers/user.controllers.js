@@ -32,7 +32,9 @@ let adminOverride = {
     ifscCode: String
 });
 
-const Payment = mongoose.model('Payment', PaymentSchema);
+export const Payment = mongoose.model('Payment', PaymentSchema);
+
+
 
 const BANK_DETAILS = {
     name: "HDFC Bank",

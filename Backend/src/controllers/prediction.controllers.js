@@ -18,6 +18,7 @@ import { ReferralEarning } from "../models/ReferralEarning.models.js";
 // import { Cashfree} from "cashfree-pg";
 // import CashfreePG from "cashfree-pg";
 import axios from "axios";
+import { Payment } from "./user.controllers.js";
 
 dotenv.config()
 let isGenerating = false;
