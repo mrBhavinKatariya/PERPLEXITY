@@ -1395,8 +1395,6 @@ const createFundAccount = asyncHandler(async (req, res) => {
 //   }
 // });
 
-
-
 const transactionHistory = asyncHandler(async (req, res) => {
   try {
     const { userid } = req.params;
@@ -1410,47 +1408,126 @@ const transactionHistory = asyncHandler(async (req, res) => {
       });
     }
 
-    // Get transactions with pagination
-    const transactions = await Transaction.find({ userId: userid })
-      .sort({ createdAt: -1 })
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .lean();
+    // Fetch transactions and payments in parallel
+    const [transactions, payments] = await Promise.all([
+      Transaction.find({ userId: userid })
+        .sort({ createdAt: -1 })
+        .lean(),
+      Payment.find({ userId: userid })
+        .sort({ createdAt: -1 })
+        .lean()
+    ]);
 
-    // Format response and remove transaction ID
-    const formattedTransactions = transactions.map(transaction => {
-      const date = new Date(transaction.createdAt);
-      return {
-        // Select only required fields
-        amount: transaction.amount,
-        type: transaction.type,
-        description: transaction.description,
-        status: transaction.status,
-        transactionId: transaction.transactionId, // Keep this if needed
+    // Combine and sort by creation date
+    const combinedHistory = [...transactions, ...payments]
+      .sort((a, b) => b.createdAt - a.createdAt);
+
+    // Apply pagination
+    const startIndex = (page - 1) * limit;
+    const endIndex = page * limit;
+    const paginatedHistory = combinedHistory.slice(startIndex, endIndex);
+
+    // Format response
+    const formattedHistory = paginatedHistory.map(item => {
+      const date = new Date(item.createdAt);
+      const commonFields = {
+        amount: item.amount,
+        type: item.type,
+        description: item.description,
+        status: item.status,
         date: `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`,
+      };
 
-
+      // Transaction specific fields
+      if (item.transactionId) {
+        return {
+          ...commonFields,
+          transactionId: item.transactionId,
+          source: 'transaction'
+        };
+      }
+      // Payment specific fields (adjust based on your schema)
+      return {
+        ...commonFields,
+        paymentId: item.paymentId, // Replace with actual payment identifier
+        source: 'payment'
       };
     });
 
     // Get total count
-    const totalCount = await Transaction.countDocuments({ userId: userid });
+    const totalTransactions = await Transaction.countDocuments({ userId: userid });
+    const totalPayments = await Payment.countDocuments({ userId: userid });
 
     res.status(200).json({
       success: true,
-      transactions: formattedTransactions,
-      totalPages: Math.ceil(totalCount / limit),
+      transactions: formattedHistory,
+      totalPages: Math.ceil((totalTransactions + totalPayments) / limit),
       currentPage: page
     });
 
   } catch (error) {
-    console.error('Transaction list error:', error);
+    console.error('Transaction history error:', error);
     res.status(500).json({
       success: false,
       message: 'Server error'
     });
   }
 });
+
+// const transactionHistory = asyncHandler(async (req, res) => {
+//   try {
+//     const { userid } = req.params;
+//     const { page = 1, limit = 10 } = req.query;
+
+//     // Authorization check
+//     if (req.user._id.toString() !== userid) {
+//       return res.status(403).json({ 
+//         success: false,
+//         message: 'Unauthorized access'
+//       });
+//     }
+
+//     // Get transactions with pagination
+//     const transactions = await Transaction.find({ userId: userid })
+//       .sort({ createdAt: -1 })
+//       .skip((page - 1) * limit)
+//       .limit(limit)
+//       .lean();
+
+//     // Format response and remove transaction ID
+//     const formattedTransactions = transactions.map(transaction => {
+//       const date = new Date(transaction.createdAt);
+//       return {
+//         // Select only required fields
+//         amount: transaction.amount,
+//         type: transaction.type,
+//         description: transaction.description,
+//         status: transaction.status,
+//         transactionId: transaction.transactionId, // Keep this if needed
+//         date: `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`,
+
+
+//       };
+//     });
+
+//     // Get total count
+//     const totalCount = await Transaction.countDocuments({ userId: userid });
+
+//     res.status(200).json({
+//       success: true,
+//       transactions: formattedTransactions,
+//       totalPages: Math.ceil(totalCount / limit),
+//       currentPage: page
+//     });
+
+//   } catch (error) {
+//     console.error('Transaction list error:', error);
+//     res.status(500).json({
+//       success: false,
+//       message: 'Server error'
+//     });
+//   }
+// });
 
 const changeCurrentPassword = asyncHandler(async(req, res) => {
   const {oldPassword, newPassword} = req.body
