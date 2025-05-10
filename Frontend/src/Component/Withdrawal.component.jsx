@@ -293,12 +293,12 @@ const Withdrawal = () => {
                   <span className="absolute left-3 top-3 text-gray-400">₹</span>
                 </div>
                 <div className="text-sm text-gray-500 mt-1">
-                  {balance >= 300
-                    ? `Maximum withdrawal: ₹${(balance - 300).toLocaleString(
+                  {balance >= 500
+                    ? `Maximum withdrawal: ₹${(balance - 500).toLocaleString(
                         "en-IN",
                         { maximumFractionDigits: 2 }
-                      )} (₹300 minimum balance)`
-                    : "Minimum ₹300 balance required to withdraw funds"}
+                      )} (₹500 minimum balance)`
+                    : "Minimum ₹500 balance required to withdraw funds"}
                 </div>
               </div>
 
