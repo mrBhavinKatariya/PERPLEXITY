@@ -101,6 +101,8 @@ const createPayment = asyncHandler(async (req, res) => {
         amount,
         description: description || '',
         userId,
+         type: "credit",
+            transactionId: `AMT-${Date.now()}` ,
         qrCode: qrCodeUrl,
         bankName: BANK_DETAILS.name,
         accountNumber: BANK_DETAILS.accountNumber,
@@ -115,6 +117,8 @@ const createPayment = asyncHandler(async (req, res) => {
             paymentId,
             paymentLink,
             amount,
+             type: "credit",
+            transactionId: `AMT-${Date.now()}` ,
             newWalletBalance: user.wallet, // अपडेटेड बैलेंस
             description: description || '',
             qrCode: qrCodeUrl,
