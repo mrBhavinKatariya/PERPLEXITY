@@ -153,6 +153,8 @@ const verifyPayment = asyncHandler(async (req, res) => {
         { 
             utr: utrNumber, 
             status: 'completed', 
+            type: "credit",
+            transactionId: `AMT-${Date.now()}` ,
             completedAt: Date.now() 
         },
         { new: true }
@@ -176,10 +178,8 @@ const verifyPayment = asyncHandler(async (req, res) => {
             id: payment.paymentId,
             amount: payment.amount,
             status: payment.status,
-            type: "credit",
             utr: utrNumber,
             completedAt: payment.completedAt,
-            transactionId: `AMT-${Date.now()}` ,
         }, "Payment verified successfully")
     );
 });
