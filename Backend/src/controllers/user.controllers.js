@@ -26,6 +26,8 @@ let adminOverride = {
     status: { type: String, default: 'pending' },
     createdAt: { type: Date, default: Date.now },
     utr: String,
+    transactionId: String,
+    type: String,
     qrCode: String,
     bankName: String,
     accountNumber: String,
@@ -81,10 +83,6 @@ const createPayment = asyncHandler(async (req, res) => {
         throw new ApiErrors(404, "User not found");
     }
 
-    // // वॉलेट बैलेंस अपडेट करें
-    // user.wallet += amount;
-    // await user.save();
-
     // पेमेंट आईडी जनरेट करें
     const paymentId = shortid();
     const paymentLink = `${process.env.FRONTEND_URL || 'https://wavelina.store'}/pay/${paymentId}`;
@@ -101,8 +99,8 @@ const createPayment = asyncHandler(async (req, res) => {
         amount,
         description: description || '',
         userId,
-         type: "credit",
-            transactionId: `AMT-${Date.now()}` ,
+        type: "credit",
+        transactionId: `AMT-${Date.now()}`,
         qrCode: qrCodeUrl,
         bankName: BANK_DETAILS.name,
         accountNumber: BANK_DETAILS.accountNumber,
