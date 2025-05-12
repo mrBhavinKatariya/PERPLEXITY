@@ -159,6 +159,9 @@ const verifyPayment = asyncHandler(async (req, res) => {
         },
         { new: true }
     );
+
+    console.log("payment",payment);
+    
    
     const user = await User.findById(userId);
     if (!user) {
