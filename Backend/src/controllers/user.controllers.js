@@ -66,7 +66,6 @@ const generateRefreshToken = async (userId) => {
     );
 };
 
-
 const createPayment = asyncHandler(async (req, res) => {
     const { amount, description } = req.body;
     const userId = req.user._id;
@@ -162,8 +161,6 @@ const verifyPayment = asyncHandler(async (req, res) => {
         { new: true }
     );
 
-
-    
    
     const user = await User.findById(userId);
     if (!user) {
@@ -220,7 +217,6 @@ const getPaymentDetails = asyncHandler(async (req, res) => {
         }, "Payment details fetched successfully")
     );
 });
-
 
 const registerUser = asyncHandler(async (req, res) => {
     const { username, email, password, fullname, phoneNo, referralCode, balance  } = req.body;
@@ -286,9 +282,6 @@ const registerUser = asyncHandler(async (req, res) => {
             refreshToken,
         }, "User registered successfully"));
 });
-
-
-
 
 const loginUser = asyncHandler(async (req, res) => {
     const { username, email, password, phoneNo } = req.body;
